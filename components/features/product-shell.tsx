@@ -1,11 +1,12 @@
 import Link from "next/link";
+import { LayoutDashboard, Layers, GitBranch, Users, LogIn } from "lucide-react";
 
 const NAV_ITEMS = [
-  { label: "Dashboard", href: "/dashboard" },
-  { label: "Programmes", href: "/programs/program-cradle-accelerator-2026/applicants" },
-  { label: "Matching", href: "/matching" },
-  { label: "Relationships", href: "/relationships" },
-  { label: "Login", href: "/login" },
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Programmes", href: "/programs/program-cradle-accelerator-2026/applicants", icon: Layers },
+  { label: "Matching", href: "/matching", icon: GitBranch },
+  { label: "Relationships", href: "/relationships", icon: Users },
+  { label: "Login", href: "/login", icon: LogIn },
 ];
 
 interface ProductShellProps {
@@ -25,49 +26,61 @@ export function ProductShell({
   cohortStatus,
   activeNav,
 }: ProductShellProps) {
-  return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-border px-4 md:px-12 py-4 flex items-start justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="text-base font-semibold tracking-tight">Verrier</span>
-            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded border border-border text-muted-foreground bg-muted leading-none">
-              Demo coordinator
-            </span>
-          </div>
-          <p className="text-xs text-muted-foreground mt-0.5">{programName}</p>
-        </div>
-        <div className="text-right">
-          <p className="text-sm font-medium">{cohortName}</p>
-          <p className="text-xs text-muted-foreground mt-0.5 capitalize">
-            {cohortWeeks}-week programme &middot; {cohortStatus}
-          </p>
-        </div>
-      </header>
+  const displayStatus = cohortStatus.charAt(0).toUpperCase() + cohortStatus.slice(1);
 
-      <nav className="border-b border-border px-4 md:px-12">
-        <ul className="flex">
-          {NAV_ITEMS.map(({ label, href }) => {
+  return (
+    <div className="flex min-h-screen bg-background text-foreground">
+      {/* Sidebar */}
+      <aside className="w-52 shrink-0 fixed top-0 left-0 h-screen border-r border-border flex flex-col bg-background z-10">
+        {/* Branding */}
+        <div className="px-5 pt-6 pb-5 border-b border-border">
+          <p className="font-semibold text-foreground leading-none">Verrier</p>
+          <p className="text-xs text-muted-foreground mt-1 leading-snug">{programName}</p>
+        </div>
+
+        {/* Nav */}
+        <nav className="flex-1 py-4 px-3 space-y-0.5 overflow-y-auto">
+          {NAV_ITEMS.map(({ label, href, icon: Icon }) => {
             const isActive = label === activeNav;
             return (
-              <li key={label}>
-                <Link
-                  href={href}
-                  className={`inline-block px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                    isActive
-                      ? "border-primary text-foreground"
-                      : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
-                  }`}
-                >
-                  {label}
-                </Link>
-              </li>
+              <Link
+                key={label}
+                href={href}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                  isActive
+                    ? "bg-muted text-foreground font-medium"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                }`}
+              >
+                <Icon size={16} className="shrink-0" />
+                {label}
+              </Link>
             );
           })}
-        </ul>
-      </nav>
+        </nav>
 
-      <div className="max-w-[1440px] mx-auto">{children}</div>
+        {/* Cohort info */}
+        <div className="px-5 py-4 border-t border-border">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground mb-2">
+            Current Cohort
+          </p>
+          <div className="flex items-center gap-1.5 mb-1">
+            <div
+              className="w-1.5 h-1.5 rounded-full animate-pulse shrink-0"
+              style={{ background: "var(--status-healthy)" }}
+            />
+            <p className="text-xs font-medium text-foreground truncate">{cohortName}</p>
+          </div>
+          <p className="text-[10px] text-muted-foreground">
+            {cohortWeeks}-Week · {displayStatus}
+          </p>
+        </div>
+      </aside>
+
+      {/* Main content */}
+      <div className="flex-1 min-w-0 ml-52">
+        {children}
+      </div>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import type { Relationship, Company, Mentor } from "@/lib/types";
 
 type StatusFilter =
@@ -34,12 +35,12 @@ const HEALTH_FILTERS: HealthFilter[] = ["all", "healthy", "at-risk", "critical"]
 
 type RelationshipStatus = Relationship["status"];
 
-const STATUS_COLORS: Record<RelationshipStatus, string> = {
-  active: "var(--status-healthy)",
-  pending: "var(--status-pending)",
-  paused: "var(--status-risk)",
-  completed: "var(--primary)",
-  terminated: "var(--status-critical)",
+const STATUS_STYLES: Record<RelationshipStatus, { color: string; bg: string }> = {
+  active: { color: "var(--status-healthy)", bg: "var(--status-healthy-bg)" },
+  pending: { color: "var(--status-ai)", bg: "var(--muted)" },
+  paused: { color: "var(--status-risk)", bg: "var(--status-risk-bg)" },
+  completed: { color: "var(--primary)", bg: "var(--muted)" },
+  terminated: { color: "var(--status-critical)", bg: "var(--status-critical-bg)" },
 };
 
 const HEALTH_COLORS: Record<HealthBand, string> = {
@@ -60,10 +61,7 @@ const TREND_COLOR: Record<Relationship["healthTrend"], string> = {
   deteriorating: "var(--status-critical)",
 };
 
-const BREAKDOWN_KEYS: [
-  keyof Relationship["matchBreakdown"],
-  string
-][] = [
+const BREAKDOWN_KEYS: [keyof Relationship["matchBreakdown"], string][] = [
   ["industryMatch", "Industry"],
   ["stageFit", "Stage"],
   ["availability", "Avail."],
@@ -89,98 +87,101 @@ export function RelationshipList({
 
   const filtered = relationships.filter((r) => {
     if (statusFilter !== "all" && r.status !== statusFilter) return false;
-    if (
-      healthFilter !== "all" &&
-      getHealthBand(r.healthScore) !== healthFilter
-    )
+    if (healthFilter !== "all" && getHealthBand(r.healthScore) !== healthFilter)
       return false;
     return true;
   });
 
-  const totalHealthy = relationships.filter(
-    (r) => getHealthBand(r.healthScore) === "healthy"
-  ).length;
-  const totalAtRisk = relationships.filter(
-    (r) => getHealthBand(r.healthScore) === "at-risk"
-  ).length;
-  const totalCritical = relationships.filter(
-    (r) => getHealthBand(r.healthScore) === "critical"
-  ).length;
+  const totalHealthy = relationships.filter((r) => getHealthBand(r.healthScore) === "healthy").length;
+  const totalAtRisk = relationships.filter((r) => getHealthBand(r.healthScore) === "at-risk").length;
+  const totalCritical = relationships.filter((r) => getHealthBand(r.healthScore) === "critical").length;
 
   return (
-    <div className="px-4 md:px-12 py-6 space-y-4">
-      {/* Summary strip */}
-      <div className="flex flex-wrap items-center gap-4 text-[10px] text-muted-foreground">
-        <span className="font-semibold uppercase tracking-wide">
-          {relationships.length} relationships
-        </span>
-        <span style={{ color: "var(--status-healthy)" }}>
-          {totalHealthy} healthy
-        </span>
-        <span style={{ color: "var(--status-risk)" }}>
-          {totalAtRisk} at risk
-        </span>
-        <span style={{ color: "var(--status-critical)" }}>
-          {totalCritical} critical
-        </span>
+    <div className="px-6 md:px-10 py-8 space-y-6">
+      {/* Page header */}
+      <div>
+        <h1 className="text-xl font-semibold text-foreground">Relationships</h1>
+        <div className="flex items-center gap-5 mt-2 text-xs text-muted-foreground">
+          <span>{relationships.length} total</span>
+          <span style={{ color: "var(--status-healthy)" }}>{totalHealthy} healthy</span>
+          <span style={{ color: "var(--status-risk)" }}>{totalAtRisk} at risk</span>
+          <span style={{ color: "var(--status-critical)" }}>{totalCritical} critical</span>
+        </div>
       </div>
 
-      {/* Filter row */}
-      <div className="flex flex-col sm:flex-row gap-2">
-        {/* Status filters */}
-        <div className="flex flex-wrap gap-1">
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-wrap gap-1.5">
           {STATUS_FILTERS.map((f) => {
             const count =
               f === "all"
                 ? relationships.length
                 : relationships.filter((r) => r.status === f).length;
+            const isActive = statusFilter === f;
             return (
               <button
                 key={f}
                 onClick={() => setStatusFilter(f)}
-                className={`px-2.5 py-1 text-[10px] font-medium rounded border transition-colors capitalize ${
-                  statusFilter === f
-                    ? "border-primary text-foreground bg-muted"
-                    : "border-border text-muted-foreground hover:text-foreground hover:border-foreground"
+                className={`px-3 py-1 text-xs font-medium rounded-full border transition-colors capitalize ${
+                  isActive
+                    ? "border-foreground bg-foreground text-background"
+                    : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/50"
                 }`}
               >
-                {f} {count > 0 && <span className="ml-0.5 opacity-60">{count}</span>}
+                {f}
+                {count > 0 && (
+                  <span className={`ml-1.5 ${isActive ? "opacity-70" : "opacity-50"}`}>
+                    {count}
+                  </span>
+                )}
               </button>
             );
           })}
         </div>
 
-        <div className="hidden sm:block w-px bg-border mx-1" />
+        <div className="hidden sm:flex items-center">
+          <div className="w-px h-5 bg-border" />
+        </div>
 
-        {/* Health filters */}
-        <div className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap gap-1.5">
           {HEALTH_FILTERS.map((f) => {
             const count =
               f === "all"
                 ? relationships.length
-                : relationships.filter(
-                    (r) => getHealthBand(r.healthScore) === f
-                  ).length;
+                : relationships.filter((r) => getHealthBand(r.healthScore) === f).length;
+            const isActive = healthFilter === f;
+            const color =
+              f === "healthy"
+                ? "var(--status-healthy)"
+                : f === "at-risk"
+                  ? "var(--status-risk)"
+                  : f === "critical"
+                    ? "var(--status-critical)"
+                    : undefined;
             return (
               <button
                 key={f}
                 onClick={() => setHealthFilter(f)}
-                className={`px-2.5 py-1 text-[10px] font-medium rounded border transition-colors capitalize ${
-                  healthFilter === f
-                    ? "border-primary text-foreground bg-muted"
-                    : "border-border text-muted-foreground hover:text-foreground hover:border-foreground"
+                className={`px-3 py-1 text-xs font-medium rounded-full border transition-colors capitalize ${
+                  isActive
+                    ? "border-foreground bg-foreground text-background"
+                    : "border-border hover:border-foreground/50"
                 }`}
+                style={!isActive && color ? { color } : undefined}
               >
-                {f} {count > 0 && <span className="ml-0.5 opacity-60">{count}</span>}
+                {f === "at-risk" ? "At Risk" : f.charAt(0).toUpperCase() + f.slice(1)}
+                {count > 0 && (
+                  <span className="ml-1.5 opacity-50">{count}</span>
+                )}
               </button>
             );
           })}
         </div>
       </div>
 
-      {/* Relationship list */}
+      {/* Relationship cards */}
       {filtered.length === 0 ? (
-        <div className="border border-border rounded p-6 text-sm text-muted-foreground">
+        <div className="bg-card border border-border rounded-xl p-8 text-sm text-muted-foreground text-center">
           No relationships match the selected filters.
         </div>
       ) : (
@@ -189,146 +190,135 @@ export function RelationshipList({
             const company = companyMap.get(r.companyId);
             const mentor = mentorMap.get(r.mentorId);
             const band = getHealthBand(r.healthScore);
-            const statusColor = STATUS_COLORS[r.status];
+            const statusStyle = STATUS_STYLES[r.status];
             const healthColor = HEALTH_COLORS[band];
 
             return (
-              <div
+              <Link
                 key={r.id}
-                className="border border-border rounded p-4 space-y-3"
+                href={`/relationships/${r.id}`}
+                className="group relative block bg-card border border-border rounded-xl overflow-hidden hover:shadow-md hover:border-foreground/20 transition-all duration-200"
               >
-                {/* Header row */}
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-sm font-semibold truncate">
-                        {company?.name ?? r.companyId}
-                      </p>
-                      <span
-                        className="text-[10px] font-medium border rounded px-1.5 py-0.5 capitalize shrink-0"
-                        style={{
-                          color: statusColor,
-                          borderColor: statusColor,
-                        }}
-                      >
-                        {r.status}
-                      </span>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground mt-0.5 truncate">
-                      {mentor?.name ?? r.mentorId}
-                      {mentor && (
-                        <span className="mx-1 opacity-50">&middot;</span>
-                      )}
-                      {mentor?.currentRole} at {mentor?.company}
-                    </p>
-                  </div>
+                {/* Left accent bar */}
+                <div
+                  className="absolute left-0 top-0 bottom-0 w-1"
+                  style={{ background: healthColor }}
+                />
 
-                  {/* Health score block */}
-                  <div className="shrink-0 text-right">
-                    <div className="flex items-baseline gap-1 justify-end">
-                      <span
-                        className="text-lg font-bold leading-none"
+                <div className="pl-5 pr-5 py-4">
+                  {/* Row 1: company + status + health score */}
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-[15px] font-semibold text-foreground truncate">
+                          {company?.name ?? r.companyId}
+                        </p>
+                        <span
+                          className="text-[10px] font-medium px-2 py-0.5 rounded-full shrink-0"
+                          style={{ color: statusStyle.color, background: statusStyle.bg }}
+                        >
+                          {r.status}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                        {mentor?.name ?? r.mentorId}
+                        {mentor && (
+                          <span className="mx-1.5 opacity-40">·</span>
+                        )}
+                        {mentor?.currentRole} at {mentor?.company}
+                      </p>
+                    </div>
+
+                    <div className="shrink-0 text-right">
+                      <div className="flex items-baseline gap-1 justify-end">
+                        <span
+                          className="text-2xl font-bold leading-none"
+                          style={{ color: healthColor }}
+                        >
+                          {r.healthScore}
+                        </span>
+                        <span
+                          className="text-sm font-semibold"
+                          style={{ color: TREND_COLOR[r.healthTrend] }}
+                        >
+                          {TREND_SYMBOL[r.healthTrend]}
+                        </span>
+                      </div>
+                      <p
+                        className="text-[10px] font-medium capitalize mt-0.5"
                         style={{ color: healthColor }}
                       >
-                        {r.healthScore}
-                      </span>
-                      <span
-                        className="text-xs font-semibold"
-                        style={{ color: TREND_COLOR[r.healthTrend] }}
-                      >
-                        {TREND_SYMBOL[r.healthTrend]}
-                      </span>
+                        {band === "at-risk" ? "At Risk" : band.charAt(0).toUpperCase() + band.slice(1)}
+                      </p>
                     </div>
-                    <p
-                      className="text-[10px] font-medium capitalize leading-none mt-0.5"
-                      style={{ color: healthColor }}
-                    >
-                      {band === "at-risk" ? "At Risk" : band.charAt(0).toUpperCase() + band.slice(1)}
-                    </p>
                   </div>
-                </div>
 
-                {/* Cadence row */}
-                <div className="flex items-center gap-4 text-[10px] text-muted-foreground">
-                  <span>
-                    <span className="font-medium text-foreground">
-                      {r.meetingCount}
-                    </span>{" "}
-                    meeting{r.meetingCount !== 1 ? "s" : ""}
-                  </span>
-                  <span>
-                    <span className="font-medium text-foreground">
-                      {r.daysSinceLastMeeting}d
-                    </span>{" "}
-                    since last
-                  </span>
-                  <span>
-                    Match{" "}
-                    <span className="font-medium text-foreground">
-                      {r.matchScore}
+                  {/* Row 2: health bar */}
+                  <div className="mt-3 flex items-center gap-3">
+                    <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{ width: `${r.healthScore}%`, background: healthColor }}
+                      />
+                    </div>
+                    <span className="text-xs text-muted-foreground shrink-0">
+                      {r.meetingCount} meetings · {r.daysSinceLastMeeting}d ago · Match {r.matchScore}
                     </span>
-                  </span>
-                  <span>
-                    Milestone{" "}
-                    <span className="font-medium text-foreground">
-                      {r.currentMilestone}
-                    </span>
-                  </span>
-                </div>
+                  </div>
 
-                {/* AI diagnosis */}
-                {r.aiDiagnosis && (
-                  <p className="text-xs text-muted-foreground">
-                    {r.aiDiagnosis}
-                  </p>
-                )}
-
-                {/* Watch points */}
-                {r.watchPoints.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5">
-                    {r.watchPoints.map((w, i) => (
+                  {/* Row 3: AI diagnosis */}
+                  {r.aiDiagnosis && (
+                    <div className="mt-3 pt-3 border-t border-border/60 flex items-start gap-2">
                       <span
-                        key={i}
-                        className="text-[10px] border rounded px-1.5 py-0.5"
+                        className="shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded mt-0.5"
                         style={{
-                          color: "var(--status-risk)",
-                          borderColor: "var(--status-risk)",
+                          background: "color-mix(in srgb, var(--status-ai) 10%, transparent)",
+                          color: "var(--status-ai)",
                         }}
                       >
-                        {w}
+                        ✦ AI
                       </span>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        {r.aiDiagnosis}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Row 4: match breakdown + watch points */}
+                  <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-1">
+                    {BREAKDOWN_KEYS.map(([key, label]) => (
+                      <div key={key} className="flex items-center gap-2">
+                        <span className="text-[10px] text-muted-foreground w-12 shrink-0">
+                          {label}
+                        </span>
+                        <div className="flex-1 bg-muted rounded-full h-1 overflow-hidden">
+                          <div
+                            className="h-full rounded-full"
+                            style={{ width: `${r.matchBreakdown[key]}%`, backgroundColor: "var(--primary)" }}
+                          />
+                        </div>
+                        <span className="text-[10px] text-muted-foreground w-5 text-right shrink-0">
+                          {r.matchBreakdown[key]}
+                        </span>
+                      </div>
                     ))}
                   </div>
-                )}
 
-                {/* Match reason */}
-                <p className="text-[10px] text-muted-foreground italic">
-                  {r.matchReason}
-                </p>
-
-                {/* Match breakdown bars */}
-                <div className="space-y-1">
-                  {BREAKDOWN_KEYS.map(([key, label]) => (
-                    <div key={key} className="flex items-center gap-2">
-                      <span className="text-[10px] text-muted-foreground w-14 shrink-0">
-                        {label}
-                      </span>
-                      <div className="flex-1 bg-muted rounded-full h-1 overflow-hidden">
-                        <div
-                          className="h-full rounded-full"
-                          style={{
-                            width: `${r.matchBreakdown[key]}%`,
-                            backgroundColor: "var(--primary)",
-                          }}
-                        />
-                      </div>
-                      <span className="text-[10px] text-muted-foreground w-5 text-right shrink-0">
-                        {r.matchBreakdown[key]}
-                      </span>
+                  {r.watchPoints.length > 0 && (
+                    <div className="mt-2.5 flex flex-wrap gap-1.5">
+                      {r.watchPoints.map((w, i) => (
+                        <span
+                          key={i}
+                          className="text-[10px] border rounded-full px-2 py-0.5"
+                          style={{ color: "var(--status-risk)", borderColor: "var(--status-risk)" }}
+                        >
+                          {w}
+                        </span>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
-              </div>
+              </Link>
             );
           })}
         </div>
