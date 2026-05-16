@@ -12,8 +12,14 @@ import {
   X,
   BarChart2,
   Search,
+  Network,
+  Handshake,
+  Wrench,
+  Building2,
+  Coins,
 } from "lucide-react";
 import type { HealthBand } from "@/lib/verrier-analytics";
+import type { EcosystemLinkageType } from "@/lib/types";
 import {
   getAttentionFeed,
   getDashboardSummary,
@@ -29,7 +35,12 @@ import {
   ResponsiveContainer,
   Cell
 } from "recharts";
-import { seedRelationships, seedCompanies } from "@/lib/verrier-seed";
+import {
+  seedCompanies,
+  seedEcosystemEntities,
+  seedEcosystemLinkages,
+  seedRelationships,
+} from "@/lib/verrier-seed";
 
 function bandToStatus(band: HealthBand): "critical" | "at-risk" | "healthy" {
   if (band === "critical") return "critical";
@@ -122,9 +133,33 @@ function RecentMeetingsSkeleton() {
   );
 }
 
+type LinkageFilter = "all" | EcosystemLinkageType;
+
+const LINKAGE_FILTERS: Array<{ value: LinkageFilter; label: string }> = [
+  { value: "all", label: "All" },
+  { value: "company-programme", label: "Company to Programme" },
+  { value: "partner-initiative", label: "Partner to Initiative" },
+  { value: "service-provider-company", label: "Provider to Company" },
+  { value: "programme-initiative", label: "Programme to Initiative" },
+];
+
+function formatLinkageType(type: EcosystemLinkageType): string {
+  const match = LINKAGE_FILTERS.find((filter) => filter.value === type);
+  return match?.label ?? type;
+}
+
+function statusClass(status: string): string {
+  if (status === "active") return "bg-green-100 text-green-700";
+  if (status === "monitoring") return "bg-amber-100 text-amber-700";
+  if (status === "proposed") return "bg-purple-100 text-purple-700";
+  return "bg-muted text-muted-foreground";
+}
+
 export function DashboardCommandCenter() {
   const [mounted, setMounted] = useState(false);
   const [feedFilter, setFeedFilter] = useState<"all" | "critical" | "at-risk" | "healthy">("all");
+  const [linkageFilter, setLinkageFilter] = useState<LinkageFilter>("all");
+  const [selectedLinkageId, setSelectedLinkageId] = useState(seedEcosystemLinkages[0]?.id ?? "");
 
   // ── Watchlist (localStorage) ──────────────────────────────────────────
   const [watchlist, setWatchlist] = useState<string[]>(() => {
@@ -239,6 +274,34 @@ export function DashboardCommandCenter() {
     else if (score <= 80) chartData[3].count++;
     else chartData[4].count++;
   });
+
+  const ecosystemEntityCounts = {
+    partners: seedEcosystemEntities.filter((entity) => entity.type === "partner").length,
+    serviceProviders: seedEcosystemEntities.filter((entity) => entity.type === "service-provider").length,
+    grants: seedEcosystemEntities.filter((entity) => entity.type === "grant").length,
+    initiatives: seedEcosystemEntities.filter((entity) => entity.type === "initiative").length,
+  };
+  const ecosystemLinkageCounts = {
+    total: seedEcosystemLinkages.length,
+  };
+  const entityNameById = new Map<string, string>([
+    ...seedEcosystemEntities.map((entity) => [entity.id, entity.name] as const),
+    ...seedCompanies.map((company) => [company.id, company.name] as const),
+  ]);
+  const filteredEcosystemLinkages = seedEcosystemLinkages.filter(
+    (linkage) => linkageFilter === "all" || linkage.type === linkageFilter
+  );
+  const selectedLinkage =
+    seedEcosystemLinkages.find((linkage) => linkage.id === selectedLinkageId) ??
+    filteredEcosystemLinkages[0] ??
+    seedEcosystemLinkages[0];
+  const averageLinkageScore =
+    seedEcosystemLinkages.length > 0
+      ? Math.round(
+          seedEcosystemLinkages.reduce((sum, linkage) => sum + linkage.fitScore, 0) /
+            seedEcosystemLinkages.length
+        )
+      : 0;
 
   return (
     <>
@@ -396,6 +459,212 @@ export function DashboardCommandCenter() {
               </div>
             </Link>
           </div>
+        </div>
+      </div>
+
+      {/* Ecosystem graph layer */}
+      <div className="px-4 md:px-12 pb-6">
+        <div className="grid grid-cols-1 xl:grid-cols-[0.82fr_1.18fr] gap-6">
+          <section className="bg-card border border-border rounded-xl p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                  Ecosystem Linkage Layer
+                </p>
+                <h2 className="text-xl font-bold text-foreground mt-2">
+                  Beyond mentor matching
+                </h2>
+                <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+                  Partners, service providers, grants, initiatives, programmes, mentors, and companies are represented as reusable linkage entities.
+                </p>
+              </div>
+              <div className="w-11 h-11 rounded-xl bg-[var(--status-ai)]/10 flex items-center justify-center shrink-0">
+                <Network size={22} style={{ color: "var(--status-ai)" }} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mt-6">
+              {[
+                { label: "Partners", value: ecosystemEntityCounts.partners, icon: Handshake },
+                { label: "Service Providers", value: ecosystemEntityCounts.serviceProviders, icon: Wrench },
+                { label: "Grant Pathways", value: ecosystemEntityCounts.grants, icon: Coins },
+                { label: "Initiatives", value: ecosystemEntityCounts.initiatives, icon: Building2 },
+                { label: "Ecosystem Linkages", value: ecosystemLinkageCounts.total, icon: Network },
+              ].map(({ label, value, icon: Icon }) => (
+                <div key={label} className="border border-border rounded-lg p-4 bg-background">
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl font-bold tabular-nums text-foreground">{value}</span>
+                    <Icon size={17} className="text-muted-foreground" />
+                  </div>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mt-2">
+                    {label}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-5 border border-border rounded-lg p-4 bg-background">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Average linkage fit
+                  </p>
+                  <p className="text-3xl font-bold tabular-nums text-foreground mt-1">
+                    {averageLinkageScore}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Governance states
+                  </p>
+                  <div className="flex flex-wrap justify-end gap-1.5 mt-2">
+                    {["proposed", "monitoring", "active"].map((status) => (
+                      <span key={status} className={`text-[10px] px-2 py-0.5 rounded-full capitalize ${statusClass(status)}`}>
+                        {status}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="bg-card border border-border rounded-xl p-6">
+            <div className="flex flex-col gap-4 mb-4">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                    Reusable Linkage Workbench
+                  </p>
+                  <h3 className="text-base font-bold text-foreground mt-1">
+                    Partner and service-provider graph
+                  </h3>
+                </div>
+                <span className="text-[10px] font-semibold px-2 py-1 rounded bg-[var(--status-ai)]/10 text-[var(--status-ai)]">
+                  First-class entities
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {LINKAGE_FILTERS.map((filter) => (
+                  <button
+                    key={filter.value}
+                    onClick={() => {
+                      setLinkageFilter(filter.value);
+                      const next = seedEcosystemLinkages.find(
+                        (linkage) => filter.value === "all" || linkage.type === filter.value
+                      );
+                      if (next) setSelectedLinkageId(next.id);
+                    }}
+                    className={`px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-colors ${
+                      linkageFilter === filter.value
+                        ? "bg-foreground text-background border-foreground"
+                        : "bg-background border-border text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {filter.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-[0.95fr_1.05fr] gap-4">
+              <div className="space-y-3">
+                {filteredEcosystemLinkages.map((linkage) => {
+                  const active = linkage.id === selectedLinkage?.id;
+                  return (
+                    <button
+                      key={linkage.id}
+                      onClick={() => setSelectedLinkageId(linkage.id)}
+                      className={`w-full text-left border rounded-lg p-4 transition-all ${
+                        active
+                          ? "border-[var(--status-ai)] bg-[var(--status-ai)]/5"
+                          : "border-border bg-background hover:border-primary/30"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-foreground truncate">
+                            {entityNameById.get(linkage.sourceEntityId) ?? linkage.sourceEntityId}
+                          </p>
+                          <p className="text-[11px] text-muted-foreground truncate">
+                            to {entityNameById.get(linkage.targetEntityId) ?? linkage.targetEntityId}
+                          </p>
+                        </div>
+                        <span className="text-sm font-bold tabular-nums shrink-0" style={{ color: "var(--status-ai)" }}>
+                          {linkage.fitScore}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 mt-3">
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full capitalize ${statusClass(linkage.status)}`}>
+                          {linkage.status}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {formatLinkageType(linkage.type)}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {selectedLinkage && (
+                <div className="border border-border rounded-lg p-5 bg-background min-h-full">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        Selected linkage
+                      </p>
+                      <h4 className="text-base font-bold text-foreground mt-1">
+                        {formatLinkageType(selectedLinkage.type)}
+                      </h4>
+                    </div>
+                    <span className="text-2xl font-bold tabular-nums" style={{ color: "var(--status-ai)" }}>
+                      {selectedLinkage.fitScore}
+                    </span>
+                  </div>
+
+                  <div className="mt-5 space-y-4">
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                        Source
+                      </p>
+                      <p className="text-sm font-semibold text-foreground">
+                        {entityNameById.get(selectedLinkage.sourceEntityId) ?? selectedLinkage.sourceEntityId}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                        Target
+                      </p>
+                      <p className="text-sm font-semibold text-foreground">
+                        {entityNameById.get(selectedLinkage.targetEntityId) ?? selectedLinkage.targetEntityId}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                        Why this linkage exists
+                      </p>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {selectedLinkage.rationale}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                        Reusable signals
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {selectedLinkage.reusableSignals.map((signal) => (
+                          <span key={signal} className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                            {signal}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
         </div>
       </div>
 

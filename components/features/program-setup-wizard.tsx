@@ -78,6 +78,53 @@ interface WizardState {
   mentorIds: string[];
 }
 
+type DraftDocumentType =
+  | "programme-brief"
+  | "grant-readiness"
+  | "partner-outreach"
+  | "service-provider-scope"
+  | "application-requirements";
+
+interface GrantRecommendation {
+  name: string;
+  provider: string;
+  fitScore: number;
+  rationale: string;
+  eligibilityNotes: string[];
+}
+
+interface ServiceProviderRecommendation {
+  name: string;
+  category: "cloud" | "legal" | "market-access" | "finance" | "technical";
+  fitScore: number;
+  rationale: string;
+  suggestedUse: string;
+}
+
+interface PartnerLinkageRecommendation {
+  source: string;
+  target: string;
+  linkageType: string;
+  fitScore: number;
+  rationale: string;
+  reusableSignals: string[];
+}
+
+interface DraftDocument {
+  title: string;
+  type: DraftDocumentType;
+  markdown: string;
+}
+
+interface EcosystemPack {
+  summary: string;
+  recommendedGrants: GrantRecommendation[];
+  recommendedServiceProviders: ServiceProviderRecommendation[];
+  recommendedPartnerLinkages: PartnerLinkageRecommendation[];
+  draftDocuments: DraftDocument[];
+  fallbackUsed: boolean;
+}
+
 const DEFAULT_STATE: WizardState = {
   name: "",
   type: "accelerator",
@@ -173,6 +220,40 @@ function PillGroup({
   );
 }
 
+function filenameSafe(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "")
+    .slice(0, 72) || "ecosystem-pack";
+}
+
+function packToMarkdown(pack: EcosystemPack): string {
+  const grants = pack.recommendedGrants
+    .map(
+      (grant) =>
+        `### ${grant.name}\n\n- Provider: ${grant.provider}\n- Fit score: ${grant.fitScore}\n- Rationale: ${grant.rationale}\n- Eligibility notes:\n${grant.eligibilityNotes.map((note) => `  - ${note}`).join("\n")}`
+    )
+    .join("\n\n");
+  const providers = pack.recommendedServiceProviders
+    .map(
+      (provider) =>
+        `### ${provider.name}\n\n- Category: ${provider.category}\n- Fit score: ${provider.fitScore}\n- Rationale: ${provider.rationale}\n- Suggested use: ${provider.suggestedUse}`
+    )
+    .join("\n\n");
+  const linkages = pack.recommendedPartnerLinkages
+    .map(
+      (linkage) =>
+        `### ${linkage.source} -> ${linkage.target}\n\n- Type: ${linkage.linkageType}\n- Fit score: ${linkage.fitScore}\n- Rationale: ${linkage.rationale}\n- Reusable signals: ${linkage.reusableSignals.join(", ")}`
+    )
+    .join("\n\n");
+  const documents = pack.draftDocuments
+    .map((doc) => `## ${doc.title}\n\n${doc.markdown}`)
+    .join("\n\n---\n\n");
+
+  return `# AI Ecosystem Pack\n\n${pack.summary}\n\n## Recommended Grants\n\n${grants || "No grant recommendations."}\n\n## Recommended Service Providers\n\n${providers || "No service provider recommendations."}\n\n## Recommended Partner Linkages\n\n${linkages || "No partner linkage recommendations."}\n\n---\n\n${documents}`;
+}
+
 export function ProgramSetupWizard() {
   const [storedDraft] = useState(readStoredDraft);
   const [state, setState] = useState<WizardState>(storedDraft.wizardState);
@@ -182,6 +263,8 @@ export function ProgramSetupWizard() {
   const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
   const [aiBriefText, setAiBriefText] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [ecosystemPack, setEcosystemPack] = useState<EcosystemPack | null>(null);
+  const [isGeneratingPack, setIsGeneratingPack] = useState(false);
 
   function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -309,7 +392,53 @@ export function ProgramSetupWizard() {
     setState(DEFAULT_STATE);
     setDraftSavedAt(null);
     setPublished(false);
+    setEcosystemPack(null);
     toast.success("Ready for a new programme.");
+  }
+
+  async function generateEcosystemPack() {
+    setIsGeneratingPack(true);
+    const toastId = toast.loading("Generating ecosystem pack...");
+    try {
+      const res = await fetch("/api/ai/programme-ecosystem-pack", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ programme: state }),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+        throw new Error(typeof data.error === "string" ? data.error : "Ecosystem pack generation failed.");
+      }
+      const data = (await res.json()) as EcosystemPack;
+      setEcosystemPack(data);
+      toast.success(data.fallbackUsed ? "Fallback ecosystem pack ready." : "AI ecosystem pack ready.", { id: toastId });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to generate ecosystem pack.", { id: toastId });
+    } finally {
+      setIsGeneratingPack(false);
+    }
+  }
+
+  async function copyDocument(markdown: string) {
+    try {
+      await navigator.clipboard.writeText(markdown);
+      toast.success("Document copied.");
+    } catch {
+      toast.error("Clipboard unavailable.");
+    }
+  }
+
+  function exportMarkdown(filename: string, markdown: string) {
+    const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `${filenameSafe(filename)}.md`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+    toast.success("Markdown exported.");
   }
 
   const inputCls =
@@ -680,6 +809,171 @@ export function ProgramSetupWizard() {
                 );
               })}
             </div>
+          </section>
+
+          {/* Ecosystem Pack */}
+          <section className="bg-card rounded-2xl border border-border p-6">
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-5">
+              <div>
+                <SectionTitle title="Ecosystem Pack" />
+                <p className="text-sm text-muted-foreground leading-relaxed -mt-2">
+                  Generate grant pathways, service-provider matches, partner linkages, and export-ready coordination documents from this programme setup.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={generateEcosystemPack}
+                disabled={isGeneratingPack || !state.name.trim()}
+                className="shrink-0 px-5 py-2.5 rounded-full text-xs font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ background: "var(--status-ai)", color: "#ffffff" }}
+              >
+                {isGeneratingPack ? "✦ Generating..." : "✦ Generate Ecosystem Pack"}
+              </button>
+            </div>
+
+            {!state.name.trim() && (
+              <p className="text-xs text-muted-foreground border border-dashed border-border rounded-xl p-4">
+                Add a programme name before generating the ecosystem pack.
+              </p>
+            )}
+
+            {ecosystemPack && (
+              <div className="space-y-6">
+                <div className="rounded-xl border border-[var(--status-ai)]/20 bg-[var(--status-ai)]/5 p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-[var(--status-ai)] text-white">
+                          {ecosystemPack.fallbackUsed ? "Fallback" : "Gemini"}
+                        </span>
+                        <p className="text-sm font-bold text-foreground">AI Ecosystem Pack</p>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+                        {ecosystemPack.summary}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => exportMarkdown(`${state.name || "programme"} ecosystem pack`, packToMarkdown(ecosystemPack))}
+                      className="px-3 py-1.5 rounded-full border border-border bg-background text-[11px] font-semibold text-foreground hover:bg-muted transition-colors shrink-0"
+                    >
+                      Export Pack
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  <div className="border border-border rounded-xl p-4 bg-background">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+                      Recommended Grants
+                    </p>
+                    <div className="space-y-3">
+                      {ecosystemPack.recommendedGrants.map((grant) => (
+                        <div key={grant.name} className="border border-border rounded-lg p-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="text-sm font-semibold text-foreground">{grant.name}</p>
+                              <p className="text-[11px] text-muted-foreground">{grant.provider}</p>
+                            </div>
+                            <span className="text-sm font-bold tabular-nums" style={{ color: "var(--status-ai)" }}>
+                              {grant.fitScore}
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{grant.rationale}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="border border-border rounded-xl p-4 bg-background">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+                      Service Providers
+                    </p>
+                    <div className="space-y-3">
+                      {ecosystemPack.recommendedServiceProviders.map((provider) => (
+                        <div key={provider.name} className="border border-border rounded-lg p-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="text-sm font-semibold text-foreground">{provider.name}</p>
+                              <p className="text-[11px] text-muted-foreground capitalize">{provider.category.replace("-", " ")}</p>
+                            </div>
+                            <span className="text-sm font-bold tabular-nums" style={{ color: "var(--status-ai)" }}>
+                              {provider.fitScore}
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{provider.suggestedUse}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="border border-border rounded-xl p-4 bg-background">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+                      Partner Linkages
+                    </p>
+                    <div className="space-y-3">
+                      {ecosystemPack.recommendedPartnerLinkages.map((linkage) => (
+                        <div key={`${linkage.source}-${linkage.target}`} className="border border-border rounded-lg p-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="text-sm font-semibold text-foreground">{linkage.source}</p>
+                              <p className="text-[11px] text-muted-foreground">to {linkage.target}</p>
+                            </div>
+                            <span className="text-sm font-bold tabular-nums" style={{ color: "var(--status-ai)" }}>
+                              {linkage.fitScore}
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-1.5 mt-2">
+                            {linkage.reusableSignals.slice(0, 3).map((signal) => (
+                              <span key={signal} className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                                {signal}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+                    Draft Documents
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {ecosystemPack.draftDocuments.map((doc) => (
+                      <div key={`${doc.type}-${doc.title}`} className="border border-border rounded-xl p-4 bg-background">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-semibold text-foreground">{doc.title}</p>
+                            <p className="text-[11px] text-muted-foreground capitalize">{doc.type.replace("-", " ")}</p>
+                          </div>
+                        </div>
+                        <pre className="mt-3 max-h-32 overflow-hidden whitespace-pre-wrap rounded-lg bg-muted/50 p-3 text-[11px] leading-relaxed text-muted-foreground">
+                          {doc.markdown}
+                        </pre>
+                        <div className="flex gap-2 mt-3">
+                          <button
+                            type="button"
+                            onClick={() => copyDocument(doc.markdown)}
+                            className="px-3 py-1.5 rounded-full border border-border text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                          >
+                            Copy
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => exportMarkdown(doc.title, doc.markdown)}
+                            className="px-3 py-1.5 rounded-full border border-border text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                          >
+                            Export .md
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </section>
         </div>
 

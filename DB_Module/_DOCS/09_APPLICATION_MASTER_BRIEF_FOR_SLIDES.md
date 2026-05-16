@@ -25,6 +25,12 @@ The core idea is:
 
 > Verrier treats mentor-startup relationships as first-class data entities that can be matched, monitored, diagnosed, and improved over time.
 
+The broader product idea is:
+
+> Verrier is an ecosystem linkage layer. It can represent companies, mentors, programmes, partners, service providers, and initiatives as connected entities whose relationships can be matched, governed, monitored, and reused.
+
+The MVP starts with the highest-friction linkage first: mentor-startup relationships inside accelerator programmes. This is the demo wedge, not the product boundary. The same relationship model extends to company-programme, partner-initiative, service-provider-company, and programme-initiative linkages.
+
 Instead of only tracking whether a startup has been accepted into a programme, Verrier tracks the full lifecycle:
 
 - what kind of programme is being run,
@@ -181,6 +187,8 @@ Current UI:
 - Relationship health counts: healthy, at risk, critical, total relationships.
 - Attention Feed with at-risk and critical relationship cards.
 - Recent meeting summaries.
+- Ecosystem Linkage Layer showing partners, service providers, initiatives, and reusable linkages beyond mentor-startup matching.
+- Reusable Linkage Workbench with linkage-type filters, status chips, fit score, rationale, source/target details, and reusable signals.
 - Health bars, status badges, AI badges, and skeleton loading.
 - Critical count no longer flashes; it uses stable card styling.
 
@@ -226,11 +234,15 @@ Current interaction:
 - Save button appears only when required conditions are met.
 - Criteria weights must total 100.
 - Preview panel updates as the coordinator edits.
+- Coordinator can generate an AI Ecosystem Pack directly from the programme profile.
+- The Ecosystem Pack recommends grants, service providers, and partner linkages.
+- AI drafts export-ready coordination documents: programme brief, grant readiness checklist, service-provider scope, partner outreach email, and application requirements.
+- Documents can be copied or exported as Markdown for real coordinator follow-up.
 - Save and reset actions use toast feedback.
 
 Slide angle:
 
-> Verrier lets the programme manager encode what "fit" means before applications arrive.
+> Verrier lets the programme manager encode what "fit" means before applications arrive, then turns that programme definition into reusable ecosystem linkages and working documents.
 
 ### 10.4 Public Startup Application
 
@@ -453,6 +465,7 @@ Slide angle:
 | AI Capability | User Trigger | Output | Human Decision |
 |---|---|---|---|
 | Programme fit scoring | Founder clicks `Get fit score & submit` | Fit score, label, recommendation, breakdown, insight | Coordinator decides applicant outcome |
+| Programme ecosystem pack | Coordinator clicks `Generate Ecosystem Pack` | Recommended grants, service providers, partner linkages, draft documents | Coordinator reviews, exports, and uses the pack |
 | Mentor matching | Coordinator clicks `Generate AI matches` | Ranked mentor cards with score and reason | Coordinator selects and confirms mentor |
 | Meeting analysis | Mentor or coordinator submits meeting notes | Summary, action items, signal, health delta, watch points | Coordinator acts on relationship signal |
 | Relationship diagnosis | Coordinator clicks `Refresh` | Narrative, watch points, recommendation | Coordinator decides intervention |
@@ -467,6 +480,7 @@ All AI calls are explicit. Verrier does not run AI silently in the background.
 | API Route | Model | Purpose |
 |---|---|---|
 | `POST /api/ai/program-fit` | `gemini-3.0-flash-preview` | Score startup fit for a programme |
+| `POST /api/ai/programme-ecosystem-pack` | `gemini-3.0-flash-preview` | Recommend grants, service providers, partner linkages, and draft exportable documents |
 | `POST /api/ai/match` | `gemini-3.0-flash-preview` | Rank mentor matches for a startup |
 | `POST /api/ai/analyze-meeting` | `gemini-3.0-flash-preview` | Summarize meeting notes and update relationship health |
 | `POST /api/ai/diagnose` | `gemini-3.0-flash-preview` | Diagnose relationship state and recommend action |
@@ -492,6 +506,8 @@ Verrier’s core data model mirrors the lifecycle of an innovation programme.
 | `relationships` | Mentor-startup pairing with match score, health score, diagnosis, milestones |
 | `meetings` | Meeting notes, AI summary, action items, signal, health delta |
 | `users` | Coordinator/admin identity and role |
+| `ecosystemEntities` | Broader ecosystem actors such as partners, service providers, initiatives, programmes, companies, and mentors |
+| `ecosystemLinkages` | Reusable non-mentor linkages such as partner-initiative, service-provider-company, and programme-initiative relationships |
 
 Key concept:
 
@@ -556,6 +572,18 @@ Demo includes:
 - approved applicants ready for matching,
 - relationship history for health monitoring,
 - cohort data for AI reporting.
+- ecosystem entities for partners, service providers, grants, programmes, and initiatives.
+- reusable ecosystem linkages beyond mentor-startup matching.
+
+Broader ecosystem demo data:
+
+| Entity / Linkage | Quantity | Purpose |
+|---|---:|---|
+| Ecosystem entities | 18 | Shows programmes, grant pathways, partners, service providers, and initiatives as addressable actors |
+| Ecosystem linkages | 12 | Shows company-programme, partner-initiative, service-provider-company, and programme-initiative relationships |
+| Partner / initiative examples | 7 | Demonstrates ecosystem coordination beyond mentor matching |
+| Service-provider examples | 6 | Demonstrates support-provider matching for cloud, legal, regulatory, product, impact, and talent needs |
+| Grant pathway examples | 3 | Demonstrates non-dilutive funding recommendations during programme setup |
 
 ---
 
@@ -614,6 +642,7 @@ Verification status:
 Completed:
 
 - Programme foundation.
+- AI Ecosystem Pack for programme-level grant, service-provider, partner-linkage, and document drafting.
 - Public startup application.
 - AI programme-fit scoring.
 - Applicant review pool.
@@ -695,6 +724,8 @@ What makes it different:
 - Meeting notes update relationship intelligence.
 - Cohort reports are generated from actual relationship data.
 - AI is embedded at decision points, not sprinkled onto the interface.
+- The same linkage model can represent partners, service providers, initiatives, programmes, companies, and mentors.
+- Mentor-startup matching is the MVP wedge; the product thesis is broader ecosystem linkage automation.
 
 ---
 
@@ -748,6 +779,8 @@ AI is essential to Verrier because the product value depends on converting messy
 Core AI jobs:
 
 - Score startup applications against programme criteria.
+- Recommend programme-level grants, service providers, and partner linkages.
+- Draft reusable coordination documents for programme launch and partner follow-up.
 - Rank mentors for approved startups.
 - Summarize meeting notes and extract action items.
 - Detect relationship health signals.
@@ -780,6 +813,7 @@ Implemented controls:
 - API routes parse and validate AI output before returning it to the UI.
 - Numeric scores are clamped into expected ranges.
 - Mentor IDs returned by Gemini are checked against the known mentor pool.
+- Ecosystem Pack recommendations are constrained to known service categories and reusable ecosystem entities.
 - If Gemini fails, times out, or returns malformed JSON, deterministic fallback logic keeps the demo usable.
 - Meeting analysis, diagnosis, cohort summary, matching, and programme fit scoring all have fallback behavior.
 
@@ -803,6 +837,8 @@ The demo demonstrates the complete core workflow:
 
 ```text
 Programme setup
+-> Gemini ecosystem pack
+-> grants, service providers, partner linkages, draft documents
 -> founder application
 -> Gemini fit score
 -> applicant review
@@ -819,6 +855,7 @@ UI strengths:
 
 - Operational dashboard starts from attention and risk, not marketing copy.
 - AI features are button-driven and visible.
+- Programme setup now produces a concrete ecosystem operating pack, not only a programme record.
 - Loading states, toast feedback, confirmations, and fallback states are designed.
 - Relationship cards expose health score, trend, meeting count, last activity, match breakdown, watch points, and AI insight.
 - Public forms reduce friction for founders and mentors.
@@ -970,12 +1007,16 @@ Verrier turns applications, matching, meetings, relationship health, and reporti
 Show the full flow:
 
 ```text
-Programme setup -> application -> AI fit score -> review -> AI match -> relationship -> meeting analysis -> diagnosis -> cohort report
+Programme setup -> AI ecosystem pack -> application -> AI fit score -> review -> AI match -> relationship -> meeting analysis -> diagnosis -> cohort report
 ```
 
 ### Slide 6. AI Fit Scoring
 
 Founder submits profile. Gemini scores fit and explains recommendation.
+
+### Slide 6A. AI Ecosystem Pack
+
+Coordinator creates a programme, then Gemini recommends grants, service providers, and partner linkages while drafting export-ready coordination documents.
 
 ### Slide 7. Applicant Review
 
@@ -1015,11 +1056,11 @@ SaaS for programme teams, ecosystem platform licenses, usage-based AI add-ons.
 
 ### Slide 16. Demo Status
 
-Feature-complete MVP: all core routes live, all five AI routes wired, lint/build passing.
+Feature-complete MVP: all core routes live, programme ecosystem pack added, AI routes wired, lint/build passing.
 
 ### Slide 17. Roadmap
 
-Persist programme CRUD, enforce production auth, add exports, add notifications, deepen analytics.
+Persist programme CRUD, enforce production auth, add DOCX/PDF exports, add notifications, deepen analytics.
 
 ### Slide 18. Closing
 
@@ -1035,28 +1076,31 @@ Verrier helps programme teams know who belongs together and when relationships a
 2. Open programmes.
    Show programme list and setup wizard.
 
-3. Open public application.
+3. Create a programme ecosystem pack.
+   Generate grants, service-provider recommendations, partner linkages, and exportable draft documents.
+
+4. Open public application.
    Submit startup details and trigger AI fit score.
 
-4. Open applicant pool.
+5. Open applicant pool.
    Review AI insight, approve applicant, show Matching nudge.
 
-5. Open matching workbench.
+6. Open matching workbench.
    Generate AI mentor matches and inspect recommendation cards.
 
-6. Select mentor and confirm.
+7. Select mentor and confirm.
    Show confirmation dialog and relationship creation toast.
 
-7. Open relationships.
+8. Open relationships.
    Show relationship portfolio and health filtering.
 
-8. Open relationship detail.
+9. Open relationship detail.
    Copy mentor link, inspect diagnosis, log meeting inline.
 
-9. Submit meeting notes.
+10. Submit meeting notes.
    Show AI summary, signal, health delta, and action items.
 
-10. Open cohort overview.
+11. Open cohort overview.
     Generate AI report and copy it.
 
 ---

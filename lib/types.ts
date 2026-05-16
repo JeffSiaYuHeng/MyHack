@@ -281,6 +281,54 @@ export interface ActionItem {
   completedAt: TimestampLike | null;
 }
 
+export type EcosystemEntityType =
+  | "programme"
+  | "company"
+  | "mentor"
+  | "partner"
+  | "service-provider"
+  | "grant"
+  | "initiative";
+
+export type EcosystemLinkageType =
+  | "company-programme"
+  | "mentor-company"
+  | "partner-initiative"
+  | "service-provider-company"
+  | "programme-initiative";
+
+export type EcosystemLinkageStatus =
+  | "proposed"
+  | "active"
+  | "monitoring"
+  | "completed";
+
+export interface EcosystemEntity {
+  id: string;
+  type: EcosystemEntityType;
+  name: string;
+  organizationName?: string;
+  focusAreas: string[];
+  geography: string[];
+  description: string;
+  createdAt: TimestampLike;
+}
+
+export interface EcosystemLinkage {
+  id: string;
+  type: EcosystemLinkageType;
+  sourceEntityId: string;
+  targetEntityId: string;
+  programmeId?: string;
+  companyId?: string;
+  status: EcosystemLinkageStatus;
+  fitScore: number;
+  rationale: string;
+  reusableSignals: string[];
+  createdAt: TimestampLike;
+  updatedAt: TimestampLike;
+}
+
 export interface VerrierUser {
   id: string;
   email: string;

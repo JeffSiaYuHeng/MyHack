@@ -3,7 +3,8 @@ import {
   collection, 
   addDoc, 
   serverTimestamp,
-  initializeFirestore
+  initializeFirestore,
+  getFirestore
 } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
@@ -21,9 +22,16 @@ const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 // Use initializeFirestore with experimentalForceLongPolling enabled.
 // This is more robust in Node.js environments (like Next.js API routes) 
 // and avoids GRPC stream errors (Code: undefined) common in serverless or restricted network contexts.
-const db = initializeFirestore(app, {
-  experimentalForceLongPolling: true,
-});
+// Cache the db instance in development to prevent memory leaks from HMR
+let db: ReturnType<typeof getFirestore>;
+
+if (getApps().length > 0) {
+  db = getFirestore(app);
+} else {
+  db = initializeFirestore(app, {
+    experimentalForceLongPolling: true,
+  });
+}
 
 const auth = getAuth(app);
 
