@@ -18,7 +18,6 @@ export default async function ApplicantsPage({
       cohortName={cohort.name}
       cohortWeeks={cohort.totalWeeks}
       cohortStatus={cohort.status}
-      activeNav="Programmes"
     >
       <ApplicantReviewPool />
     </ProductShell>

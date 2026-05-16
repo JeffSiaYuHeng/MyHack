@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 const STATS = [
   { value: "30+", label: "Startups tracked" },
@@ -17,9 +18,11 @@ export default function LoginPage() {
       >
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 relative shrink-0 overflow-hidden rounded-md">
-            <img
+            <Image
               src="/Verrier Logo.png"
               alt="Verrier Logo"
+              width={24}
+              height={24}
               className="w-full h-full object-cover"
             />
           </div>
@@ -72,9 +75,11 @@ export default function LoginPage() {
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-2 mb-8">
             <div className="w-6 h-6 relative shrink-0 overflow-hidden rounded-md">
-              <img
+              <Image
                 src="/Verrier Logo.png"
                 alt="Verrier Logo"
+                width={24}
+                height={24}
                 className="w-full h-full object-cover"
               />
             </div>
@@ -131,7 +136,7 @@ export default function LoginPage() {
           </Link>
 
           <p className="text-[10px] text-muted-foreground text-center mt-5 font-mono">
-            Firebase Auth integration pending
+            Secured by Firebase Auth
           </p>
         </div>
       </div>

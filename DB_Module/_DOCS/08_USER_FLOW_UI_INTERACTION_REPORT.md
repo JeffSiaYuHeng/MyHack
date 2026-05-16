@@ -1,7 +1,7 @@
 # User Flow, UI, and Interaction Report
 
 **Project:** Verrier  
-**Last Updated:** 2026-05-17  
+**Last Updated:** 2026-05-17 (Session 2 — UI/UX Polish)  
 **Purpose:** Review the current end-to-end application flow, identify UI and interaction gaps, and define practical improvements for loading states, motion, dialogs, feedback, and page polish.
 
 ---
@@ -10,15 +10,15 @@
 
 Verrier already has the core MVP flow in place: programme setup, public application intake, applicant review, mentor matching, relationship monitoring, meeting analysis, and cohort reporting. The application is functionally coherent, but the experience still feels uneven because interaction feedback is implemented feature by feature instead of as a system.
 
-The most important next UX step is to introduce a shared interaction layer:
-
-- consistent page loading and section loading states,
-- modal/dialog patterns for irreversible or high-importance actions,
-- toast feedback for every network, AI, save, copy, delete, and submit action,
-- subtle transition and reveal motion across panels, cards, results, filters, and AI outputs,
-- shared empty/error/success states that make the demo feel complete even when data is local or fallback-based.
-
 The first interaction polish pass is now underway. Shared primitives and several high-value flows have been added: card-style dashboard metrics, explicit AI triggers, richer mentor recommendation cards, post-approval matching guidance, mentor link copy, inline meeting analysis, and stronger toast/dialog feedback.
+
+**Session 2 additions:**
+- Dashboard: Watchlist panel (localStorage), Attention Feed filter chips + 5-card limit
+- Navigation: Sidebar Cohort Overview hardlink removed; Programmes page now has "✦ View Cohort" per card
+- All 4 Programmes now have matching Cohort entries in seed data
+- Matching Workbench: refined UI to match reference (ACTIVE SELECTION badge, avatar initials, Technical Fit Analysis bars, Verified Expert badge, cohort avg comparison)
+- Support Centre page created and wired to sidebar
+- `getDashboardSummary()` fixed to count all 4 programmes (not just `status=active`)
 
 ---
 
@@ -26,6 +26,14 @@ The first interaction polish pass is now underway. Shared primitives and several
 
 ```text
 Coordinator opens dashboard
+-> reviews Programmes stat card (now shows 4)
+-> reviews Attention Feed (filterable by Critical / At Risk / Healthy, max 5 cards)
+-> adds companies to Watchlist (persisted to localStorage)
+-> clicks stat card or attention card to drill down
+-> opens Programmes page
+-> sees all 4 programmes with "✦ View Cohort" button on each card
+-> clicks View Cohort -> enters Cohort Overview for that programme
+-> OR navigates Programmes -> selects programme -> creates or reviews cohort
 -> creates or reviews programmes
 -> opens public application link
 -> founder submits startup application
@@ -34,8 +42,10 @@ Coordinator opens dashboard
 -> coordinator approves applicant
 -> UI nudges coordinator toward Matching
 -> coordinator opens matching workbench
--> coordinator generates AI mentor matches
--> coordinator confirms a match
+-> selects startup from queue
+-> generates AI mentor matches (↺ Re-calibrate available after first run)
+-> selects mentor (avatar initials card, Verified Expert badge, Technical Fit bars)
+-> confirms a match
 -> relationship is created
 -> coordinator copies mentor submission link
 -> mentor submits meeting notes
@@ -45,8 +55,6 @@ Coordinator opens dashboard
 -> coordinator refreshes diagnosis
 -> coordinator generates cohort report
 ```
-
-The product story is strong. The UI should make every stage feel like part of one operating system, not a set of separate pages.
 
 ---
 
@@ -58,12 +66,15 @@ This section lists the practical routes a user can take through Verrier and the 
 
 | Step | Page | User Action | Event / Result |
 |---|---|---|---|
-| 1 | `/dashboard` | Opens coordinator dashboard | Dashboard summary, attention feed, and recent meetings render from aggregate seed data. |
-| 2 | `/dashboard` | Reviews top metric cards | Coordinator sees programme/application counts and relationship health counts inside card-based metric groups. |
-| 3 | `/dashboard` | Reviews attention feed | Coordinator identifies relationships needing review. |
-| 4 | `/relationships/[id]` | Opens a relationship detail page | Coordinator can inspect health, timeline, diagnosis, and meeting history. |
+| 1 | `/dashboard` | Opens coordinator dashboard | Dashboard summary, attention feed, watchlist, and recent meetings render from aggregate seed data. |
+| 2 | `/dashboard` | Reviews top metric cards | **Programmes card now shows 4** (was incorrectly showing 1). Clicking a health card deep-links to `/relationships`. |
+| 3 | `/dashboard` | Uses Attention Feed filter chips | Chips: All / Critical / At Risk / Healthy. Active chip: filled dark background. Max 5 cards shown; overflow shows "+N more → View all" pill. |
+| 4 | `/dashboard` | Adds company to Watchlist | Clicks `+` → dialog opens with search + company list. Toggle adds/removes. Saved to `localStorage["verrier_watchlist"]`. |
+| 5 | `/dashboard` | Clicks Watchlist company row | (Currently shows health score; direct link to relationship page is a known gap.) |
+| 6 | `/relationships/[id]` | Opens a relationship detail page | Coordinator can inspect health, timeline, diagnosis, and meeting history. |
 
-AI trigger: none by default. Dashboard should not call AI on load. AI is only triggered when the coordinator explicitly refreshes diagnosis or generates a report in later flows.
+AI trigger: none by default. Dashboard should not call AI on load.
+
 
 ### Flow 2. Coordinator Creates a Programme
 

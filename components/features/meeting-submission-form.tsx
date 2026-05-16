@@ -248,18 +248,6 @@ export function MeetingSubmissionForm() {
 
   if (formState === "confirmed" && confirmed) {
     const { analysis, context } = confirmed;
-    const signalColor =
-      analysis.signal === "Positive"
-        ? "var(--status-healthy)"
-        : analysis.signal === "Friction detected"
-        ? "var(--status-risk)"
-        : undefined;
-    const signalBg =
-      analysis.signal === "Positive"
-        ? "var(--status-healthy-bg)"
-        : analysis.signal === "Friction detected"
-        ? "var(--status-risk-bg)"
-        : "var(--muted)";
     const deltaColor =
       analysis.healthScoreDelta > 0
         ? "var(--status-healthy)"
@@ -354,19 +342,24 @@ export function MeetingSubmissionForm() {
       {/* Token */}
       <div className="space-y-1">
         <label className="text-xs font-medium text-foreground block">
-          Mentor token
+          Select Mentor
         </label>
         <p className="text-[10px] text-muted-foreground">
-          Found in your programme invitation email.
+          Choose the mentor logging this meeting.
         </p>
-        <input
-          type="text"
+        <select
           value={fields.token}
           onChange={(e) => handleChange("token", e.target.value)}
           onBlur={() => handleBlur("token")}
-          placeholder="token-mentor-XX"
-          className="w-full border border-border rounded px-3 py-2 text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-        />
+          className="w-full border border-border rounded px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+        >
+          <option value="" disabled>Select a mentor...</option>
+          {seedMentors.map((m) => (
+            <option key={m.id} value={m.meetingSubmissionToken || ""}>
+              {m.name}
+            </option>
+          ))}
+        </select>
         {touched.token && errors.token && (
           <p className="text-[10px]" style={{ color: "var(--status-critical)" }}>
             {errors.token}

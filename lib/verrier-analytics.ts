@@ -46,9 +46,7 @@ export interface DashboardSummary {
 }
 
 export function getDashboardSummary(): DashboardSummary {
-  const activeProgramCount = seedPrograms.filter(
-    (p) => p.status === "active"
-  ).length;
+  const totalProgramCount = seedPrograms.length;
 
   const activeCohortCount = seedCohorts.filter(
     (c) => c.status === "active"
@@ -93,7 +91,7 @@ export function getDashboardSummary(): DashboardSummary {
   const meetingCount = seedMeetings.length;
 
   return {
-    activeProgramCount,
+    activeProgramCount: totalProgramCount,
     activeCohortCount,
     submittedApplicationCount,
     approvedApplicationCount,

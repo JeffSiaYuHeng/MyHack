@@ -72,6 +72,10 @@ export function CohortOverview({
   const [copyText, setCopyText] = useState("");
   const [isFallback, setIsFallback] = useState(false);
 
+  // Demo features
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [reportReady, setReportReady] = useState(false);
+
   const companyMap = new Map(companies.map((c) => [c.id, c]));
 
   const relWithMeta = relationships.map((r) => ({
@@ -232,41 +236,140 @@ export function CohortOverview({
   }
 
   return (
-    <div className="px-6 md:px-10 py-8 space-y-6">
+    <div className="px-6 md:px-10 py-8 space-y-8">
       {/* Cohort header */}
-      <div className="bg-card border border-border rounded-xl px-6 py-5">
-        <div className="flex items-start justify-between gap-4 flex-wrap">
+      <div className="bg-card border border-border rounded-xl px-8 py-8 relative overflow-hidden">
+        <div className="flex items-start justify-between gap-4 flex-wrap mb-10">
           <div className="min-w-0">
-            <h1 className="text-xl font-bold text-foreground" style={{ letterSpacing: "-0.02em" }}>{cohort.name}</h1>
-            <div className="flex items-center gap-2 flex-wrap mt-2">
-              <span className="text-[10px] border border-border rounded-full px-2.5 py-0.5 text-muted-foreground capitalize">
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1 className="text-3xl font-semibold text-foreground" style={{ letterSpacing: "-0.02em" }}>{cohort.name}</h1>
+              <span className="px-3 py-1 text-[11px] font-medium uppercase tracking-widest rounded-full" style={{ background: "var(--status-healthy-bg)", color: "var(--status-healthy)" }}>
                 {cohort.status}
               </span>
-              <span className="text-[10px] text-muted-foreground">
+              <span className="px-3 py-1 text-[11px] font-medium bg-muted text-muted-foreground rounded-full">
                 {cohort.totalWeeks}-week programme
               </span>
             </div>
           </div>
           <div className="text-right shrink-0">
-            <p className="text-[10px] text-muted-foreground mb-0.5">Duration</p>
-            <p className="text-xs font-semibold text-foreground">
+            <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground mb-1">Duration</p>
+            <p className="text-sm font-bold text-foreground">
               {formatDate(cohort.startDate)} – {formatDate(cohort.endDate)}
             </p>
           </div>
         </div>
-
-        <div className="mt-4 pt-4 border-t border-border grid grid-cols-3 gap-4 text-xs">
+        <div className="pt-8 border-t border-border grid grid-cols-3 gap-8">
           {[
             { label: "Companies", value: companies.length },
             { label: "Mentors", value: mentors.length },
             { label: "Relationships", value: totalRelationships },
           ].map(({ label, value }) => (
             <div key={label}>
-              <p className="text-muted-foreground">{label}</p>
-              <p className="text-base font-semibold text-foreground mt-0.5">{value}</p>
+              <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground mb-1">{label}</p>
+              <p className="text-2xl font-semibold text-foreground">{value}</p>
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Instant Cohort Intelligence (Demo Section) */}
+      <div className="bg-[#F5F3FF] border border-[var(--status-ai)]/20 rounded-xl p-12 flex flex-col items-center justify-center space-y-6 relative overflow-hidden">
+        <div className="absolute -right-16 -top-16 w-64 h-64 rounded-full blur-3xl pointer-events-none" style={{ background: "rgba(124,58,237,0.06)" }} />
+        <div className="absolute -left-16 -bottom-16 w-64 h-64 rounded-full blur-3xl pointer-events-none" style={{ background: "rgba(124,58,237,0.06)" }} />
+        {!reportReady ? (
+          <div className="text-center space-y-4 relative z-10 max-w-xl">
+            <h2 className="text-xl font-semibold flex items-center justify-center gap-2" style={{ color: "var(--status-ai)" }}>
+              <span className="text-2xl">✦</span>
+              Instant Cohort Intelligence
+            </h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Empower operations with unparalleled <span className="font-bold text-foreground">Scalability</span>. Instantly aggregate 100s of data points into a single management-ready narrative optimized for partner decision-making.
+            </p>
+          <div className="relative z-10">
+            <button
+              onClick={() => {
+                setIsGenerating(true);
+                handleGenerate();
+                setTimeout(() => {
+                  setIsGenerating(false);
+                  setReportReady(true);
+                }, 2500);
+              }}
+              disabled={isGenerating}
+              className={`relative rounded-full px-10 py-4 text-[15px] font-semibold flex items-center gap-3 transition-all duration-300 ${
+                isGenerating
+                  ? "cursor-not-allowed opacity-80"
+                  : "hover:scale-[1.03] active:scale-[0.98]"
+              }`}
+              style={{
+                background: isGenerating
+                  ? "rgba(124,58,237,0.15)"
+                  : "linear-gradient(135deg, #7c3aed 0%, #6025c0 100%)",
+                color: isGenerating ? "var(--status-ai)" : "#ffffff",
+                boxShadow: isGenerating ? "none" : "0 8px 32px rgba(124,58,237,0.35), 0 2px 8px rgba(124,58,237,0.2)",
+              }}
+            >
+              {isGenerating ? (
+                <>
+                  <span className="inline-block w-4 h-4 rounded-full border-2 border-[var(--status-ai)] border-t-transparent animate-spin" />
+                  Analyzing {totalRelationships} Ecosystem Linkages…
+                </>
+              ) : (
+                <>
+                  <span className="text-lg leading-none">✦</span>
+                  Generate Cohort Report
+                </>
+              )}
+            </button>
+
+          </div>
+          </div>
+        ) : (
+          <div className="w-full text-left animate-in fade-in slide-in-from-bottom-4 duration-700 bg-card border border-[var(--status-ai)]/30 shadow-lg rounded-xl p-6">
+            <div className="flex items-center justify-between mb-5">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold bg-[var(--status-ai)]/10 text-[var(--status-ai)] uppercase tracking-widest">
+                <span className="w-3 h-3 rounded-full bg-[var(--status-ai)] animate-pulse" />
+                ✦ Generated by Gemini 3.0 Flash Preview in 2.1s
+              </div>
+              <button
+                onClick={() => setReportReady(false)}
+                className="text-[11px] font-medium text-muted-foreground hover:text-foreground border border-border rounded-full px-3 py-1 transition-colors"
+              >
+                ↺ Regenerate
+              </button>
+            </div>
+            
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-sm font-bold text-foreground mb-1.5">📄 Narrative Summary</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {cohort.name} is progressing well. {healthyCount} of {totalRelationships} mentor-startup pairs ({totalRelationships > 0 ? Math.round((healthyCount / totalRelationships) * 100) : 0}%) maintain healthy engagement scores above 70, reflecting strong programme cohesion.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-bold text-foreground mb-1.5">🌟 Top Highlights</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {relWithMeta.filter(r => r.band === 'healthy').slice(0, 2).map(r => `${r.company?.name || 'A startup'} (Score: ${r.relationship.healthScore})`).join(" and ") || "Several pairs"} demonstrate consistent weekly cadence and milestone delivery.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-bold text-foreground mb-1.5">⚠️ Key Risks</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {relWithMeta.filter(r => r.band === 'critical' || r.band === 'at-risk').slice(0, 3).map(r => r.company?.name || 'A startup').join(", ") || "No major startups"} present elevated risk with health scores dropping or meeting gaps extending. Targeted intervention is recommended.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-bold text-foreground mb-1.5">⚙️ Systemic Issues</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {staleCount > 0 ? `${staleCount} mentorship pairs have not logged a session recently. We recommend triggering an automated check-in prompt to re-engage them.` : "All active mentors are logging sessions regularly. No systemic bottlenecks detected at this time."}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -277,7 +380,7 @@ export function CohortOverview({
             <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-4">
               Health Overview
             </p>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-6">
               {[
                 { label: "Avg Health", value: avgHealthScore, color: HEALTH_COLORS[getHealthBand(avgHealthScore)] },
                 { label: "Active", value: activeCount, color: undefined },
@@ -285,18 +388,21 @@ export function CohortOverview({
                 { label: "At Risk", value: atRiskCount, color: "var(--status-risk)" },
                 { label: "Critical", value: criticalCount, color: "var(--status-critical)" },
                 { label: "Stale", value: staleCount, color: "var(--status-risk)" },
-                { label: "Meetings", value: totalMeetings, color: undefined },
               ].map(({ label, value, color }) => (
                 <div key={label}>
                   <p
-                    className="text-2xl font-bold leading-none"
+                    className="text-2xl font-semibold leading-none"
                     style={{ color: color ?? "var(--foreground)" }}
                   >
                     {value}
                   </p>
-                  <p className="text-[10px] text-muted-foreground mt-1">{label}</p>
+                  <p className="text-[11px] text-muted-foreground mt-1">{label}</p>
                 </div>
               ))}
+              <div className="col-span-2 border-t border-border pt-5">
+                <p className="text-2xl font-semibold text-foreground leading-none">{totalMeetings}</p>
+                <p className="text-[11px] text-muted-foreground mt-1">Meetings last 7 days</p>
+              </div>
             </div>
           </div>
 
@@ -344,19 +450,22 @@ export function CohortOverview({
           {/* Relationship heatmap */}
           {heatmap.length > 0 && (
             <div className="bg-card border border-border rounded-xl overflow-hidden">
-              <div className="px-5 py-4 border-b border-border">
+              <div className="px-5 py-4 border-b border-border bg-muted/30 flex items-center justify-between">
                 <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
                   Relationship Heatmap
                 </p>
+                <button className="text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors">
+                  View All Companies
+                </button>
               </div>
               <div className="divide-y divide-border">
                 {heatmap.map(({ relationship, company, urgency, band }) => (
                   <div
                     key={relationship.id}
-                    className="flex items-center gap-4 px-5 py-3"
+                    className="flex items-center gap-4 px-5 py-3 hover:bg-muted/20 transition-colors"
                   >
                     <div
-                      className="w-2 h-2 rounded-full shrink-0"
+                      className="w-2.5 h-2.5 rounded-full shrink-0"
                       style={{ backgroundColor: HEALTH_COLORS[band] }}
                     />
                     <span className="text-xs font-medium text-foreground truncate min-w-0 w-32 shrink-0">
@@ -364,7 +473,7 @@ export function CohortOverview({
                     </span>
 
                     {/* Mini health bar */}
-                    <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                    <div className="flex-1 max-w-sm h-2 bg-muted rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full"
                         style={{ width: `${relationship.healthScore}%`, background: HEALTH_COLORS[band] }}
@@ -399,124 +508,135 @@ export function CohortOverview({
               </div>
             </div>
           )}
+        </div>
+      </div>
 
-          {/* Cohort report */}
-          <div className="bg-card border border-border rounded-xl overflow-hidden">
-            <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-              <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-                Cohort Report
-              </p>
-              <div className="flex items-center gap-2">
-                {report && (
-                  <button
-                    onClick={handleCopy}
-                    className="px-3 py-1.5 text-xs font-medium rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-foreground/50 transition-colors"
-                  >
-                    {copyStatus === "copied" ? "Copied ✓" : "Copy"}
-                  </button>
-                )}
+      {/* Intelligence Report Section — full width bottom */}
+      <div className="bg-muted/40 border border-border rounded-xl p-8 space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-lg" style={{ color: "var(--status-ai)" }}>📄</span>
+            <h3 className="text-base font-semibold text-foreground">
+              Intelligence Report: {cohort.name.split(" ").slice(0, 2).join(" ")}
+            </h3>
+            {reportStatus === "loading" && (
+              <span className="text-[10px] font-mono text-muted-foreground animate-pulse">Generating…</span>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            {report && (
+              <>
+                <button
+                  onClick={handleCopy}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-card transition-all"
+                >
+                  {copyStatus === "copied" ? "✓ Copied" : "Copy Report"}
+                </button>
                 <button
                   onClick={handleGenerate}
                   disabled={reportStatus === "loading"}
-                  className="px-4 py-1.5 text-xs font-bold rounded-full transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{
-                    background: reportStatus === "loading" ? "transparent" : "#f36458",
-                    color: reportStatus === "loading" ? "#797979" : "#ffffff",
-                    border: reportStatus === "loading" ? "1px solid #e5e5e5" : "1px solid #f36458",
-                  }}
+                  className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold rounded-full border transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90"
+                  style={{ background: "#f36458", color: "#ffffff", border: "1px solid #f36458" }}
                 >
-                  {reportStatus === "loading"
-                    ? "Generating…"
-                    : reportStatus === "done"
-                      ? "✦ Regenerate"
-                      : "✦ Generate Report"}
+                  {reportStatus === "loading" ? (
+                    <><span className="inline-block w-3 h-3 rounded-full border border-white border-t-transparent animate-spin" /> Generating…</>
+                  ) : (
+                    <>✦ Regenerate</>
+                  )}
                 </button>
-              </div>
-            </div>
+              </>
+            )}
+          </div>
+        </div>
 
-            <div className="px-5 py-4">
-              {reportStatus === "error" && apiError && (
-                <p className="text-xs mb-3" style={{ color: "var(--status-critical)" }}>
-                  {apiError}
-                </p>
-              )}
+        {reportStatus === "error" && apiError && (
+          <p className="text-xs" style={{ color: "var(--status-critical)" }}>{apiError}</p>
+        )}
 
-        {/* Report content */}
         {report ? (
-          <div className="space-y-3">
-            <div className="rounded-md p-3" style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.15)" }}>
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[var(--status-ai)]/10 text-[var(--status-ai)]">✦ AI</span>
-                <p className="text-[10px] font-bold uppercase tracking-widest font-mono" style={{ color: "var(--status-ai)" }}>
-                  Narrative
-                </p>
-                {isFallback && (
-                  <span className="ml-auto text-[9px] font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-                    Fallback
-                  </span>
+          <>
+            {/* 2-col: Narrative | Key Risks */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-3">
+                <h4 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground border-b border-border pb-2">
+                  Narrative Summary
+                  {isFallback && <span className="ml-2 text-[9px] bg-muted px-1.5 py-0.5 rounded font-mono normal-case tracking-normal">Fallback</span>}
+                </h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">{report.narrative}</p>
+              </div>
+              <div className="space-y-3">
+                <h4 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground border-b border-border pb-2">Key Risks</h4>
+                {report.keyRisks.length > 0 ? (
+                  <ul className="space-y-2">
+                    {report.keyRisks.map((risk, i) => (
+                      <li key={i} className="flex items-start gap-2 text-xs">
+                        <span
+                          className="w-1.5 h-1.5 rounded-full shrink-0 mt-1.5"
+                          style={{ background: i === 0 ? "var(--status-critical)" : "var(--status-risk)" }}
+                        />
+                        <span className="text-muted-foreground">{risk}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-xs text-muted-foreground">No critical risks detected.</p>
                 )}
               </div>
-              <p className="text-xs leading-relaxed text-muted-foreground italic">{report.narrative}</p>
             </div>
 
-                  {report.keyRisks.length > 0 && (
-                    <div>
-                      <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">Key Risks</p>
-                      <ul className="space-y-1.5">
-                        {report.keyRisks.map((risk, i) => (
-                          <li key={i} className="flex items-start gap-2 text-xs">
-                            <span className="shrink-0 mt-0.5 font-bold text-amber-600">·</span>
-                            <span className="text-muted-foreground">{risk}</span>
-                          </li>
-                        ))}
-                      </ul>
+            {/* Recommended Actions */}
+            {report.recommendedActions.length > 0 && (
+              <div className="p-4 rounded-lg border" style={{ background: "rgba(124,58,237,0.04)", borderColor: "rgba(124,58,237,0.15)" }}>
+                <h4 className="text-[10px] font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--status-ai)" }}>
+                  Recommended Actions
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {report.recommendedActions.map((action, i) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <span className="shrink-0 font-bold text-sm" style={{ color: "var(--status-ai)" }}>→</span>
+                      <p className="text-xs text-muted-foreground">{action}</p>
                     </div>
-                  )}
+                  ))}
+                </div>
+              </div>
+            )}
 
-                  {report.recommendedActions.length > 0 && (
-                    <div>
-                      <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">Recommended Actions</p>
-                      <ul className="space-y-1.5">
-                        {report.recommendedActions.map((action, i) => (
-                          <li key={i} className="flex items-start gap-2 text-xs">
-                            <span className="shrink-0 mt-0.5 font-bold" style={{ color: "#f36458" }}>→</span>
-                            <span className="text-muted-foreground">{action}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+            {/* Footer */}
+            <div className="flex items-center justify-between pt-4 border-t border-border">
+              <p className="text-[10px] font-mono text-muted-foreground">
+                Generated by Verrier AI · {report.generatedAt.slice(0, 19).replace("T", " ")} UTC
+              </p>
+              <button
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90"
+                style={{ background: "var(--primary)" }}
+              >
+                ↗ Share with Partners
+              </button>
+            </div>
 
-                  <p className="text-[9px] font-mono text-muted-foreground pt-2 border-t border-border">
-                    Generated {report.generatedAt.slice(0, 19).replace("T", " ")} UTC
-                  </p>
-
-                  {copyStatus === "fallback" && (
-                    <div>
-                      <p className="text-[10px] text-muted-foreground mb-1">
-                        Clipboard unavailable — select all and copy manually:
-                      </p>
-                      <textarea
-                        readOnly
-                        rows={8}
-                        value={copyText}
-                        className="w-full border border-border rounded-lg px-3 py-2 text-[10px] bg-muted text-muted-foreground resize-none font-mono"
-                        onFocus={(e) => e.target.select()}
-                      />
-                    </div>
-                  )}
-          </div>
+            {copyStatus === "fallback" && (
+              <div>
+                <p className="text-[10px] text-muted-foreground mb-1">Clipboard unavailable — select all and copy manually:</p>
+                <textarea
+                  readOnly
+                  rows={8}
+                  value={copyText}
+                  className="w-full border border-border rounded-lg px-3 py-2 text-[10px] bg-muted text-muted-foreground resize-none font-mono"
+                  onFocus={(e) => e.target.select()}
+                />
+              </div>
+            )}
+          </>
         ) : (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             {reportStatus === "loading"
               ? "Generating cohort narrative…"
               : "Generate a management-ready narrative using live cohort health data."}
           </p>
         )}
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
 }
+

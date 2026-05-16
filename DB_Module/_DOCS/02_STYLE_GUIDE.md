@@ -91,7 +91,8 @@ The product should use:
 - green/amber/red for relationship state,
 - consistent card radii,
 - clear grouping,
-- compact tables/lists/cards for repeated operational items.
+- compact tables/lists/cards for repeated operational items,
+- unified search, filter chips, and pagination controls for all list views.
 
 ---
 
@@ -228,6 +229,13 @@ Use cards for:
 - AI result panels.
 
 Do not use cards for every page section if a simple band or divider is enough.
+
+### List Controls (Search, Filters, Pagination)
+
+All management lists (Programmes, Startups, Mentors) must share a unified control layout:
+- **Search Bar**: Positioned at the top left, full width on mobile, max 300px on desktop. Uses a subtle magnifying glass icon.
+- **Filter Chips**: Scrollable row of pill-shaped buttons below or adjacent to the search bar. Active state uses `surface-container-highest` or `primary` styling.
+- **Pagination**: Centered at the bottom of the list. Features "Previous" and "Next" buttons with numeric page indicators. Changing filters or search terms MUST automatically reset the view to Page 1.
 
 ### Badges and Status Chips
 
@@ -379,7 +387,7 @@ Relationship detail should expose:
 
 Mentor form should remain narrow and focused:
 
-- token,
+- mentor select dropdown (replaced manual token for ease of use),
 - date,
 - duration,
 - notes,
@@ -487,8 +495,13 @@ Use an operational report layout:
 - risk distribution,
 - milestone progress,
 - relationship heatmap,
-- AI narrative report,
+- Instant Cohort Intelligence report generator,
 - copy/export affordance.
+
+**Instant Cohort Intelligence Demo UI**:
+- For the grand finale feature, use a more prominent "Magic Wand" trigger (`✦ Generate Cohort Report`) with premium styling (e.g. subtle gradient or enhanced hover).
+- Simulate an intelligent loading sequence that extracts, aggregates, and drafts.
+- Ensure the final generated report maintains the Morandi Tech styling while standing out as a high-value asset.
 
 ---
 

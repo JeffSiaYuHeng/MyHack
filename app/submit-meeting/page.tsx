@@ -1,4 +1,5 @@
 import { MeetingSubmissionForm } from "@/components/features/meeting-submission-form";
+import Image from "next/image";
 
 export default function SubmitMeetingPage() {
   return (
@@ -7,9 +8,11 @@ export default function SubmitMeetingPage() {
         {/* Branding */}
         <div className="flex items-center gap-2 mb-10">
           <div className="w-6 h-6 relative shrink-0 overflow-hidden rounded-md">
-            <img
+            <Image
               src="/Verrier Logo.png"
               alt="Verrier Logo"
+              width={24}
+              height={24}
               className="w-full h-full object-cover"
             />
           </div>

@@ -24,7 +24,6 @@ export default async function RelationshipDetailPage({
   if (!relationship) {
     return (
       <ProductShell
-        activeNav="Relationships"
         programName={program.name}
         cohortName={cohort.name}
         cohortWeeks={cohort.totalWeeks}
@@ -53,7 +52,6 @@ export default async function RelationshipDetailPage({
 
   return (
     <ProductShell
-      activeNav="Relationships"
       programName={program.name}
       cohortName={cohort.name}
       cohortWeeks={cohort.totalWeeks}

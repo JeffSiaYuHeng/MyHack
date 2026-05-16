@@ -22,7 +22,6 @@ export default async function CohortOverviewPage({
   if (!cohort) {
     return (
       <ProductShell
-        activeNav="Programmes"
         programName={program.name}
         cohortName="—"
         cohortWeeks={0}
@@ -56,7 +55,6 @@ export default async function CohortOverviewPage({
 
   return (
     <ProductShell
-      activeNav="Programmes"
       programName={program.name}
       cohortName={cohort.name}
       cohortWeeks={cohort.totalWeeks}

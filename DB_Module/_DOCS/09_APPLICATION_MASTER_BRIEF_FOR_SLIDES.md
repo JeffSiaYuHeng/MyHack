@@ -466,11 +466,12 @@ All AI calls are explicit. Verrier does not run AI silently in the background.
 
 | API Route | Model | Purpose |
 |---|---|---|
-| `POST /api/ai/program-fit` | `gemini-3-flash-preview` | Score startup fit for a programme |
-| `POST /api/ai/match` | `gemini-3-flash-preview` | Rank mentor matches for a startup |
-| `POST /api/ai/analyze-meeting` | `gemini-2.0-flash` | Summarize meeting notes and update relationship health |
-| `POST /api/ai/diagnose` | `gemini-3-flash-preview` | Diagnose relationship state and recommend action |
-| `POST /api/ai/cohort-summary` | `gemini-3-flash-preview` | Generate cohort management report |
+| `POST /api/ai/program-fit` | `gemini-3.0-flash-preview` | Score startup fit for a programme |
+| `POST /api/ai/match` | `gemini-3.0-flash-preview` | Rank mentor matches for a startup |
+| `POST /api/ai/analyze-meeting` | `gemini-3.0-flash-preview` | Summarize meeting notes and update relationship health |
+| `POST /api/ai/diagnose` | `gemini-3.0-flash-preview` | Diagnose relationship state and recommend action |
+| `POST /api/ai/cohort-summary` | `gemini-3.0-flash-preview` | Generate cohort management report |
+| `POST /api/ai/parse-program` | `gemini-3.0-flash-preview` | Extract data from programme briefs |
 | `POST /api/relationships/confirm-match` | Non-AI route | Create a relationship record after match confirmation |
 
 Every AI route has deterministic fallback behavior when Gemini is unavailable or malformed output is returned.

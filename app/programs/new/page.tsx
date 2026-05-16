@@ -12,7 +12,6 @@ export default function ProgramsNewPage() {
       cohortName={cohort.name}
       cohortWeeks={cohort.totalWeeks}
       cohortStatus={cohort.status}
-      activeNav="Programmes"
     >
       <ProgramSetupWizard />
     </ProductShell>

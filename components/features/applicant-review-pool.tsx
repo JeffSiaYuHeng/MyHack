@@ -1,62 +1,55 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { StateBlock } from "@/components/ui/state-block";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Application, ApplicationStatus, Company } from "@/lib/types";
 import { seedApplications, seedCompanies } from "@/lib/verrier-seed";
 
 function ApplicantPoolSkeleton() {
   return (
-    <div className="flex gap-5 h-[600px]">
-      <div className="w-64 shrink-0 bg-card border border-border rounded-xl overflow-hidden divide-y divide-border">
-        {[0, 1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className="p-4 space-y-3">
+    <div className="flex gap-6" style={{ height: 640 }}>
+      {/* Left skeleton */}
+      <div className="w-[380px] shrink-0 space-y-3">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="bg-card border border-border rounded-xl p-5 space-y-3">
             <div className="flex justify-between">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-4 w-12 rounded-full" />
+              <Skeleton className="h-5 w-24 rounded-full" />
+              <Skeleton className="h-5 w-12" />
             </div>
-            <Skeleton className="h-3 w-32" />
-            <div className="flex justify-between items-center pt-1">
-              <Skeleton className="h-1.5 w-16 rounded-full" />
-              <Skeleton className="h-3 w-10" />
-            </div>
+            <Skeleton className="h-7 w-40" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-3 w-28" />
           </div>
         ))}
       </div>
-      <div className="flex-1 bg-card border border-border rounded-xl overflow-hidden flex flex-col">
-        <div className="p-6 border-b border-border flex justify-between">
-          <div className="space-y-2">
-            <Skeleton className="h-6 w-48" />
-            <Skeleton className="h-4 w-64" />
+      {/* Right skeleton */}
+      <div className="flex-1 bg-card border border-border rounded-2xl overflow-hidden flex flex-col">
+        <div className="p-6 border-b border-border flex gap-4 items-center">
+          <Skeleton className="h-16 w-16 rounded-2xl shrink-0" />
+          <div className="space-y-2 flex-1">
+            <Skeleton className="h-8 w-56" />
+            <Skeleton className="h-4 w-72" />
           </div>
-          <Skeleton className="h-6 w-20 rounded-full" />
         </div>
-        <div className="p-6 grid grid-cols-2 gap-8">
-          <div className="space-y-4">
-            <Skeleton className="h-4 w-32" />
-            <div className="space-y-2">
-              <Skeleton className="h-3 w-full" />
-              <Skeleton className="h-3 w-full" />
-              <Skeleton className="h-3 w-3/4" />
+        <div className="p-6 grid grid-cols-2 gap-6 flex-1">
+          <div className="space-y-4 col-span-1">
+            <Skeleton className="h-3 w-32" />
+            <div className="space-y-3">
+              {[0,1,2,3].map(i => (
+                <div key={i} className="flex gap-2 items-center">
+                  <Skeleton className="h-2 flex-1 rounded-full" />
+                  <Skeleton className="h-3 w-8" />
+                </div>
+              ))}
             </div>
           </div>
-          <div className="space-y-4">
-            <Skeleton className="h-4 w-32" />
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Skeleton className="h-2 w-full" />
-                <Skeleton className="h-3 w-6" />
-              </div>
-              <div className="flex items-center gap-2">
-                <Skeleton className="h-2 w-full" />
-                <Skeleton className="h-3 w-6" />
-              </div>
-            </div>
+          <div className="space-y-4 col-span-1">
+            <Skeleton className="h-3 w-32" />
+            <Skeleton className="h-24 w-full rounded-xl" />
           </div>
         </div>
       </div>
@@ -95,7 +88,7 @@ function getStatusStyle(status: ApplicationStatus): { color: string; bg: string 
     case "declined":
       return { color: "var(--status-critical)", bg: "var(--status-critical-bg)" };
     default:
-      return { color: "var(--status-ai)", bg: "var(--muted)" };
+      return { color: "var(--status-ai)", bg: "rgba(124,58,237,0.08)" };
   }
 }
 
@@ -120,8 +113,7 @@ export function ApplicantReviewPool() {
   const [applications, setApplications] = useState<Application[]>(seedApplications);
   const [activeFilter, setActiveFilter] = useState<Filter>("all");
   const [selectedId, setSelectedId] = useState<string | null>(seedApplications[0]?.id ?? null);
-  const [isLoading] = useState(false);
-  const [error] = useState<string | null>(null);
+  const [isScoring, setIsScoring] = useState(false);
   const [lastApprovedId, setLastApprovedId] = useState<string | null>(null);
   const [pendingDecision, setPendingDecision] = useState<{
     applicationId: string;
@@ -143,21 +135,9 @@ export function ApplicantReviewPool() {
   const selected = applications.find((app) => app.id === selectedId) ?? null;
   const selectedCompany = selected ? companyMap.get(selected.companyId) : null;
 
-  const approvedApps = applications.filter((app) => app.status === "approved");
-  const approvedCompanies: Company[] = [];
-  const seenIds = new Set<string>();
-  for (const app of approvedApps) {
-    if (!seenIds.has(app.companyId)) {
-      const c = companyMap.get(app.companyId);
-      if (c) { approvedCompanies.push(c); seenIds.add(app.companyId); }
-    }
-  }
-
   function applyDecision(applicationId: string, status: ApplicationStatus) {
     setApplications((prev) => applyLocalDecision(prev, applicationId, status));
-    if (status === "approved") {
-      setLastApprovedId(applicationId);
-    }
+    if (status === "approved") setLastApprovedId(applicationId);
     toast.success(`Applicant marked as ${status}.`);
   }
 
@@ -166,381 +146,449 @@ export function ApplicantReviewPool() {
       setPendingDecision({ applicationId, status });
       return;
     }
-
     applyDecision(applicationId, status);
   }
 
-  if (isLoading) {
-    return <div className="px-6 md:px-10 py-8 text-sm text-muted-foreground">Loading applicant pool…</div>;
-  }
-
-  if (error) {
-    return (
-      <div className="px-6 md:px-10 py-8 text-sm" style={{ color: "var(--status-critical)" }}>
-        Error: {error}
-      </div>
-    );
-  }
-
   return (
-    <div className="px-6 md:px-10 py-8 space-y-6">
-      {/* Page header */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-foreground" style={{ letterSpacing: "-0.02em" }}>Applicant Review Pool</h1>
-          <p className="text-xs text-muted-foreground mt-1">{applications.length} total applications</p>
-        </div>
-        <Link
-          href="/programs/new"
-          className="shrink-0 px-3 py-1.5 text-xs font-medium rounded border border-border text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
-        >
-          + New Programme
-        </Link>
-      </div>
-
-      {/* Approved companies strip */}
-      {approvedCompanies.length > 0 && (
-        <div className="bg-card border border-border rounded-xl px-5 py-4">
-          <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2.5">
-            Approved for Matching ({approvedCompanies.length})
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {approvedCompanies.map((company) => (
-              <span
-                key={company.id}
-                className="inline-flex items-center text-[10px] font-medium rounded-full px-2.5 py-1"
-                style={{ color: "var(--status-healthy)", background: "var(--status-healthy-bg)" }}
-              >
-                ✓ {company.name}
-              </span>
-            ))}
+    <div className="px-8 py-8 space-y-6 max-w-full">
+      {/* Page header + filter tabs */}
+      <div className="space-y-0">
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">Applicant Review Pool</h1>
+            <p className="text-xs text-muted-foreground mt-1">{applications.length} total applications</p>
           </div>
         </div>
-      )}
 
-      {/* Filter tabs */}
-      <div className="flex gap-0 border-b border-border">
-        {FILTERS.map(({ label, value }) => {
-          const count =
-            value === "all"
-              ? applications.length
-              : applications.filter((a) => a.status === value).length;
-          const isActive = activeFilter === value;
-          return (
-            <button
-              key={value}
-              onClick={() => setActiveFilter(value)}
-              className={`px-4 py-2.5 text-xs font-medium border-b-2 transition-colors -mb-px ${
-                isActive
-                  ? "border-[#f36458] text-foreground"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {label}
-              <span className={`ml-1.5 ${isActive ? "opacity-60" : "opacity-40"}`}>({count})</span>
-            </button>
-          );
-        })}
+        {/* Filter tabs */}
+        <div className="flex items-end gap-0 border-b border-border overflow-x-auto">
+          {FILTERS.map(({ label, value }) => {
+            const count =
+              value === "all"
+                ? applications.length
+                : applications.filter((a) => a.status === value).length;
+            const isActive = activeFilter === value;
+            return (
+              <button
+                key={value}
+                onClick={() => setActiveFilter(value)}
+                className={`pb-3 px-4 text-sm font-semibold border-b-2 transition-colors -mb-px whitespace-nowrap ${
+                  isActive
+                    ? "text-foreground border-primary"
+                    : "text-muted-foreground border-transparent hover:text-foreground"
+                }`}
+              >
+                {label}{" "}
+                <span className={isActive ? "opacity-60" : "opacity-40"}>({count})</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Split panel */}
       {!mounted ? (
         <ApplicantPoolSkeleton />
       ) : (
-        <div className="flex gap-5">
-          {/* List */}
-          <div className="w-64 shrink-0 bg-card border border-border rounded-xl overflow-hidden">
+        <div className="flex gap-6 min-h-0">
+          {/* List panel */}
+          <div className="w-[380px] shrink-0 flex flex-col gap-3 overflow-y-auto max-h-[calc(100vh-280px)] pr-1">
             {filtered.length === 0 ? (
-              <StateBlock
-                className="m-4"
-                title="No applicants match this filter"
-                description="Clear or change the current review filter to see more applications."
-                action={
-                  <button
-                    onClick={() => setActiveFilter("all")}
-                    className="px-3 py-1.5 text-xs font-medium rounded border border-border text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    Clear filter
-                  </button>
-                }
-              />
+              <div className="bg-card border border-border rounded-xl p-8 text-center space-y-3">
+                <p className="text-sm font-semibold text-foreground">No applicants match this filter</p>
+                <p className="text-xs text-muted-foreground">Change or clear the filter to see more applications.</p>
+                <button
+                  onClick={() => setActiveFilter("all")}
+                  className="px-4 py-2 text-xs font-medium rounded-lg border border-border text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Clear filter
+                </button>
+              </div>
             ) : (
-              <ul className="divide-y divide-border">
-                {filtered.map((app) => {
-                  const company = companyMap.get(app.companyId);
-                  const isSelected = app.id === selectedId;
-                  const statusStyle = getStatusStyle(app.status);
-                  return (
-                    <li key={app.id}>
-                      <button
-                        onClick={() => setSelectedId(app.id)}
-                        className={`w-full text-left px-4 py-3.5 transition-colors ${
-                          isSelected ? "bg-muted" : "hover:bg-muted/50"
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <p className="text-xs font-semibold text-foreground truncate">
-                            {company?.name ?? app.companyId}
+              filtered.map((app) => {
+                const company = companyMap.get(app.companyId);
+                const isSelected = app.id === selectedId;
+                const style = getStatusStyle(app.status);
+                return (
+                  <button
+                    key={app.id}
+                    onClick={() => {
+                      if (selectedId !== app.id) {
+                        setIsScoring(true);
+                        setSelectedId(app.id);
+                        setTimeout(() => setIsScoring(false), 1500);
+                      }
+                    }}
+                    className={`w-full text-left rounded-xl transition-all duration-150 ${
+                      isSelected
+                        ? "bg-card border-y border-r border-border border-l-4 shadow-sm rounded-l-none"
+                        : "bg-card border border-border hover:bg-muted/30"
+                    }`}
+                    style={isSelected ? { borderLeftColor: "var(--primary)" } : undefined}
+                  >
+                    <div className="p-5">
+                      <div className="flex justify-between items-start mb-3">
+                        <span
+                          className="px-3 py-1 rounded-full text-[11px] font-medium capitalize"
+                          style={{ color: style.color, background: style.bg }}
+                        >
+                          {app.status}
+                        </span>
+                        <div className="text-right">
+                          <p
+                            className="text-base font-semibold leading-none"
+                            style={{ color: isSelected ? "var(--primary)" : undefined }}
+                          >
+                            {app.fitScore}
                           </p>
-                          <span
-                            className="text-[10px] font-medium rounded-full px-2 py-0.5 shrink-0"
-                            style={{ color: statusStyle.color, background: statusStyle.bg }}
-                          >
-                            {app.status}
-                          </span>
+                          <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground mt-0.5">
+                            Fit Score
+                          </p>
                         </div>
-                        <p className="text-[10px] text-muted-foreground mt-0.5 truncate">
-                          {app.founderContactEmail}
-                        </p>
-                        <div className="flex items-center justify-between mt-2">
-                          <div className="flex items-center gap-1.5">
-                            <div className="w-14 h-1 bg-muted rounded-full overflow-hidden">
-                              <div
-                                className="h-full rounded-full"
-                                style={{ width: `${app.fitScore}%`, backgroundColor: "var(--primary)" }}
-                              />
-                            </div>
-                            <span className="text-[10px] text-muted-foreground">
-                              {app.fitScore}
-                            </span>
-                          </div>
-                          <span
-                            className="text-[10px] font-medium capitalize"
-                            style={{ color: getRecommendationColor(app.aiRecommendation) }}
-                          >
-                            {app.aiRecommendation}
-                          </span>
-                        </div>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
+                      </div>
+                      <h3 className="text-xl font-bold text-foreground mb-1 text-left leading-tight">
+                        {company?.name ?? app.companyId}
+                      </h3>
+                      <p className="text-sm text-muted-foreground line-clamp-2 text-left leading-relaxed mb-4">
+                        {app.founderSummary}
+                      </p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground">
+                          {company?.stage ?? "—"}
+                          {company?.industry?.[0] ? ` · ${company.industry[0]}` : ""}
+                        </span>
+                        <span
+                          className="text-[11px] font-semibold capitalize"
+                          style={{ color: getRecommendationColor(app.aiRecommendation) }}
+                        >
+                          {app.aiRecommendation}
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })
             )}
           </div>
 
           {/* Detail panel */}
           {selected ? (
-            <div className="flex-1 min-w-0 bg-card border border-border rounded-xl overflow-hidden">
-              {/* Panel header */}
-              <div className="border-b border-border px-6 py-4 flex items-start justify-between gap-4">
-                <div>
-                  <h2 className="text-base font-semibold text-foreground">
-                    {selectedCompany?.name ?? selected.companyId}
-                  </h2>
-                  {selectedCompany && (
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {selectedCompany.industry.join(", ")} · {selectedCompany.stage} · {selectedCompany.city}, {selectedCompany.country}
-                    </p>
-                  )}
+            <div className="flex-1 min-w-0 bg-card border border-border rounded-2xl flex flex-col overflow-hidden shadow-sm relative">
+              
+              {/* Simulated AI Loading Overlay */}
+              {isScoring && (
+                <div className="absolute inset-0 z-10 bg-card/80 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-300">
+                  <div className="bg-background border border-[var(--status-ai)]/30 shadow-xl rounded-2xl p-8 flex flex-col items-center w-80 max-w-full space-y-4">
+                    <div className="w-10 h-10 rounded-full bg-[var(--status-ai)]/10 flex items-center justify-center animate-pulse">
+                      <span className="text-xl">✦</span>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm font-bold text-foreground mb-1">AI analyzing applicant...</p>
+                      <p className="text-xs text-muted-foreground">Evaluating fit across 5 dimensions.</p>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-1.5 mt-2 overflow-hidden">
+                      <div className="h-full w-full ai-loading-scan" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Detail header */}
+              <div className="px-8 py-6 border-b border-border flex items-center justify-between gap-6">
+                <div className="flex items-center gap-5">
+                  <div
+                    className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl shrink-0"
+                    style={{ background: "rgba(243,100,88,0.1)", color: "var(--primary)" }}
+                  >
+                    {(selectedCompany?.name?.[0] ?? "?").toUpperCase()}
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-foreground leading-tight">
+                      {selectedCompany?.name ?? selected.companyId}
+                    </h2>
+                    {selectedCompany && (
+                      <p className="text-sm text-muted-foreground mt-0.5">
+                        {selectedCompany.industry.join(", ")} · {selectedCompany.city},{" "}
+                        {selectedCompany.country}
+                      </p>
+                    )}
+                  </div>
                 </div>
                 <span
-                  className="text-xs font-medium rounded-full px-3 py-1 shrink-0"
-                  style={{ color: getStatusStyle(selected.status).color, background: getStatusStyle(selected.status).bg }}
+                  className="px-3 py-1 rounded-full text-xs font-medium capitalize shrink-0"
+                  style={{
+                    color: getStatusStyle(selected.status).color,
+                    background: getStatusStyle(selected.status).bg,
+                  }}
                 >
                   {selected.status}
                 </span>
               </div>
+
+              {/* Approved banner */}
               {lastApprovedId === selected.id && (
-                <div className="mx-6 mt-3 flex items-center justify-between bg-[var(--status-healthy-bg)] text-[var(--status-healthy)] text-xs px-3 py-2 rounded-lg">
-                  <span>✓ Approved — ready for mentor matching</span>
+                <div
+                  className="mx-6 mt-4 flex items-center justify-between text-sm px-4 py-2.5 rounded-xl"
+                  style={{
+                    background: "var(--status-healthy-bg)",
+                    color: "var(--status-healthy)",
+                  }}
+                >
+                  <span className="font-medium">✓ Approved — ready for mentor matching</span>
                   <button
                     onClick={() => router.push("/matching")}
-                    className="font-medium underline underline-offset-2"
+                    className="font-semibold underline underline-offset-2 ml-4"
                   >
                     Go to Matching →
                   </button>
                 </div>
               )}
 
-              {/* Decision actions */}
-              <div className="border-b border-border px-6 py-3 flex gap-2 flex-wrap">
-                {(["approved", "shortlisted", "waitlisted", "declined"] as ApplicationStatus[]).map((action) => {
-                  const style = getStatusStyle(action);
-                  const isCurrentStatus = selected.status === action;
-                  return (
-                    <button
-                      key={action}
-                      onClick={() => handleDecision(selected.id, action)}
-                      disabled={isCurrentStatus}
-                      className="px-4 py-1.5 text-xs font-semibold rounded-full border transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                      style={{
-                        color: style.color,
-                        borderColor: style.color,
-                        background: isCurrentStatus ? style.bg : "transparent",
-                    }}
-                  >
-                      {DECISION_LABELS[action]}
-                    </button>
-                  );
-                })}
+              {/* Decision bar */}
+              <div className="border-b border-border px-8 py-4 flex gap-3 flex-wrap">
+                {(["approved", "shortlisted", "waitlisted", "declined"] as ApplicationStatus[]).map(
+                  (action) => {
+                    const s = getStatusStyle(action);
+                    const isCurrent = selected.status === action;
+                    return (
+                      <button
+                        key={action}
+                        onClick={() => handleDecision(selected.id, action)}
+                        disabled={isCurrent}
+                        className="px-5 py-2 text-xs font-semibold rounded-full border transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        style={{
+                          color: s.color,
+                          borderColor: s.color,
+                          background: isCurrent ? s.bg : "transparent",
+                        }}
+                      >
+                        {DECISION_LABELS[action]}
+                      </button>
+                    );
+                  }
+                )}
               </div>
 
-              {/* Content grid */}
-              <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {/* Company profile */}
-                <section>
-                  <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-3">
-                    Company Profile
-                  </p>
-                  {selectedCompany ? (
-                    <dl className="space-y-2 text-xs">
-                      {[
-                        ["Business model", selectedCompany.businessModel],
-                        ["Team size", String(selectedCompany.teamSize)],
-                        ...(selectedCompany.revenueMonthly !== undefined
-                          ? [["MRR", `MYR ${selectedCompany.revenueMonthly.toLocaleString()}`]]
-                          : []),
-                        ["Contact", selected.founderContactEmail],
-                      ].map(([label, value]) => (
-                        <div key={label} className="flex gap-3">
-                          <dt className="text-muted-foreground w-28 shrink-0">{label}</dt>
-                          <dd className="font-medium text-foreground truncate">{value}</dd>
+              {/* Content: main (8/12) + sidebar (4/12) */}
+              <div className="flex-1 overflow-y-auto">
+                <div className="p-8 grid grid-cols-12 gap-8">
+                  {/* Main column */}
+                  <div className="col-span-12 lg:col-span-8 flex flex-col gap-8">
+                    {/* Fit score breakdown */}
+                    <section>
+                      <h3 className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground mb-4">
+                        Fit Score Breakdown
+                      </h3>
+                      <div className="grid grid-cols-2 gap-5 bg-muted/50 p-5 rounded-xl border border-border">
+                        {(
+                          [
+                            ["Stage", selected.fitBreakdown.stageFit],
+                            ["Industry", selected.fitBreakdown.industryFit],
+                            ["Traction", selected.fitBreakdown.tractionFit],
+                            ["Team", selected.fitBreakdown.teamFit],
+                            ["Needs", selected.fitBreakdown.needsFit],
+                          ] as [string, number][]
+                        ).map(([label, score]) => (
+                          <div key={label}>
+                            <div className="flex justify-between mb-1.5">
+                              <p className="text-xs text-muted-foreground">{label}</p>
+                              <p className="text-xs font-bold text-foreground">{score}%</p>
+                            </div>
+                            <div className="h-2 w-full bg-border rounded-full overflow-hidden">
+                              <div
+                                className="h-full rounded-full"
+                                style={{ width: `${score}%`, background: "var(--primary)" }}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                        <div className="col-span-2 flex items-center gap-3 pt-2 border-t border-border">
+                          <span className="text-xs text-muted-foreground">Overall</span>
+                          <span className="text-xl font-bold text-foreground">{selected.fitScore}</span>
+                          <span className="text-xs text-muted-foreground capitalize">— {selected.fitLabel}</span>
                         </div>
-                      ))}
-                    </dl>
-                  ) : (
-                    <p className="text-xs text-muted-foreground">Company data unavailable.</p>
-                  )}
-                </section>
-
-                {/* Fit score */}
-                <section>
-                  <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-3">
-                    Fit Score — <span className="text-foreground normal-case font-bold">{selected.fitScore}</span>
-                    <span className="font-normal normal-case ml-1">({selected.fitLabel})</span>
-                  </p>
-                  <dl className="space-y-2">
-                    {(
-                      [
-                        ["Stage", selected.fitBreakdown.stageFit],
-                        ["Industry", selected.fitBreakdown.industryFit],
-                        ["Traction", selected.fitBreakdown.tractionFit],
-                        ["Team", selected.fitBreakdown.teamFit],
-                        ["Needs", selected.fitBreakdown.needsFit],
-                      ] as [string, number][]
-                    ).map(([label, score]) => (
-                      <div key={label} className="flex items-center gap-2">
-                        <dt className="text-[10px] text-muted-foreground w-14 shrink-0">{label}</dt>
-                        <div className="flex-1 bg-muted rounded-full h-1.5 overflow-hidden">
-                          <div
-                            className="h-full rounded-full"
-                            style={{ width: `${score}%`, backgroundColor: "var(--primary)" }}
-                          />
-                        </div>
-                        <dd className="text-[10px] text-muted-foreground w-6 text-right shrink-0">{score}</dd>
                       </div>
-                    ))}
-                  </dl>
-                </section>
+                    </section>
 
-                {/* Founder summary */}
-                <section>
-                  <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-3">
-                    Founder Summary
-                  </p>
-                  <p className="text-xs text-foreground leading-relaxed">{selected.founderSummary}</p>
-                  {selectedCompany?.founderBackground && (
-                    <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-                      {selectedCompany.founderBackground}
-                    </p>
-                  )}
-                </section>
+                    {/* Company profile */}
+                    <section>
+                      <h3 className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground mb-4">
+                        Company Profile
+                      </h3>
+                      {selectedCompany ? (
+                        <div className="space-y-4">
+                          <p className="text-sm text-foreground leading-relaxed">
+                            {selected.founderSummary}
+                          </p>
+                          <div className="grid grid-cols-3 gap-3">
+                            {[
+                              ["Business model", selectedCompany.businessModel],
+                              ["Team size", String(selectedCompany.teamSize)],
+                              ...(selectedCompany.revenueMonthly !== undefined
+                                ? [["MRR", `MYR ${selectedCompany.revenueMonthly.toLocaleString()}`]]
+                                : []),
+                              ["Contact", selected.founderContactEmail],
+                            ].map(([label, value]) => (
+                              <div key={label} className="p-3 border border-border rounded-lg">
+                                <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground mb-1">
+                                  {label}
+                                </p>
+                                <p className="text-sm font-semibold text-foreground truncate">{value}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">Company data unavailable.</p>
+                      )}
+                    </section>
 
-                {/* AI insight */}
-                <section>
-                  <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-3">
-                    AI Insight
-                  </p>
-                  <div className="rounded-md p-3" style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.15)" }}>
-                    <div className="flex items-center gap-1.5 mb-1.5">
-                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[var(--status-ai)]/10 text-[var(--status-ai)]">✦ AI</span>
-                      <p className="text-[10px] font-bold uppercase tracking-widest font-mono" style={{ color: "var(--status-ai)" }}>
-                        Insight
-                      </p>
-                    </div>
-                    <p className="text-xs leading-relaxed text-muted-foreground italic">{selected.aiInsight}</p>
-                    <p
-                      className="text-xs font-bold mt-2 capitalize font-mono"
-                      style={{ color: getRecommendationColor(selected.aiRecommendation) }}
+                    {/* Support needs */}
+                    <section>
+                      <h3 className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground mb-4">
+                        Support Needs
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {selected.supportNeeds.map((need) => (
+                          <span
+                            key={need}
+                            className="px-4 py-2 bg-muted border border-border rounded-lg text-xs text-foreground"
+                          >
+                            {need}
+                          </span>
+                        ))}
+                      </div>
+                    </section>
+
+                    {/* Founder background */}
+                    {selectedCompany?.founderBackground && (
+                      <section>
+                        <h3 className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground mb-4">
+                          Founder Background
+                        </h3>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          {selectedCompany.founderBackground}
+                        </p>
+                      </section>
+                    )}
+
+                    {/* Documents */}
+                    {Object.keys(selected.documentUrls).length > 0 && (
+                      <section>
+                        <h3 className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground mb-4">
+                          Documents
+                        </h3>
+                        <div className="flex flex-wrap gap-2">
+                          {Object.entries(selected.documentUrls).map(([docType, url]) => (
+                            <span
+                              key={docType}
+                              className="text-xs font-mono bg-muted border border-border rounded-lg px-3 py-1.5 text-muted-foreground"
+                            >
+                              {docType}
+                              <span className="ml-1 opacity-50">
+                                {url.replace("seed://documents/", "")}
+                              </span>
+                            </span>
+                          ))}
+                        </div>
+                      </section>
+                    )}
+                  </div>
+
+                  {/* Sidebar column */}
+                  <div className="col-span-12 lg:col-span-4 flex flex-col gap-5">
+                    {/* AI Insight panel */}
+                    <div
+                      className="rounded-2xl p-5 border"
+                      style={{
+                        background: "rgba(124,58,237,0.04)",
+                        borderColor: "rgba(124,58,237,0.2)",
+                      }}
                     >
-                      → {selected.aiRecommendation}
-                    </p>
-                  </div>
-                </section>
-
-                {/* Support needs */}
-                <section>
-                  <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-3">
-                    Support Needs
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {selected.supportNeeds.map((need) => (
-                      <span
-                        key={need}
-                        className="text-[10px] bg-muted border border-border rounded-full px-2.5 py-0.5"
-                      >
-                        {need}
-                      </span>
-                    ))}
-                  </div>
-                </section>
-
-                {/* Eligibility flags */}
-                <section>
-                  <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-3">
-                    Eligibility Flags
-                  </p>
-                  {selected.eligibilityFlags.length === 0 ? (
-                    <p className="text-xs" style={{ color: "var(--status-healthy)" }}>
-                      ✓ No eligibility flags
-                    </p>
-                  ) : (
-                    <ul className="space-y-1.5">
-                      {selected.eligibilityFlags.map((flag) => (
-                        <li
-                          key={flag}
-                          className="flex items-start gap-1.5 text-xs"
-                          style={{ color: "var(--status-risk)" }}
+                      <div className="flex items-center gap-2 mb-4">
+                        <span
+                          className="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                          style={{ background: "var(--status-ai)", color: "#ffffff" }}
                         >
-                          <span className="w-1.5 h-1.5 rounded-full shrink-0 mt-1.5" style={{ backgroundColor: "var(--status-risk)" }} />
-                          {flag}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </section>
-              </div>
-
-              {/* Documents */}
-              {Object.keys(selected.documentUrls).length > 0 && (
-                <div className="px-6 pb-6">
-                  <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-3">
-                    Documents
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {Object.entries(selected.documentUrls).map(([docType, url]) => (
-                      <span
-                        key={docType}
-                        className="text-[10px] bg-muted border border-border rounded-lg px-3 py-1.5 font-mono text-muted-foreground"
+                          ✦ AI INSIGHT
+                        </span>
+                      </div>
+                      <h4 className="text-sm font-semibold text-foreground mb-2 capitalize">
+                        Recommendation: {selected.aiRecommendation}
+                      </h4>
+                      <p className="text-sm text-muted-foreground leading-relaxed italic mb-4">
+                        &ldquo;{selected.aiInsight}&rdquo;
+                      </p>
+                      <div
+                        className="p-3 rounded-lg"
+                        style={{
+                          background: "rgba(124,58,237,0.06)",
+                          border: "1px solid rgba(124,58,237,0.1)",
+                        }}
                       >
-                        {docType}
-                        <span className="ml-1 opacity-50">{url.replace("seed://documents/", "")}</span>
-                      </span>
-                    ))}
+                        <p
+                          className="text-xs font-semibold mb-1"
+                          style={{ color: "var(--status-ai)" }}
+                        >
+                          → {selected.aiRecommendation}
+                        </p>
+                        <p
+                          className="text-xs font-bold uppercase tracking-widest"
+                          style={{ color: getRecommendationColor(selected.aiRecommendation) }}
+                        >
+                          {selected.fitLabel}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Eligibility flags */}
+                    <div className="bg-muted rounded-2xl p-5 border border-border">
+                      <h3 className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground mb-4">
+                        Eligibility Flags
+                      </h3>
+                      {selected.eligibilityFlags.length === 0 ? (
+                        <div className="flex items-start gap-3">
+                          <span
+                            className="text-base mt-0.5 shrink-0"
+                            style={{ color: "var(--status-healthy)" }}
+                          >
+                            ✓
+                          </span>
+                          <p className="text-sm font-medium text-foreground">No eligibility flags</p>
+                        </div>
+                      ) : (
+                        <ul className="space-y-4">
+                          {selected.eligibilityFlags.map((flag) => (
+                            <li key={flag} className="flex items-start gap-3">
+                              <span
+                                className="text-base mt-0.5 shrink-0"
+                                style={{ color: "var(--status-risk)" }}
+                              >
+                                ⚠
+                              </span>
+                              <p className="text-sm text-foreground">{flag}</p>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           ) : (
-            <StateBlock
-              className="flex-1"
-              title="Select an applicant"
-              description="Choose a startup from the review queue to inspect fit score, documents, and AI recommendation."
-            />
+            <div className="flex-1 bg-card border border-border rounded-2xl flex items-center justify-center text-center p-8">
+              <div className="space-y-2">
+                <p className="text-sm font-semibold text-foreground">Select an applicant</p>
+                <p className="text-xs text-muted-foreground">
+                  Choose a startup from the review queue to inspect fit score, documents, and AI recommendation.
+                </p>
+              </div>
+            </div>
           )}
         </div>
       )}
+
       <ConfirmDialog
         open={!!pendingDecision}
         title={
@@ -567,15 +615,14 @@ export function ApplicantReviewPool() {
             <div className="flex justify-between gap-4">
               <span>Applicant</span>
               <span className="font-medium text-foreground">
-                {companyMap.get(applications.find((app) => app.id === pendingDecision.applicationId)?.companyId ?? "")?.name ??
-                  pendingDecision.applicationId}
+                {companyMap.get(
+                  applications.find((app) => app.id === pendingDecision.applicationId)?.companyId ?? ""
+                )?.name ?? pendingDecision.applicationId}
               </span>
             </div>
             <div className="mt-1 flex justify-between gap-4">
               <span>Decision</span>
-              <span className="font-medium capitalize text-foreground">
-                {pendingDecision.status}
-              </span>
+              <span className="font-medium capitalize text-foreground">{pendingDecision.status}</span>
             </div>
           </div>
         )}

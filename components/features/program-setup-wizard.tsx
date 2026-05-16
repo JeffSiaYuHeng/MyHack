@@ -1,9 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import toast from "react-hot-toast";
 import type { Program, ProgramType, SelectionCriteria } from "@/lib/types";
 import { seedMentors } from "@/lib/verrier-seed";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 const PROGRAM_TYPES: { value: ProgramType; label: string; description: string }[] = [
   { value: "accelerator", label: "Accelerator", description: "Equity-based, cohort model" },
@@ -91,6 +100,23 @@ const DEFAULT_STATE: WizardState = {
   mentorIds: [],
 };
 
+function readStoredDraft(): { wizardState: WizardState; savedAt: string | null } {
+  if (typeof window === "undefined") {
+    return { wizardState: DEFAULT_STATE, savedAt: null };
+  }
+  try {
+    const raw = window.localStorage.getItem(DRAFT_STORAGE_KEY);
+    if (!raw) return { wizardState: DEFAULT_STATE, savedAt: null };
+    const parsed = JSON.parse(raw) as { wizardState?: WizardState; savedAt?: string };
+    return {
+      wizardState: parsed.wizardState ?? DEFAULT_STATE,
+      savedAt: parsed.savedAt ?? null,
+    };
+  } catch {
+    return { wizardState: DEFAULT_STATE, savedAt: null };
+  }
+}
+
 function toggle<T>(arr: T[], item: T): T[] {
   return arr.includes(item) ? arr.filter((v) => v !== item) : [...arr, item];
 }
@@ -148,20 +174,64 @@ function PillGroup({
 }
 
 export function ProgramSetupWizard() {
-  const [state, setState] = useState<WizardState>(DEFAULT_STATE);
-  const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
+  const [storedDraft] = useState(readStoredDraft);
+  const [state, setState] = useState<WizardState>(storedDraft.wizardState);
+  const [draftSavedAt, setDraftSavedAt] = useState<string | null>(storedDraft.savedAt);
   const [published, setPublished] = useState(false);
 
-  useEffect(() => {
+  const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
+  const [aiBriefText, setAiBriefText] = useState("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      if (ev.target?.result) setAiBriefText(ev.target.result as string);
+    };
+    reader.readAsText(file);
+  }
+
+  async function handleExtractParameters() {
+    if (!aiBriefText.trim()) return;
+    setIsAnalyzing(true);
+    const toastId = toast.loading("✦ Reading Document...");
     try {
-      const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
-      if (raw) {
-        const { wizardState, savedAt } = JSON.parse(raw) as { wizardState: WizardState; savedAt: string };
-        setState(wizardState);
-        setDraftSavedAt(savedAt);
-      }
-    } catch {}
-  }, []);
+      const res = await fetch("/api/ai/parse-program", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ briefText: aiBriefText }),
+      });
+      if (!res.ok) throw new Error("Failed to extract parameters");
+      const data = await res.json();
+      
+      setState((s) => ({
+        ...s,
+        name: data.name || s.name,
+        type: data.type || s.type,
+        description: data.description || s.description,
+        targetStages: data.targetStages || s.targetStages,
+        targetIndustries: data.targetIndustries || s.targetIndustries,
+        targetMarkets: data.targetMarkets || s.targetMarkets,
+        selectionCriteria: {
+          ...s.selectionCriteria,
+          ...(data.criteriaWeights || {})
+        },
+        requiredDocuments: data.requiredDocuments || s.requiredDocuments,
+        mentorIds: data.mentorIds || s.mentorIds,
+      }));
+      
+      toast.success("✦ Programme parameters successfully extracted by AI.", { id: toastId });
+      setIsAiDialogOpen(false);
+      setAiBriefText("");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to extract parameters from AI.", { id: toastId });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }
 
   const weightTotal =
     state.selectionCriteria.stageWeight +
@@ -250,6 +320,73 @@ export function ProgramSetupWizard() {
       <div className="flex gap-8 items-start">
         {/* Left: form */}
         <div className="flex-1 min-w-0 space-y-5">
+          {/* AI Autofill */}
+          <Dialog open={isAiDialogOpen} onOpenChange={setIsAiDialogOpen}>
+            <DialogTrigger
+              render={
+                <Button
+                  variant="secondary"
+                  className="w-full text-[var(--status-ai)] bg-[var(--status-ai)]/10 hover:bg-[var(--status-ai)]/20"
+                />
+              }
+            >
+              ✦ Autofill with AI
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>✦ AI Programme Extraction</DialogTitle>
+                <DialogDescription>
+                  Paste your programme brief, press release, or requirements document. Gemini will extract and configure the parameters.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-5 py-2">
+                <textarea
+                  className="w-full border border-border rounded-xl px-4 py-3 text-sm bg-muted/30 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--status-ai)]/30 focus:border-[var(--status-ai)]/60 transition-colors resize-none h-40 shadow-inner"
+                  placeholder="Paste your programme brief here..."
+                  value={aiBriefText}
+                  onChange={(e) => setAiBriefText(e.target.value)}
+                />
+                
+                <div className="flex items-center gap-4">
+                  <div className="flex-1 h-px bg-border" />
+                  <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">or upload</span>
+                  <div className="flex-1 h-px bg-border" />
+                </div>
+
+                <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-border rounded-xl bg-muted/10 hover:bg-muted/40 hover:border-foreground/30 transition-all cursor-pointer group">
+                  <div className="flex flex-col items-center justify-center">
+                    <svg className="w-5 h-5 mb-2 text-muted-foreground group-hover:text-foreground transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                    <p className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">
+                      <span className="font-semibold text-foreground">Click to upload</span> .txt or .csv
+                    </p>
+                  </div>
+                  <input
+                    type="file"
+                    accept=".txt,.csv"
+                    className="hidden"
+                    onChange={handleFileUpload}
+                  />
+                </label>
+              </div>
+              <div className="flex justify-end pt-2">
+                <Button 
+                  onClick={handleExtractParameters} 
+                  disabled={isAnalyzing || !aiBriefText.trim()}
+                  className="w-full sm:w-auto bg-[var(--status-ai)] hover:bg-[var(--status-ai)]/90 text-white font-semibold rounded-xl px-6 py-5 h-auto transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isAnalyzing ? (
+                    <span className="flex items-center gap-2 animate-pulse">
+                      <span className="text-base">✦</span> Extracting...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      <span className="text-base">✦</span> Extract Parameters
+                    </span>
+                  )}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
 
           {/* Basics */}
           <section className="bg-card rounded-2xl border border-border p-6">
@@ -367,10 +504,16 @@ export function ProgramSetupWizard() {
               {CRITERIA_FIELDS.map(({ key, label }) => (
                 <div key={key} className="flex items-center gap-4">
                   <span className="text-sm text-foreground w-24 shrink-0">{label}</span>
-                  <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary rounded-full transition-all duration-300"
-                      style={{ width: `${Math.min(state.selectionCriteria[key], 100)}%` }}
+                  <div className="flex-1 flex items-center">
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      step={5}
+                      className="w-full h-1.5 bg-muted rounded-full appearance-none cursor-pointer"
+                      style={{ accentColor: "var(--primary)" }}
+                      value={state.selectionCriteria[key]}
+                      onChange={(e) => updateCriteria(key, e.target.value)}
                     />
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">

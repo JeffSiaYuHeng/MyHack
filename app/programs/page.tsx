@@ -11,7 +11,6 @@ export default function ProgramsPage() {
       cohortName={cohort?.name ?? ""}
       cohortWeeks={cohort?.totalWeeks ?? 0}
       cohortStatus={cohort?.status ?? ""}
-      activeNav="Programmes"
     >
       <ProgramList programs={seedPrograms} />
     </ProductShell>

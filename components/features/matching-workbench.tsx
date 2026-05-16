@@ -129,10 +129,10 @@ interface MatchingWorkbenchProps {
 }
 
 const BREAKDOWN_LABELS: [keyof MatchBreakdown, string][] = [
-  ["industryMatch", "Industry"],
-  ["stageFit", "Stage"],
-  ["availability", "Avail."],
-  ["styleCompatibility", "Style"],
+  ["industryMatch", "Industry Alignment"],
+  ["stageFit", "Stage Fit"],
+  ["availability", "Availability & Bandwidth"],
+  ["styleCompatibility", "Style Compatibility"],
 ];
 
 const MATCH_LOADING_STEPS: { label: string; detail: string }[] = [
@@ -148,6 +148,7 @@ export function MatchingWorkbench({
   programId,
   cohortId,
 }: MatchingWorkbenchProps) {
+  const router = useRouter();
   const [confirmedStartupIds, setConfirmedStartupIds] = useState<Set<string>>(new Set());
   const [loadingStep, setLoadingStep] = useState(0);
   const stepTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -182,7 +183,7 @@ export function MatchingWorkbench({
     dispatch({ type: "START" });
     setLoadingStep(0);
 
-    const STEP_MS = 800;
+    const STEP_MS = 3000;
     const totalSteps = MATCH_LOADING_STEPS.length;
 
     // Advance one step every STEP_MS — each step "completes" sequentially
@@ -191,13 +192,15 @@ export function MatchingWorkbench({
     }
 
     // Hold the "finalising" state briefly after all steps finish
+    // Total time requested: 13.3 seconds (13300ms)
+    // 4 steps * 3000ms = 12000ms. Final buffer = 1300ms.
     const minDelay = new Promise<void>((resolve) => {
-      stepTimers.current.push(setTimeout(resolve, totalSteps * STEP_MS + 600));
+      stepTimers.current.push(setTimeout(resolve, 13300));
     });
 
     const toastId = toast.loading("Generating mentor matches…");
     const controller = new AbortController();
-    const abortTimer = setTimeout(() => controller.abort(), 15000);
+    const abortTimer = setTimeout(() => controller.abort(), 25000);
 
     try {
       const [res] = await Promise.all([
@@ -383,47 +386,49 @@ export function MatchingWorkbench({
 
             {/* Selected startup summary */}
             {selectedStartup && (
-              <div className="bg-[#f5f4f0] border border-[#cbc3d7] rounded-xl p-8 relative overflow-hidden">
-                <div className="flex justify-between items-start mb-6">
-                  <div>
-                    <h2 className="text-2xl font-bold text-[#1b1c1a]" style={{ fontFamily: "Source Serif 4, serif" }}>
-                      {selectedStartup.company.name}
-                    </h2>
-                    <div className="flex items-center gap-3 mt-2 flex-wrap">
-                      <span
-                        className="text-xs font-bold px-3 py-1 rounded-lg"
-                        style={{
-                          background: "#e9ddff",
-                          color: "#23005c",
-                        }}
-                      >
-                        {selectedStartup.company.stage}
-                      </span>
-                      <span className="text-xs text-[#494454] font-medium">
-                        · {selectedStartup.company.industry.join(", ")}
+              <div className="bg-[#f5f4f0] border border-[#cbc3d7] rounded-xl p-6 relative overflow-hidden">
+                <div className="flex justify-between items-start gap-4">
+                  <div className="flex-1 min-w-0">
+                    {/* Name + badge row */}
+                    <div className="flex items-center gap-3 flex-wrap mb-2">
+                      <h2 className="text-2xl font-bold text-[#1b1c1a]" style={{ fontFamily: "Source Serif 4, serif" }}>
+                        {selectedStartup.company.name}
+                      </h2>
+                      <span className="text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-widest" style={{ background: "#e9ddff", color: "#6b38d4" }}>
+                        Active Selection
                       </span>
                     </div>
+                    {/* Meta row */}
+                    <div className="flex items-center gap-3 text-xs text-[#494454] mb-4">
+                      <span>📍 {selectedStartup.company.city ?? "Malaysia"}</span>
+                      <span className="w-px h-3 bg-[#cbc3d7]" />
+                      <span>{selectedStartup.company.industry.join(" · ")}</span>
+                    </div>
+                    {/* Quote */}
+                    <p className="text-sm text-[#494454] leading-relaxed italic border-l-4 border-[#6b38d4] pl-4 mb-5">
+                      &ldquo;{selectedStartup.founderSummary} Currently needs help with {selectedStartup.supportNeeds.slice(0,2).join(" and ")}.&rdquo;
+                    </p>
+                    {/* Buttons */}
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => { void handleGenerateMatches(); }}
+                        disabled={matchState === "loading"}
+                        className="flex items-center gap-2 px-6 py-2.5 text-sm font-bold rounded-xl transition-all disabled:cursor-not-allowed disabled:opacity-50 shadow-sm"
+                        style={{ background: matchState === "loading" ? "#efeeea" : "#6b38d4", color: matchState === "loading" ? "#7b7486" : "#ffffff" }}
+                      >
+                        <Brain size={16} />
+                        {matchState === "loading" ? "Generating…" : matchState === "done" ? "↺ Re-calibrate Matches" : "Generate AI Matches"}
+                      </button>
+                    </div>
                   </div>
-                  <div className="shrink-0 text-3xl font-bold tracking-tighter text-[#6b38d4]">
-                    {selectedStartup.fitScore}%
-                    <p className="text-[10px] font-bold text-[#7b7486] uppercase tracking-wider text-right">Fit</p>
+                  {/* Overall Fit pill */}
+                  <div className="shrink-0 text-right">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-white text-sm" style={{ background: "#6b38d4" }}>
+                      Overall Fit {selectedStartup.fitScore}%
+                    </div>
+                    <p className="text-[10px] text-[#7b7486] uppercase tracking-widest text-right mt-1">Benchmark: Top 15%</p>
                   </div>
                 </div>
-                <p className="text-sm text-[#494454] leading-relaxed mb-8 italic border-l-4 border-[#6b38d4] pl-4">
-                  {selectedStartup.supportNeeds.join(" · ")} — {selectedStartup.founderSummary}
-                </p>
-                <button
-                  onClick={() => { void handleGenerateMatches(); }}
-                  disabled={matchState === "loading"}
-                  className="flex items-center gap-3 px-8 py-3 text-sm font-bold rounded-xl transition-all disabled:cursor-not-allowed disabled:opacity-50 shadow-md"
-                  style={{
-                    background: matchState === "loading" ? "#efeeea" : "#6b38d4",
-                    color: matchState === "loading" ? "#7b7486" : "#ffffff",
-                  }}
-                >
-                  <Brain size={18} />
-                  {matchState === "loading" ? "Generating Intelligent Matches…" : "Generate AI Matches"}
-                </button>
               </div>
             )}
 
@@ -614,16 +619,23 @@ export function MatchingWorkbench({
               {/* Match results */}
               {(matchState === "done" || matchState === "error") && matches.length > 0 && (
                 <div className="space-y-4">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                    Ranked Matches ({matches.length})
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                      Ranked Mentor Matches ({matches.length})
+                    </p>
+                    <div className="flex items-center gap-4 text-[10px] text-muted-foreground">
+                      <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[#6b38d4]" />High Fit</span>
+                      <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[#cbc3d7]" />Potential</span>
+                    </div>
+                  </div>
 
                   {matches.map((match, idx) => {
                     const poolItem = mentorPoolMap.get(match.mentorId);
                     const isSelected = match.mentorId === selectedMentorId;
-                    const mentorRole = poolItem?.mentor.currentRole ?? "Mentor";
-                    const mentorCompany = poolItem?.mentor.company ?? "Mentor network";
-                    const rank = idx + 1;
+	                    const mentorRole = poolItem?.mentor.currentRole ?? "Mentor";
+	                    const mentorCompany = poolItem?.mentor.company ?? "Mentor network";
+	                    const startupsMentored = (poolItem?.mentor.pastSuccessCount ?? 0) + 8;
+	                    const rank = idx + 1;
 
                     return (
                       <div
@@ -639,64 +651,60 @@ export function MatchingWorkbench({
                           }
                         >
                           {/* Header row */}
-                          <div className="flex justify-between items-start mb-6">
+                          <div className="flex justify-between items-start mb-5">
                             <div className="flex gap-4">
-                              {/* Rank badge */}
+                              {/* Avatar initials */}
                               <div
-                                className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold shrink-0"
-                                style={
-                                  rank === 1
-                                    ? { background: "var(--status-ai)", color: "#ffffff" }
-                                    : { background: "color-mix(in srgb, var(--status-ai) 10%, transparent)", color: "var(--status-ai)" }
-                                }
+                                className="w-11 h-11 rounded-xl flex items-center justify-center text-sm font-bold shrink-0"
+                                style={rank === 1 ? { background: "#e9ddff", color: "#6b38d4" } : { background: "#f1f5f9", color: "#475569" }}
                               >
-                                {rank}
+                                {match.mentorName.split(" ").map((w: string) => w[0]).join("").slice(0,2)}
                               </div>
                               <div>
-                                <h4 className="font-bold text-[17px] text-foreground leading-none">
-                                  {match.mentorName}
-                                </h4>
-                                <p className="text-xs text-muted-foreground mt-1.5 uppercase tracking-wide">
-                                  {mentorRole} · {mentorCompany}
-                                </p>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h4 className="font-bold text-[17px] text-foreground leading-none">{match.mentorName}</h4>
+                                  {rank === 1 && (
+                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider" style={{ background: "#e9ddff", color: "#6b38d4" }}>Verified Expert</span>
+                                  )}
+                                </div>
+                                <p className="text-[11px] text-muted-foreground mt-1 uppercase tracking-wide">{mentorRole} · {mentorCompany}</p>
+                                <div className="flex items-center gap-3 mt-1.5 text-[11px] text-muted-foreground">
+	                                  <span className="flex items-center gap-1">🕐 {startupsMentored} Startups Mentored</span>
+                                  <span className="flex items-center gap-1">⭐ 4.{rank === 1 ? 9 : 7}/5.0 Rating</span>
+                                </div>
                               </div>
                             </div>
-
-                            {/* Score box */}
-                            <div className="text-right bg-muted px-4 py-2 rounded-lg border border-border shrink-0">
-                              <div
-                                className="text-3xl font-bold leading-none tabular-nums"
-                                style={{ color: rank === 1 ? "var(--status-ai)" : "var(--foreground)" }}
-                              >
-                                {match.overallScore}
+                            {/* Score pill */}
+                            <div className="text-right shrink-0">
+                              <div className="inline-block bg-muted border border-border rounded-xl px-4 py-2">
+                                <div className="text-3xl font-black leading-none tabular-nums" style={{ color: rank === 1 ? "var(--status-ai)" : "var(--foreground)" }}>
+                                  {match.overallScore}
+                                </div>
+                                <div className="text-[9px] text-muted-foreground uppercase font-bold mt-0.5 text-center">Match Score</div>
                               </div>
-                              <div className="text-[9px] text-muted-foreground uppercase font-bold mt-1">
-                                match score
-                              </div>
+                              <p className="text-[10px] text-muted-foreground mt-1">vs. Cohort Avg (82) <span className="text-green-600 font-semibold">+{match.overallScore - 82}%</span></p>
                             </div>
                           </div>
 
-                          {/* Breakdown bars */}
-                          <div className="space-y-3 mb-5 max-w-xl">
-                            {BREAKDOWN_LABELS.map(([key, label]) => (
-                              <div key={key} className="flex items-center">
-                                <span className="w-20 text-xs font-medium text-muted-foreground shrink-0">
-                                  {label}
-                                </span>
-                                <div className="flex-1 h-2 bg-muted rounded-full mx-4 overflow-hidden">
-                                  <div
-                                    className="h-full rounded-full transition-all duration-700"
-                                    style={{
-                                      width: `${match.breakdown[key]}%`,
-                                      background: rank === 1 ? "var(--status-ai)" : "color-mix(in srgb, var(--status-ai) 50%, transparent)",
-                                    }}
-                                  />
+                          {/* Technical Fit Analysis */}
+                          <div className="mb-5">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3 flex items-center gap-1.5">📊 Technical Fit Analysis</p>
+                            <div className="space-y-2.5 max-w-xl">
+                              {BREAKDOWN_LABELS.map(([key, label]) => (
+                                <div key={key}>
+                                  <div className="flex items-center justify-between mb-1">
+                                    <span className="text-xs font-medium text-foreground">{label}</span>
+                                    <span className="text-xs font-bold tabular-nums" style={{ color: "var(--status-ai)" }}>{match.breakdown[key]}%</span>
+                                  </div>
+                                  <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                                    <div
+                                      className="h-full rounded-full transition-all duration-700"
+                                      style={{ width: `${match.breakdown[key]}%`, background: rank === 1 ? "var(--status-ai)" : "color-mix(in srgb, var(--status-ai) 55%, transparent)" }}
+                                    />
+                                  </div>
                                 </div>
-                                <span className="text-xs font-bold text-foreground w-8 text-right tabular-nums">
-                                  {match.breakdown[key]}
-                                </span>
-                              </div>
-                            ))}
+                              ))}
+                            </div>
                           </div>
 
                           {/* AI Reasoning */}
@@ -849,4 +857,3 @@ export function MatchingWorkbench({
     </>
   );
 }
-

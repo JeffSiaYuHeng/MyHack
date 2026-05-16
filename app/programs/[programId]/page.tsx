@@ -20,7 +20,6 @@ export default async function ProgramDetailPage({
       cohortName={cohort?.name ?? ""}
       cohortWeeks={cohort?.totalWeeks ?? 0}
       cohortStatus={cohort?.status ?? ""}
-      activeNav="Programmes"
     >
       <ProgramDetail program={program} />
     </ProductShell>

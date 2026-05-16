@@ -13,7 +13,6 @@ export default function DashboardPage() {
         cohortName="Seed data unavailable"
         cohortWeeks={0}
         cohortStatus="setup"
-        activeNav="Dashboard"
       >
         <div className="p-8 text-center border border-dashed border-border rounded-lg m-4">
           <p className="text-sm text-muted-foreground">
@@ -30,7 +29,6 @@ export default function DashboardPage() {
       cohortName={cohort.name}
       cohortWeeks={cohort.totalWeeks}
       cohortStatus={cohort.status}
-      activeNav="Dashboard"
     >
       <DashboardCommandCenter />
     </ProductShell>

@@ -1,5 +1,10 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore, collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { 
+  collection, 
+  addDoc, 
+  serverTimestamp,
+  initializeFirestore
+} from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
@@ -12,7 +17,14 @@ const firebaseConfig = {
 };
 
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-const db = getFirestore(app);
+
+// Use initializeFirestore with experimentalForceLongPolling enabled.
+// This is more robust in Node.js environments (like Next.js API routes) 
+// and avoids GRPC stream errors (Code: undefined) common in serverless or restricted network contexts.
+const db = initializeFirestore(app, {
+  experimentalForceLongPolling: true,
+});
+
 const auth = getAuth(app);
 
 // ─── MVP Collection Registry ──────────────────────────────────────────────────

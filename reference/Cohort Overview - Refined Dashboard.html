@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Cohort Overview | Verrier Venture Workbench</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&amp;family=Inter:wght@100..900&amp;display=swap"
+        rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet">
+    <!-- Tailwind Configuration -->
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-background": "#1b1c1a",
+                        "on-surface-variant": "#494454",
+                        "surface-container-low": "#f5f4f0",
+                        "surface-container-high": "#e9e8e4",
+                        "surface-tint": "#6d3bd7",
+                        "primary-fixed-dim": "#d0bcff",
+                        "outline-variant": "#cbc3d7",
+                        "on-primary-fixed": "#23005c",
+                        "on-tertiary-fixed-variant": "#474746",
+                        "inverse-primary": "#d0bcff",
+                        "tertiary-fixed": "#e5e2e1",
+                        "error": "#ba1a1a",
+                        "on-primary-container": "#fffbff",
+                        "surface-container-highest": "#e3e2df",
+                        "on-tertiary-fixed": "#1c1b1b",
+                        "on-primary-fixed-variant": "#5516be",
+                        "background": "#faf9f5",
+                        "on-error-container": "#93000a",
+                        "surface-dim": "#dbdad6",
+                        "secondary-container": "#ff5a5f",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "secondary-fixed-dim": "#ffb3b0",
+                        "tertiary-container": "#757474",
+                        "inverse-surface": "#30312e",
+                        "on-tertiary-container": "#f7feff",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "primary-fixed": "#e9ddff",
+                        "surface-bright": "#faf9f5",
+                        "primary": "#6b38d4",
+                        "inverse-on-surface": "#f2f1ed",
+                        "on-error": "#ffffff",
+                        "on-surface": "#1b1c1a",
+                        "on-secondary-fixed": "#410007",
+                        "surface-variant": "#e3e2df",
+                        "surface-container": "#efeeea",
+                        "surface": "#faf9f5",
+                        "secondary": "#b52330",
+                        "on-secondary-container": "#60000e",
+                        "secondary-fixed": "#ffdad8",
+                        "primary-container": "#8455ef",
+                        "outline": "#7b7486",
+                        "on-primary": "#ffffff",
+                        "tertiary": "#5d5c5b",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed-variant": "#92001b"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container-padding": "2rem",
+                        "stack-sm": "0.5rem",
+                        "stack-md": "1rem",
+                        "sidebar-width": "260px",
+                        "section-margin": "2.5rem",
+                        "card-gap": "1rem"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Source Serif 4"],
+                        "headline-lg-mobile": ["Source Serif 4"],
+                        "label-caps": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-xl": ["Source Serif 4"],
+                        "headline-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["22px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-caps": ["11px", { "lineHeight": "16px", "letterSpacing": "0.08em", "fontWeight": "500" }],
+                        "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-xl": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "headline-sm": ["16px", { "lineHeight": "24px", "letterSpacing": "0.02em", "fontWeight": "600" }]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        body {
+            background-color: #faf9f5;
+            color: #1b1c1a;
+        }
+    </style>
+</head>
+
+<body class="flex min-h-screen">
+    <!-- Fixed SideNavBar -->
+    <aside
+        class="docked fixed left-0 top-0 h-full w-[260px] bg-inverse-surface dark:bg-on-surface flex flex-col py-8 z-50">
+        <div class="px-6 mb-12">
+            <h1 class="text-headline-lg font-headline-lg font-bold text-surface dark:text-surface-bright">Verrier</h1>
+            <p class="font-label-caps text-label-caps text-outline-variant tracking-widest mt-1">VENTURE WORKBENCH</p>
+        </div>
+        <nav class="flex-1 space-y-1">
+            <a class="flex items-center gap-3 px-4 py-3 text-outline-variant dark:text-outline-variant hover:bg-white/5 hover:text-white transition-colors"
+                href="#">
+                <span class="material-symbols-outlined" data-icon="grid_view">grid_view</span>
+                <span class="font-body-md text-body-md">Dashboard</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 text-outline-variant dark:text-outline-variant hover:bg-white/5 hover:text-white transition-colors"
+                href="#">
+                <span class="material-symbols-outlined" data-icon="work">work</span>
+                <span class="font-body-md text-body-md">Portfolio</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 text-surface-bright dark:text-surface-bright bg-primary/10 border-l-4 border-primary"
+                href="#">
+                <span class="material-symbols-outlined" data-icon="groups">groups</span>
+                <span class="font-body-md text-body-md">Relationships</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 text-outline-variant dark:text-outline-variant hover:bg-white/5 hover:text-white transition-colors"
+                href="#">
+                <span class="material-symbols-outlined" data-icon="person_pin_circle">person_pin_circle</span>
+                <span class="font-body-md text-body-md">Mentors</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 text-outline-variant dark:text-outline-variant hover:bg-white/5 hover:text-white transition-colors"
+                href="#">
+                <span class="material-symbols-outlined" data-icon="insights">insights</span>
+                <span class="font-body-md text-body-md">Insights</span>
+            </a>
+        </nav>
+        <div class="mt-auto space-y-1">
+            <a class="flex items-center gap-3 px-4 py-3 text-outline-variant dark:text-outline-variant hover:bg-white/5 hover:text-white transition-colors"
+                href="#">
+                <span class="material-symbols-outlined" data-icon="settings">settings</span>
+                <span class="font-body-md text-body-md">Settings</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 text-outline-variant dark:text-outline-variant hover:bg-white/5 hover:text-white transition-colors"
+                href="#">
+                <span class="material-symbols-outlined" data-icon="help">help</span>
+                <span class="font-body-md text-body-md">Support</span>
+            </a>
+            <div
+                class="px-4 py-3 flex items-center gap-3 text-outline-variant dark:text-outline-variant hover:bg-white/5 hover:text-white transition-colors cursor-pointer">
+                <div
+                    class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center overflow-hidden">
+                    <img alt="N" class="w-full h-full object-cover"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuB726IIykTNl_dl50Sx-Cf6f55ZqfzDs294KIN6BDU-aFTVIMH_JaWFKo5O2G3pbCz0AVExNK_nYQ349H4LaHVWiXpSnu8FfMrCn0Wz48vQc0ax_Qi8_1UisMA3_qKOuMtIRFJjINplxhdbhwIfj_qAAf7V9H1j8y3G1TjRB2zRTpIZwj6sj0Thj-RoCbMst-r1NGSNR_ex8FaFFonwykPmY9brtdUiiErjWISN79yijnrLS-hlBbuPaLitNacKCFRNO14IpTefbMw">
+                </div>
+                <span class="font-body-md text-body-md">Exit Workbench</span>
+                <span class="material-symbols-outlined ml-auto text-body-sm" data-icon="logout">logout</span>
+            </div>
+        </div>
+    </aside>
+    <!-- Main Workbench Canvas -->
+    <main class="ml-[260px] flex-1 bg-background min-h-screen">
+        <!-- TopNavBar -->
+        <header
+            class="sticky top-0 z-40 bg-surface dark:bg-surface-dim border-b border-outline-variant dark:border-outline flex justify-between items-center px-8 py-4">
+            <div class="flex items-center gap-4">
+                <div class="relative">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline"
+                        data-icon="search">search</span>
+                    <input
+                        class="pl-10 pr-4 py-2 rounded-lg bg-surface-container border-none focus:ring-1 focus:ring-primary text-body-md w-64"
+                        placeholder="Search workbench..." type="text">
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <button
+                    class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors text-on-surface-variant">
+                    <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+                </button>
+                <button
+                    class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors">
+                    <div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant">
+                        <img alt="User Profile" class="w-full h-full object-cover"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBOhNSZ4RyvVXsBIJ1-S6vxuXl6tN_Z5_JzZuGZDAuNWgGMxyo221VR13DC_5Q1M1SPzGC2A0CaMMto2UY4gxNP42HHP4XWug-VW466Ai6amD38IF4uWHh1_DmdFuVrWBtYCuh_aZdd_lLemQSOtuHZNjfbZI44rY5XDTY7b-gO76LodEhBzTMFbHizgR55NjKnTBcfWOAlAHzbFKUWu-d3Mal2NuNwaz08SVFgGg20KksGutadJKqVIIJQK3u6mfa5--oyVQiYPrs">
+                    </div>
+                </button>
+            </div>
+        </header>
+        <div class="p-8 max-w-[1400px] mx-auto space-y-8">
+            <!-- Cohort Header Card -->
+            <div
+                class="bg-surface-container-lowest border border-outline-variant rounded-xl p-8 relative overflow-hidden">
+                <div class="flex justify-between items-start mb-10">
+                    <div>
+                        <div class="flex items-center gap-3 mb-2">
+                            <h2 class="font-headline-xl text-headline-xl text-on-surface">Cradle Q2 2026</h2>
+                            <span
+                                class="px-3 py-1 bg-green-100 text-green-700 rounded-full font-label-caps text-label-caps">Active</span>
+                            <span
+                                class="px-3 py-1 bg-surface-container-high text-on-surface-variant rounded-full font-label-caps text-label-caps">24-week
+                                programme</span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-label-caps text-label-caps text-outline mb-1 uppercase tracking-wider">Duration
+                        </p>
+                        <p class="font-body-md text-body-md font-bold text-on-surface">2026-06-15 – 2026-11-30</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-8 border-t border-outline-variant pt-8">
+                    <div>
+                        <p class="font-label-caps text-label-caps text-outline mb-1">Companies</p>
+                        <p class="font-headline-lg text-headline-lg text-on-surface">11</p>
+                    </div>
+                    <div>
+                        <p class="font-label-caps text-label-caps text-outline mb-1">Mentors</p>
+                        <p class="font-headline-lg text-headline-lg text-on-surface">15</p>
+                    </div>
+                    <div>
+                        <p class="font-label-caps text-label-caps text-outline mb-1">Relationships</p>
+                        <p class="font-headline-lg text-headline-lg text-on-surface">8</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Instant Cohort Intelligence (AI Hero) -->
+            <div
+                class="bg-[#F5F3FF] border border-primary/20 rounded-xl p-12 text-center flex flex-col items-center gap-6 relative overflow-hidden">
+                <div class="absolute -right-16 -top-16 w-64 h-64 bg-primary/5 rounded-full blur-3xl"></div>
+                <div class="absolute -left-16 -bottom-16 w-64 h-64 bg-primary/5 rounded-full blur-3xl"></div>
+                <div class="flex flex-col gap-3 max-w-2xl">
+                    <h3 class="font-headline-lg text-headline-lg text-primary flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined" data-icon="auto_awesome"
+                            style="font-variation-settings: &quot;FILL&quot; 1;">auto_awesome</span>
+                        Instant Cohort Intelligence
+                    </h3>
+                    <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                        Empower operations with unparalleled <span class="font-bold text-on-surface">Scalability</span>.
+                        Instantly aggregate 100s of data points into a single management-ready narrative optimized for
+                        partner decision-making.
+                    </p>
+                </div>
+                <button
+                    class="bg-primary-container text-on-primary-container px-8 py-4 rounded-full font-headline-sm text-headline-sm flex items-center gap-3 hover:scale-[1.02] transition-transform shadow-lg shadow-primary/20">
+
+                    Generate Cohort Report
+                </button>
+            </div>
+            <div class="grid grid-cols-12 gap-8">
+                <!-- Left Column (Health & Milestones) -->
+                <div class="col-span-12 lg:col-span-4 space-y-8">
+                    <!-- Health Overview -->
+                    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
+                        <h4 class="font-label-caps text-label-caps text-outline uppercase mb-6">Health Overview</h4>
+                        <div class="grid grid-cols-2 gap-y-8 gap-x-4">
+                            <div>
+                                <p class="font-headline-lg text-headline-lg text-secondary">66</p>
+                                <p class="font-body-sm text-body-sm text-outline">Avg Health</p>
+                            </div>
+                            <div>
+                                <p class="font-headline-lg text-headline-lg">8</p>
+                                <p class="font-body-sm text-body-sm text-outline">Active</p>
+                            </div>
+                            <div>
+                                <p class="font-headline-lg text-headline-lg text-green-600">4</p>
+                                <p class="font-body-sm text-body-sm text-outline">Healthy</p>
+                            </div>
+                            <div>
+                                <p class="font-headline-lg text-headline-lg text-orange-500">3</p>
+                                <p class="font-body-sm text-body-sm text-outline">At Risk</p>
+                            </div>
+                            <div>
+                                <p class="font-headline-lg text-headline-lg text-error">1</p>
+                                <p class="font-body-sm text-body-sm text-outline">Critical</p>
+                            </div>
+                            <div>
+                                <p class="font-headline-lg text-headline-lg text-amber-700">2</p>
+                                <p class="font-body-sm text-body-sm text-outline">Stale</p>
+                            </div>
+                            <div class="col-span-2 border-t border-outline-variant pt-6">
+                                <p class="font-headline-lg text-headline-lg">12</p>
+                                <p class="font-body-sm text-body-sm text-outline">Meetings last 7 days</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Milestone Distribution -->
+                    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
+                        <h4 class="font-label-caps text-label-caps text-outline uppercase mb-6">Milestone Distribution
+                        </h4>
+                        <div class="space-y-5">
+                            <div>
+                                <div class="flex justify-between font-body-sm text-body-sm mb-1.5">
+                                    <span class="">1. Discovery</span>
+                                    <span class="text-green-600 font-medium">8 (done)</span>
+                                </div>
+                                <div class="h-1.5 w-full bg-surface-container rounded-full overflow-hidden">
+                                    <div class="h-full bg-primary" style="width: 72%;"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between font-body-sm text-body-sm mb-1.5">
+                                    <span class="">2. Alignment</span>
+                                    <span class="text-green-600 font-medium">7 (done)</span>
+                                </div>
+                                <div class="h-1.5 w-full bg-surface-container rounded-full overflow-hidden">
+                                    <div class="h-full bg-primary" style="width: 64%;"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between font-body-sm text-body-sm mb-1.5">
+                                    <span class="">3. Execution</span>
+                                    <span class="text-outline">4 in progress</span>
+                                </div>
+                                <div class="h-1.5 w-full bg-surface-container rounded-full overflow-hidden">
+                                    <div class="h-full bg-primary" style="width: 36%;"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between font-body-sm text-body-sm mb-1.5">
+                                    <span class="">4. Scaling</span>
+                                    <span class="text-outline">2 active</span>
+                                </div>
+                                <div class="h-1.5 w-full bg-surface-container rounded-full overflow-hidden">
+                                    <div class="h-full bg-primary" style="width: 18%;"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between font-body-sm text-body-sm mb-1.5">
+                                    <span class="">5. Completion</span>
+                                    <span class="text-outline">0 reached</span>
+                                </div>
+                                <div class="h-1.5 w-full bg-surface-container rounded-full overflow-hidden">
+                                    <div class="h-full bg-primary" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Right Column (Heatmap) -->
+                <div class="col-span-12 lg:col-span-8">
+                    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
+                        <div
+                            class="px-6 py-4 border-b border-outline-variant bg-surface-container-low flex justify-between items-center">
+                            <h4 class="font-label-caps text-label-caps text-outline uppercase">Relationship Heatmap</h4>
+                            <button class="text-primary font-label-caps text-label-caps hover:underline">View All
+                                Companies</button>
+                        </div>
+                        <div class="divide-y divide-outline-variant">
+                            <!-- Agribot -->
+                            <div
+                                class="px-6 py-4 flex items-center gap-4 hover:bg-surface-container-lowest transition-colors">
+                                <div class="w-2.5 h-2.5 rounded-full bg-error"></div>
+                                <div class="w-32 flex-shrink-0">
+                                    <p class="font-body-md text-body-md font-semibold">Agribot</p>
+                                </div>
+                                <div class="flex-1 max-w-md h-2 bg-surface-container rounded-full overflow-hidden">
+                                    <div class="h-full bg-error" style="width: 34%;"></div>
+                                </div>
+                                <div class="w-12 text-center">
+                                    <p class="font-body-md text-body-md font-bold text-error">34</p>
+                                </div>
+                                <div class="w-24 text-right">
+                                    <span
+                                        class="font-label-caps text-[10px] px-2 py-0.5 bg-error/10 text-error rounded-full">CRITICAL</span>
+                                </div>
+                                <div class="w-20 text-right">
+                                    <span
+                                        class="font-label-caps text-[10px] px-2 py-0.5 border border-outline-variant text-outline rounded-full uppercase">Stale</span>
+                                </div>
+                                <div class="w-20 text-right">
+                                    <p class="font-body-sm text-body-sm text-outline">28d ago</p>
+                                </div>
+                            </div>
+                            <!-- ClimateOS -->
+                            <div class="px-6 py-4 flex items-center gap-4">
+                                <div class="w-2.5 h-2.5 rounded-full bg-orange-500"></div>
+                                <div class="w-32 flex-shrink-0">
+                                    <p class="font-body-md text-body-md font-semibold">ClimateOS</p>
+                                </div>
+                                <div class="flex-1 max-w-md h-2 bg-surface-container rounded-full overflow-hidden">
+                                    <div class="h-full bg-orange-500" style="width: 47%;"></div>
+                                </div>
+                                <div class="w-12 text-center">
+                                    <p class="font-body-md text-body-md font-bold text-orange-500">47</p>
+                                </div>
+                                <div class="w-24 text-right">
+                                    <span
+                                        class="font-label-caps text-[10px] px-2 py-0.5 bg-orange-100 text-orange-600 rounded-full">AT
+                                        RISK</span>
+                                </div>
+                                <div class="w-20 text-right">
+                                    <span
+                                        class="font-label-caps text-[10px] px-2 py-0.5 border border-outline-variant text-outline rounded-full uppercase">Stale</span>
+                                </div>
+                                <div class="w-20 text-right">
+                                    <p class="font-body-sm text-body-sm text-outline">21d ago</p>
+                                </div>
+                            </div>
+                            <!-- UrbanFarm -->
+                            <div class="px-6 py-4 flex items-center gap-4">
+                                <div class="w-2.5 h-2.5 rounded-full bg-orange-500"></div>
+                                <div class="w-32 flex-shrink-0">
+                                    <p class="font-body-md text-body-md font-semibold">UrbanFarm</p>
+                                </div>
+                                <div class="flex-1 max-w-md h-2 bg-surface-container rounded-full overflow-hidden">
+                                    <div class="h-full bg-orange-400" style="width: 58%;"></div>
+                                </div>
+                                <div class="w-12 text-center">
+                                    <p class="font-body-md text-body-md font-bold text-orange-500">58</p>
+                                </div>
+                                <div class="w-24 text-right">
+                                    <span
+                                        class="font-label-caps text-[10px] px-2 py-0.5 bg-orange-100 text-orange-600 rounded-full">AT
+                                        RISK</span>
+                                </div>
+                                <div class="w-20 text-right">
+                                    <span
+                                        class="font-label-caps text-[10px] px-2 py-0.5 border border-outline-variant text-outline rounded-full uppercase">Stale</span>
+                                </div>
+                                <div class="w-20 text-right">
+                                    <p class="font-body-sm text-body-sm text-outline">19d ago</p>
+                                </div>
+                            </div>
+                            <!-- EduPilot -->
+                            <div class="px-6 py-4 flex items-center gap-4">
+                                <div class="w-2.5 h-2.5 rounded-full bg-orange-500"></div>
+                                <div class="w-32 flex-shrink-0">
+                                    <p class="font-body-md text-body-md font-semibold">EduPilot</p>
+                                </div>
+                                <div class="flex-1 max-w-md h-2 bg-surface-container rounded-full overflow-hidden">
+                                    <div class="h-full bg-orange-400" style="width: 65%;"></div>
+                                </div>
+                                <div class="w-12 text-center">
+                                    <p class="font-body-md text-body-md font-bold text-orange-500">65</p>
+                                </div>
+                                <div class="w-24 text-right">
+                                    <span
+                                        class="font-label-caps text-[10px] px-2 py-0.5 bg-orange-100 text-orange-600 rounded-full">AT
+                                        RISK</span>
+                                </div>
+                                <div class="w-20 text-right">
+                                    <span
+                                        class="font-label-caps text-[10px] px-2 py-0.5 border border-primary/30 text-primary rounded-full uppercase">Watch</span>
+                                </div>
+                                <div class="w-20 text-right">
+                                    <p class="font-body-sm text-body-sm text-outline">11d ago</p>
+                                </div>
+                            </div>
+                            <!-- PayLokal -->
+                            <div class="px-6 py-4 flex items-center gap-4">
+                                <div class="w-2.5 h-2.5 rounded-full bg-green-500"></div>
+                                <div class="w-32 flex-shrink-0">
+                                    <p class="font-body-md text-body-md font-semibold">PayLokal</p>
+                                </div>
+                                <div class="flex-1 max-w-md h-2 bg-surface-container rounded-full overflow-hidden">
+                                    <div class="h-full bg-green-500" style="width: 73%;"></div>
+                                </div>
+                                <div class="w-12 text-center">
+                                    <p class="font-body-md text-body-md font-bold text-green-600">73</p>
+                                </div>
+                                <div class="w-24 text-right">
+                                    <span
+                                        class="font-label-caps text-[10px] px-2 py-0.5 bg-green-100 text-green-600 rounded-full">HEALTHY</span>
+                                </div>
+                                <div class="w-20 text-right">
+                                    <span
+                                        class="font-label-caps text-[10px] px-2 py-0.5 border border-outline-variant text-outline rounded-full uppercase opacity-0">Active</span>
+                                </div>
+                                <div class="w-20 text-right">
+                                    <p class="font-body-sm text-body-sm text-outline">7d ago</p>
+                                </div>
+                            </div>
+                            <!-- ByteScale -->
+                            <div class="px-6 py-4 flex items-center gap-4">
+                                <div class="w-2.5 h-2.5 rounded-full bg-green-500"></div>
+                                <div class="w-32 flex-shrink-0">
+                                    <p class="font-body-md text-body-md font-semibold">ByteScale</p>
+                                </div>
+                                <div class="flex-1 max-w-md h-2 bg-surface-container rounded-full overflow-hidden">
+                                    <div class="h-full bg-green-500" style="width: 82%;"></div>
+                                </div>
+                                <div class="w-12 text-center">
+                                    <p class="font-body-md text-body-md font-bold text-green-600">82</p>
+                                </div>
+                                <div class="w-24 text-right">
+                                    <span
+                                        class="font-label-caps text-[10px] px-2 py-0.5 bg-green-100 text-green-600 rounded-full">HEALTHY</span>
+                                </div>
+                                <div class="w-20 text-right">
+                                    <span
+                                        class="font-label-caps text-[10px] px-2 py-0.5 border border-outline-variant text-outline rounded-full uppercase opacity-0">Active</span>
+                                </div>
+                                <div class="w-20 text-right">
+                                    <p class="font-body-sm text-body-sm text-outline">5d ago</p>
+                                </div>
+                            </div>
+                            <!-- MedSupply AI -->
+                            <div class="px-6 py-4 flex items-center gap-4">
+                                <div class="w-2.5 h-2.5 rounded-full bg-green-500"></div>
+                                <div class="w-32 flex-shrink-0">
+                                    <p class="font-body-md text-body-md font-semibold">MedSupply AI</p>
+                                </div>
+                                <div class="flex-1 max-w-md h-2 bg-surface-container rounded-full overflow-hidden">
+                                    <div class="h-full bg-green-500" style="width: 76%;"></div>
+                                </div>
+                                <div class="w-12 text-center">
+                                    <p class="font-body-md text-body-md font-bold text-green-600">76</p>
+                                </div>
+                                <div class="w-24 text-right">
+                                    <span
+                                        class="font-label-caps text-[10px] px-2 py-0.5 bg-green-100 text-green-600 rounded-full">HEALTHY</span>
+                                </div>
+                                <div class="w-20 text-right">
+                                    <span
+                                        class="font-label-caps text-[10px] px-2 py-0.5 border border-outline-variant text-outline rounded-full uppercase opacity-0">Active</span>
+                                </div>
+                                <div class="w-20 text-right">
+                                    <p class="font-body-sm text-body-sm text-outline">4d ago</p>
+                                </div>
+                            </div>
+                            <!-- NexaHealth -->
+                            <div class="px-6 py-4 flex items-center gap-4">
+                                <div class="w-2.5 h-2.5 rounded-full bg-green-500"></div>
+                                <div class="w-32 flex-shrink-0">
+                                    <p class="font-body-md text-body-md font-semibold">NexaHealth</p>
+                                </div>
+                                <div class="flex-1 max-w-md h-2 bg-surface-container rounded-full overflow-hidden">
+                                    <div class="h-full bg-green-600" style="width: 91%;"></div>
+                                </div>
+                                <div class="w-12 text-center">
+                                    <p class="font-body-md text-body-md font-bold text-green-600">91</p>
+                                </div>
+                                <div class="w-24 text-right">
+                                    <span
+                                        class="font-label-caps text-[10px] px-2 py-0.5 bg-green-100 text-green-600 rounded-full">HEALTHY</span>
+                                </div>
+                                <div class="w-20 text-right">
+                                    <span
+                                        class="font-label-caps text-[10px] px-2 py-0.5 border border-outline-variant text-outline rounded-full uppercase opacity-0">Active</span>
+                                </div>
+                                <div class="w-20 text-right">
+                                    <p class="font-body-sm text-body-sm text-outline">2d ago</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Cohort Report Section (Bottom) -->
+            <div class="bg-surface-container border border-outline-variant rounded-xl p-8 space-y-6">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary" data-icon="description">description</span>
+                        <h3 class="font-headline-sm text-headline-sm">Intelligence Report: Cradle Q2</h3>
+                    </div>
+                    <button
+                        class="flex items-center gap-2 text-primary font-label-caps text-label-caps hover:bg-primary/5 px-3 py-1.5 rounded-lg transition-colors">
+                        <span class="material-symbols-outlined text-[18px]" data-icon="content_copy">content_copy</span>
+                        Copy Report
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="space-y-4">
+                        <h4
+                            class="font-label-caps text-label-caps text-outline uppercase border-b border-outline-variant pb-2">
+                            Narrative Summary</h4>
+                        <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                            Cohort Cradle Q2 2026 is currently demonstrating a <span
+                                class="font-bold text-on-surface">66% average health score</span>, trending 4% lower
+                            than the Q1 benchmark. While 36% of the portfolio is in the 'Healthy' quadrant, a cluster of
+                            4 companies (36% of cohort) is currently entering 'At Risk' status due to stagnant
+                            relationship metrics in the last 14 days.
+                        </p>
+                    </div>
+                    <div class="space-y-4">
+                        <h4
+                            class="font-label-caps text-label-caps text-outline uppercase border-b border-outline-variant pb-2">
+                            Key Risks</h4>
+                        <ul class="space-y-2">
+                            <li class="flex items-center gap-2 font-body-sm text-body-sm">
+                                <span class="w-1.5 h-1.5 bg-error rounded-full"></span>
+                                <span class="font-bold">Agribot:</span> Critical inactivity (28d). Urgent outreach
+                                required.
+                            </li>
+                            <li class="flex items-center gap-2 font-body-sm text-body-sm">
+                                <span class="w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
+                                <span class="font-bold">ClimateOS:</span> Stalled at Alignment phase for 3 consecutive
+                                weeks.
+                            </li>
+                            <li class="flex items-center gap-2 font-body-sm text-body-sm">
+                                <span class="w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
+                                <span class="font-bold">UrbanFarm:</span> Decline in mentor engagement score (-12pts).
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="p-4 bg-primary/5 rounded-lg border border-primary/10">
+                    <h4 class="font-label-caps text-label-caps text-primary uppercase mb-3">Recommended Actions</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="flex items-start gap-3">
+                            <span class="material-symbols-outlined text-primary text-[20px]"
+                                data-icon="task_alt">task_alt</span>
+                            <p class="font-body-sm text-body-sm">Schedule immediate partner review for Agribot and
+                                ClimateOS.</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="material-symbols-outlined text-primary text-[20px]"
+                                data-icon="task_alt">task_alt</span>
+                            <p class="font-body-sm text-body-sm">Redeploy technical mentors to UrbanFarm to address
+                                scaling blockers.</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="material-symbols-outlined text-primary text-[20px]"
+                                data-icon="task_alt">task_alt</span>
+                            <p class="font-body-sm text-body-sm">Synthesize Q2 mid-point reports for upcoming investor
+                                board meeting.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center pt-4 border-t border-outline-variant">
+                    <p class="font-body-sm text-body-sm text-outline">Generated by Verrier AI • Today at 10:24 AM</p>
+                    <div class="flex gap-4">
+                        <button
+                            class="bg-secondary text-on-secondary px-4 py-2 rounded-lg font-label-caps text-label-caps flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[18px]" data-icon="ios_share">ios_share</span>
+                            Share with Partners
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+
+</body>
+
+</html>

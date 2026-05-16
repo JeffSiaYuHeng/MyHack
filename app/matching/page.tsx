@@ -17,7 +17,6 @@ export default function MatchingPage() {
         cohortName="Seed data unavailable"
         cohortWeeks={0}
         cohortStatus="setup"
-        activeNav="Matching"
       >
         <div className="p-8 text-center border border-dashed border-border rounded-lg m-4">
           <p className="text-sm text-muted-foreground">
@@ -38,9 +37,7 @@ export default function MatchingPage() {
         cohortName={cohort.name}
         cohortWeeks={cohort.totalWeeks}
         cohortStatus={cohort.status}
-        activeNav="Matching"
-      >
-        <div className="p-8 text-center border border-dashed border-border rounded-lg m-4">
+      >        <div className="p-8 text-center border border-dashed border-border rounded-lg m-4">
           <p className="text-sm text-muted-foreground">
             {initialQueue.length === 0
               ? "No approved unmatched startups available for matching."
@@ -53,7 +50,6 @@ export default function MatchingPage() {
 
   return (
     <ProductShell
-      activeNav="Matching"
       programName={program.name}
       cohortName={cohort.name}
       cohortWeeks={cohort.totalWeeks}

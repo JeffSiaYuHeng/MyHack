@@ -235,7 +235,7 @@ export async function POST(req: Request) {
   const prompt = buildCohortSummaryPrompt(nums);
 
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
+    const model = genAI.getGenerativeModel({ model: "gemini-3.0-flash-preview" });
     const result = await model.generateContent({
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       generationConfig: { responseMimeType: "application/json" },

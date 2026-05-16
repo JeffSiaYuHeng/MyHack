@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import Image from "next/image";
 import toast from "react-hot-toast";
 import { AiOperationLoader } from "@/components/ui/ai-operation-loader";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -297,9 +298,11 @@ export function PublicApplicationForm({
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-6 h-6 relative shrink-0 overflow-hidden rounded-md">
-                <img
+                <Image
                   src="/Verrier Logo.png"
                   alt="Verrier Logo"
+                  width={24}
+                  height={24}
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -346,9 +349,11 @@ export function PublicApplicationForm({
         <div>
           <div className="flex items-center gap-2 mb-3">
             <div className="w-6 h-6 relative shrink-0 overflow-hidden rounded-md">
-              <img
+              <Image
                 src="/Verrier Logo.png"
                 alt="Verrier Logo"
+                width={24}
+                height={24}
                 className="w-full h-full object-cover"
               />
             </div>

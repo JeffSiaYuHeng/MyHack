@@ -183,7 +183,6 @@ export function RelationshipDetail({
   const [meetingDate, setMeetingDate] = useState("");
   const [duration, setDuration] = useState("");
   const [notes, setNotes] = useState("");
-  const [formError, setFormError] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [meetingResult, setMeetingResult] = useState<AnalysisResult | null>(null);
   const [liveHealthScore, setLiveHealthScore] = useState(relationship.healthScore);
@@ -266,7 +265,6 @@ export function RelationshipDetail({
     setMeetingDate("");
     setDuration("");
     setNotes("");
-    setFormError(null);
     setMeetingResult(null);
     setUploadOpen(false);
   }

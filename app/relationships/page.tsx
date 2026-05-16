@@ -19,7 +19,6 @@ export default function RelationshipsPage() {
         cohortName="Seed data unavailable"
         cohortWeeks={0}
         cohortStatus="setup"
-        activeNav="Relationships"
       >
         <div className="p-8 text-center border border-dashed border-border rounded-lg m-4">
           <p className="text-sm text-muted-foreground">
@@ -41,7 +40,6 @@ export default function RelationshipsPage() {
         cohortName={cohort.name}
         cohortWeeks={cohort.totalWeeks}
         cohortStatus={cohort.status}
-        activeNav="Relationships"
       >
         <div className="p-8 text-center border border-dashed border-border rounded-lg m-4">
           <p className="text-sm text-muted-foreground">
@@ -54,7 +52,6 @@ export default function RelationshipsPage() {
 
   return (
     <ProductShell
-      activeNav="Relationships"
       programName={program.name}
       cohortName={cohort.name}
       cohortWeeks={cohort.totalWeeks}

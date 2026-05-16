@@ -3,8 +3,8 @@
 **Project**: Verrier
 **Repository**: MyHack
 **Event**: Build With AI 2026 KL
-**Last Updated**: 2026-05-17
-**Status**: Interaction polish complete — AI calls are explicit user actions, Programme CRUD live, Dashboard redesigned
+**Last Updated**: 2026-05-17 (Final Sprint)
+**Status**: Interaction polish complete — AI calls are explicit user actions, Programme CRUD live, Dashboard redesigned, Search & Pagination implemented, Cohort Intelligence added, Models standardized to Gemini 3.0 Flash Preview.
 
 ---
 
@@ -22,7 +22,11 @@
 - `components/features/cohort-overview.tsx` — AI report generation and copy actions now use toast feedback; fallback report mode is visible.
 - `app/layout.tsx` — Global `react-hot-toast` presenter styled to match Verrier surfaces, borders, icon colors, and top-right operational placement.
 - `app/globals.css` — Shared button and action-link hover/active/disabled effects added across the system, plus matching scan animation utilities.
-- `components/features/program-list.tsx` — New component. Programme index with accent-bar cards, stats (applications, approved, mentors, dates), View/Applicants/Delete actions, delete confirmation modal.
+- `components/features/program-list.tsx` — New component. Programme index with accent-bar cards, stats (applications, approved, mentors, dates), View/Applicants/Delete actions, delete confirmation modal. Added category filter chips, search bar, and pagination.
+- `components/features/startup-list.tsx` — Added search bar, stage filtering, and pagination.
+- `components/features/mentor-list.tsx` — Added search bar, style filtering, and pagination.
+- `components/features/meeting-submission-form.tsx` — Mentor token input replaced with a user-friendly mentor `<select>` dropdown.
+- `components/features/cohort-overview.tsx` — Added an interactive "Instant Cohort Intelligence" section simulating a magic-wand AI report generation.
 - `components/features/program-detail.tsx` — New component. Full programme detail with read view (stats strip, basics, target profile, criteria bars, mentor list) and inline edit mode (all fields editable, sticky save panel, weights validation). Delete with confirmation modal and redirect.
 - `components/features/applicant-review-pool.tsx` — "New Programme" button added to page header linking to `/programs/new`.
 - `components/features/program-setup-wizard.tsx` — Save Programme button added. Shows when `isReady === true`. On save: confirmation state with application URL and "Create another" reset.
@@ -51,13 +55,14 @@ All five Gemini-backed API routes are fully implemented and wired to UI:
 
 | Route | Trigger | Status |
 |---|---|---|
-| `POST /api/ai/match` | "Generate AI matches" in `/matching` after startup selection | ✅ Live |
-| `POST /api/ai/program-fit` | "Get fit score & submit" in `/apply/[programId]` | ✅ Live |
-| `POST /api/ai/analyze-meeting` | "Submit & Analyze" in `/submit-meeting` AND inline Log Meeting in `/relationships/[id]` | ✅ Live |
-| `POST /api/ai/cohort-summary` | "Generate Report" in `/program/[cohortId]` | ✅ Live |
-| `POST /api/ai/diagnose` | "Refresh Diagnosis" in `/relationships/[id]` | ✅ Live — previously orphaned, now wired |
+| `POST /api/ai/match` | "Generate AI matches" in `/matching` after startup selection | ✅ Live (`gemini-3.0-flash-preview`) |
+| `POST /api/ai/program-fit` | "Get fit score & submit" in `/apply/[programId]` | ✅ Live (`gemini-3.0-flash-preview`) |
+| `POST /api/ai/analyze-meeting` | "Submit & Analyze" in `/submit-meeting` AND inline Log Meeting in `/relationships/[id]` | ✅ Live (`gemini-3.0-flash-preview`) |
+| `POST /api/ai/cohort-summary` | "Generate Report" in `/program/[cohortId]` | ✅ Live (`gemini-3.0-flash-preview`) |
+| `POST /api/ai/diagnose` | "Refresh Diagnosis" in `/relationships/[id]` | ✅ Live (`gemini-3.0-flash-preview`) |
+| `POST /api/ai/parse-program` | "AI Autofill" in `/programs/new` | ✅ Live (`gemini-3.0-flash-preview`) |
 
-`lib/gemini.ts` wrapper (`analyzeWithGemini`, `generateContent`) remains exported but unused — all routes instantiate `GoogleGenerativeAI` directly inline.
+`lib/gemini.ts` wrapper (`analyzeWithGemini`, `generateContent`) has been updated to use `gemini-3.0-flash-preview`, but remains largely unused as routes instantiate `GoogleGenerativeAI` directly inline.
 
 ### Data and Auth
 
@@ -84,15 +89,21 @@ All five Gemini-backed API routes are fully implemented and wired to UI:
 - Phase 5 Block A: Firebase Persistence and Rules. Completed 2026-05-17.
 - Phase 5 Block B: Demo Resilience and Fallbacks. Completed 2026-05-17.
 - **Post-hackathon polish session. Completed 2026-05-17.**
-  - Dashboard redesigned as AI ops platform.
+  - Dashboard redesigned as AI ops platform with stateful card filtering navigating to `/relationships`.
+  - Sidebar active state refactored to use `usePathname` for automatic URL-based detection.
   - Log Meeting form wired to `POST /api/ai/analyze-meeting`.
   - Refresh Diagnosis button wired to `POST /api/ai/diagnose`.
   - Mentor matching changed from passive startup-selection trigger to explicit `Generate AI matches` action.
   - Matching loading visualization, toast feedback, and shared button interaction effects added.
   - Programme CRUD: list page, detail page, inline edit, delete with confirmation.
-  - Programme Setup Wizard Save button implemented.
+  - Programme Setup Wizard Save button implemented, complete with an AI Autofill dialog for extracting data from program briefs.
   - Nav "Programmes" link fixed to `/programs`.
   - "New Programme" button added to applicant review pool header.
+- **Final Sprint Polish. Completed 2026-05-17.**
+  - Added full search and pagination logic to `ProgramList`, `StartupList`, and `MentorList`.
+  - Upgraded all backend AI routes to explicitly use `gemini-3.0-flash-preview`.
+  - Built the "Instant Cohort Intelligence" magical reveal component for the final demo in `CohortOverview`.
+  - Simplified the `MeetingSubmissionForm` by converting the hard-to-use "Mentor token" text input into a select dropdown populated from seed data.
 
 ## Current Milestone Progress
 

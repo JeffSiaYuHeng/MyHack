@@ -1,8 +1,14 @@
 # Project Structure Map
 
-**Last Updated:** 2026-05-17 (post-hackathon polish session)
+**AUTO-GENERATED** by `scripts/generate-structure.js`  
+**DO NOT EDIT MANUALLY** - This file is regenerated before each planning session.  
+**Last Updated:** 05/17/2026, 02:05
 
 ---
+
+## Purpose
+This file provides the current valid file tree to prevent AI hallucination of paths.
+It is automatically generated from the actual directory structure.
 
 ## Directory Structure
 
@@ -18,14 +24,59 @@ MyHack/
 ├── docker-compose.yml
 ├── .dockerignore
 ├── .env.example
-├── .env.local
 ├── README.md
+├── overview.md
+├── SetupReport.md
 ├── DB_Module/
 │   ├── _DOCS/
 │   │   ├── LOGS/
-│   │   │   └── [session logs]
+│   │   │   ├── 2026-05-16_AI_Fit_Route.md
+│   │   │   ├── 2026-05-16_Applicant_Review_Pool.md
+│   │   │   ├── 2026-05-16_Auth_Boundary.md
+│   │   │   ├── 2026-05-16_Block_A_Closure.md
+│   │   │   ├── 2026-05-16_Dashboard_Command_Center.md
+│   │   │   ├── 2026-05-16_Design_Token_Alignment.md
+│   │   │   ├── 2026-05-16_Docker_Environment.md
+│   │   │   ├── 2026-05-16_Domain_Types.md
+│   │   │   ├── 2026-05-16_Match_Confirmation.md
+│   │   │   ├── 2026-05-16_Matching_Data_Normalization.md
+│   │   │   ├── 2026-05-16_Matching_Gemini_Integration_FAIL.md
+│   │   │   ├── 2026-05-16_Matching_Gemini_Integration.md
+│   │   │   ├── 2026-05-16_Matching_Route_Boundary.md
+│   │   │   ├── 2026-05-16_Matching_Workbench.md
+│   │   │   ├── 2026-05-16_Meeting_Analysis_Route_FAIL.md
+│   │   │   ├── 2026-05-16_Meeting_Submission_Form.md
+│   │   │   ├── 2026-05-16_Metadata_and_Root_Copy.md
+│   │   │   ├── 2026-05-16_Product_Shell.md
+│   │   │   ├── 2026-05-16_Programme_Setup_Wizard.md
+│   │   │   ├── 2026-05-16_Public_Application.md
+│   │   │   ├── 2026-05-16_Relationship_Detail.md
+│   │   │   ├── 2026-05-16_Relationship_List.md
+│   │   │   ├── 2026-05-17_Cohort_Metrics.md
+│   │   │   ├── 2026-05-17_Cohort_Overview_Shell.md
+│   │   │   ├── 2026-05-17_Cohort_Report_UI.md
+│   │   │   ├── 2026-05-17_Cohort_Summary_Route.md
+│   │   │   ├── 2026-05-17_Dashboard_Attention_Feed.md
+│   │   │   ├── 2026-05-17_Deployment_Config.md
+│   │   │   ├── 2026-05-17_Firebase_Readiness.md
+│   │   │   ├── 2026-05-17_Firestore_Rules.md
+│   │   │   ├── 2026-05-17_Match_Confirmation_Persistence.md
+│   │   │   ├── 2026-05-17_Meeting_Analysis_Route.md
+│   │   │   ├── 2026-05-17_Meeting_Form_Wiring.md
+│   │   │   ├── 2026-05-17_Polish_Session.md
+│   │   │   ├── 2026-05-17_Relationship_Detail_Intelligence.md
+│   │   │   ├── 2026-05-17_Relationship_Diagnosis_Route.md
+│   │   │   ├── 2026-05-17_Resilience_Docs.md
+│   │   │   ├── 2026-05-17_Resilience_Hardening_Correction.md
+│   │   │   ├── 2026-05-17_Resilience_Hardening_Part2_FAIL.md
+│   │   │   ├── 2026-05-17_Resilience_Hardening.md
+│   │   │   ├── 2026-05-17_Runtime_Data_Normalization.md
+│   │   │   ├── 2026-05-17_Seed_Guards.md
+│   │   │   ├── 2026-05-17_Staleness_Analytics.md
+│   │   │   ├── 2026-05-17_UI_Interaction_Primitives.md
+│   │   │   └── LOG(format).md
 │   │   ├── 00_SRS.md
-│   │   ├── 00_STRUCTURE.md          ← this file
+│   │   ├── 00_STRUCTURE.md
 │   │   ├── 01_DB_SCHEMA.md
 │   │   ├── 02_STYLE_GUIDE.md
 │   │   ├── 03_SERVER_ACTIONS.md
@@ -33,73 +84,140 @@ MyHack/
 │   │   ├── 05_PROJECT_SNAPSHOT.md
 │   │   ├── 06_DEPENDENCY_GRAPH.md
 │   │   ├── 07_DATA_FLOW.md
-│   │   └── PROJECT_SNAPSHOT.md
+│   │   ├── 08_USER_FLOW_UI_INTERACTION_REPORT.md
+│   │   ├── 09_APPLICATION_MASTER_BRIEF_FOR_SLIDES.md
+│   │   ├── PROGRAMS_PAGES.md
+│   │   ├── PROJECT_SNAPSHOT.md
+│   │   └── VERRIER_ARCHITECTURE.md
 │   ├── _PHASES/
+│   │   ├── 00_INIT.md
+│   │   ├── 00_ROADMAP.md
+│   │   ├── PHASE_1__Verrier_Product_Foundation.md
+│   │   ├── PHASE_2__Programme_Intake_and_Applicant_Review.md
+│   │   ├── PHASE_3__Mentor_Matching_and_Relationship_Creation.md
+│   │   ├── PHASE_4__Relationship_Health_and_Cohort_Intelligence.md
+│   │   └── PHASE_5__Demo_Hardening_and_Deployment_Readiness.md
 │   ├── _TASK/
+│   │   ├── _Hand_OverLog.md
+│   │   ├── _INSTRUCTION.md
+│   │   ├── _INSTRUCTION(Sample).md
+│   │   ├── _PLAN.md
+│   │   └── _PLAN(Sample).md
 │   ├── Resource/
+│   │   ├── Design.md
+│   │   └── prd.md
 │   ├── DB_README.md
-│   └── Manual.md
+│   ├── Manual.md
+│   └── prd.md
 ├── app/
 │   ├── api/
 │   │   ├── ai/
-│   │   │   ├── analyze-meeting/route.ts   ← POST: meeting notes → Gemini → summary, signal, delta
-│   │   │   ├── cohort-summary/route.ts    ← POST: cohortId → Gemini → narrative, risks, actions
-│   │   │   ├── diagnose/route.ts          ← POST: relationshipId → Gemini → narrative, watchPoints, recommendation
-│   │   │   ├── match/route.ts             ← POST: startupId → Gemini → top 3 mentor matches
-│   │   │   ├── program-fit/route.ts       ← POST: companyProfile → Gemini → fitScore, breakdown
-│   │   │   └── route.ts                   ← legacy scaffold route (unused)
+│   │   │   ├── analyze-meeting/
+│   │   │   │   └── route.ts
+│   │   │   ├── cohort-summary/
+│   │   │   │   └── route.ts
+│   │   │   ├── diagnose/
+│   │   │   │   └── route.ts
+│   │   │   ├── match/
+│   │   │   │   └── route.ts
+│   │   │   ├── program-fit/
+│   │   │   │   └── route.ts
+│   │   │   └── route.ts
 │   │   └── relationships/
-│   │       └── confirm-match/route.ts     ← POST: creates Relationship, attempts Firestore write
+│   │       └── confirm-match/
+│   │           └── route.ts
 │   ├── apply/
-│   │   └── [programId]/page.tsx           ← public startup application
+│   │   └── [programId]/
+│   │       └── page.tsx
 │   ├── dashboard/
 │   │   └── page.tsx
+│   ├── favicon_io/
+│   │   ├── android-chrome-192x192.png
+│   │   ├── android-chrome-512x512.png
+│   │   ├── apple-touch-icon.png
+│   │   ├── favicon-16x16.png
+│   │   ├── favicon-32x32.png
+│   │   ├── favicon.ico
+│   │   └── site.webmanifest
 │   ├── login/
 │   │   └── page.tsx
 │   ├── matching/
 │   │   └── page.tsx
+│   ├── mentors/
+│   │   ├── [mentorId]/
+│   │   │   └── page.tsx
+│   │   └── page.tsx
 │   ├── program/
-│   │   └── [cohortId]/page.tsx            ← cohort overview + AI report
+│   │   └── [cohortId]/
+│   │       └── page.tsx
 │   ├── programs/
 │   │   ├── [programId]/
-│   │   │   ├── applicants/page.tsx        ← applicant review pool
-│   │   │   └── page.tsx                   ← NEW: programme detail (read + edit + delete)
-│   │   ├── new/page.tsx                   ← programme setup wizard
-│   │   └── page.tsx                       ← NEW: programme list
+│   │   │   ├── applicants/
+│   │   │   │   └── page.tsx
+│   │   │   └── page.tsx
+│   │   ├── new/
+│   │   │   └── page.tsx
+│   │   └── page.tsx
 │   ├── relationships/
-│   │   ├── [id]/page.tsx                  ← relationship detail
-│   │   └── page.tsx                       ← relationship list
+│   │   ├── [id]/
+│   │   │   └── page.tsx
+│   │   └── page.tsx
+│   ├── startups/
+│   │   ├── [companyId]/
+│   │   │   └── page.tsx
+│   │   └── page.tsx
 │   ├── submit-meeting/
-│   │   └── page.tsx                       ← public mentor meeting form
+│   │   └── page.tsx
 │   ├── globals.css
 │   ├── layout.tsx
-│   └── page.tsx                           ← redirects to /dashboard
+│   └── page.tsx
 ├── components/
 │   ├── features/
-│   │   ├── applicant-review-pool.tsx      ← applicant list + detail panel + decisions
-│   │   ├── cohort-overview.tsx            ← cohort stats, heatmap, AI report
-│   │   ├── dashboard-command-center.tsx   ← redesigned AI ops dashboard
-│   │   ├── matching-workbench.tsx         ← AI mentor matching UI
-│   │   ├── meeting-submission-form.tsx    ← public meeting form (token-gated)
-│   │   ├── product-shell.tsx              ← coordinator nav shell
-│   │   ├── program-detail.tsx             ← NEW: programme detail + inline edit + delete
-│   │   ├── program-list.tsx               ← NEW: programme index cards
-│   │   ├── program-setup-wizard.tsx       ← programme creation wizard
-│   │   ├── public-application-form.tsx    ← startup application form
-│   │   ├── relationship-detail.tsx        ← detail + wired Log Meeting + Refresh Diagnosis
-│   │   └── relationship-list.tsx          ← relationship list with health bands
+│   │   ├── applicant-review-pool.tsx
+│   │   ├── cohort-overview.tsx
+│   │   ├── dashboard-command-center.tsx
+│   │   ├── matching-workbench.tsx
+│   │   ├── meeting-submission-form.tsx
+│   │   ├── mentor-detail.tsx
+│   │   ├── mentor-list.tsx
+│   │   ├── product-shell.tsx
+│   │   ├── program-detail.tsx
+│   │   ├── program-list.tsx
+│   │   ├── program-setup-wizard.tsx
+│   │   ├── public-application-form.tsx
+│   │   ├── relationship-detail.tsx
+│   │   ├── relationship-list.tsx
+│   │   ├── startup-detail.tsx
+│   │   └── startup-list.tsx
 │   └── ui/
+│       ├── ai-operation-loader.tsx
 │       ├── button.tsx
-│       └── skeleton.tsx
+│       ├── confirm-dialog.tsx
+│       ├── skeleton.tsx
+│       └── state-block.tsx
 ├── lib/
-│   ├── firebase.ts                        ← Firebase init, safeWrite, getFirebaseConfigStatus
-│   ├── gemini.ts                          ← generic wrapper (unused — dead code)
+│   ├── firebase.ts
+│   ├── gemini.ts
 │   ├── store.ts
-│   ├── types.ts                           ← all domain types
+│   ├── types.ts
 │   ├── utils.ts
-│   ├── verrier-analytics.ts               ← getDashboardSummary, getAttentionFeed, etc.
-│   └── verrier-seed.ts                    ← all seed data (programs, cohorts, companies, mentors, relationships, meetings)
+│   ├── verrier-analytics.ts
+│   └── verrier-seed.ts
 ├── public/
+│   ├── android-chrome-192x192.png
+│   ├── android-chrome-512x512.png
+│   ├── apple-touch-icon.png
+│   ├── favicon-16x16.png
+│   ├── favicon-32x32.png
+│   ├── favicon.ico
+│   ├── file.svg
+│   ├── globe.svg
+│   ├── next.svg
+│   ├── push-sw.js
+│   ├── site.webmanifest
+│   ├── vercel.svg
+│   ├── Verrier Logo.png
+│   └── window.svg
 └── scripts/
     ├── generate-dependency-graph.js
     └── generate-structure.js
@@ -107,28 +225,14 @@ MyHack/
 
 ---
 
-## New Files Added (Post-Hackathon Polish)
-
-| File | Purpose |
-|---|---|
-| `app/programs/page.tsx` | Programme list page |
-| `app/programs/[programId]/page.tsx` | Programme detail page |
-| `components/features/program-list.tsx` | Programme index component with CRUD actions |
-| `components/features/program-detail.tsx` | Programme detail component with inline edit and delete |
-
-## Key Changes to Existing Files
-
-| File | Change |
-|---|---|
-| `components/features/product-shell.tsx` | Nav "Programmes" → `/programs`; removed "Demo coordinator" badge; cohort pill with pulse dot |
-| `components/features/dashboard-command-center.tsx` | Full redesign: two-group stat bar, accent cards, health bars, AI badges, skeletons |
-| `components/features/relationship-detail.tsx` | Log Meeting form wired to AI; Refresh Diagnosis button wired to AI |
-| `components/features/applicant-review-pool.tsx` | "New Programme" button added to header |
-| `components/features/program-setup-wizard.tsx` | Save Programme button implemented |
-
----
-
 ## Maintenance
 
-- Run `npm run gen:structure` to regenerate from actual filesystem.
-- Ignored: `node_modules`, `.git`, `.next`, `dist`, `build`.
+- **Auto-generated:** Run `npm run gen:structure` or `node scripts/generate-structure.js`
+- **Pre-planning hook:** This should run automatically before Planner agent execution
+- **Ignored items:** node_modules, .git, .next, dist, build, .turbo, .vercel, coverage
+- **Scanned directories:** DB_Module, .agent, app, components, context, hooks, lib, public, utils, scripts
+
+## Integration with Dual-Brain System
+
+The Planner agent should always read this file first to ensure accurate path references.
+This eliminates the need for manual updates and prevents outdated structure information.

@@ -12,7 +12,6 @@ export default function Home() {
       cohortName={cohort.name}
       cohortWeeks={cohort.totalWeeks}
       cohortStatus={cohort.status}
-      activeNav="Dashboard"
     >
       <DashboardCommandCenter />
     </ProductShell>
