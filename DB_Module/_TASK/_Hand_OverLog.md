@@ -351,3 +351,34 @@
 - Log: `DB_Module/_DOCS/LOGS/2026-05-17_Match_Confirmation_Persistence.md`
 - `_PLAN.md` updated.
 - Ready for next task.
+
+---
+
+## 2026-05-17 05:45 — Evaluator → Archivist
+
+**Status**: PASSED
+
+### What Was Done
+- Build verification: SUCCESS (19 routes compile cleanly).
+- Scope audit: CLEAN (Coder adhered to authorized files).
+- Ticked all checkboxes in `_PLAN.md` for Phase 5 Block A.
+- Verified `firestore.rules` implementation:
+  - Role resolution via `get(/databases/$(database)/documents/users/$(request.auth.uid))`.
+  - Admin/Viewer/Public creation boundaries for all 8 collections.
+  - Token-validated meeting creation.
+  - Organization scoping for program/cohort updates.
+- Verified doc updates in `01_DB_SCHEMA.md` and `05_PROJECT_SNAPSHOT.md`.
+
+### Strategic Anchor
+- Phase: PHASE_5__Demo_Hardening_and_Deployment_Readiness
+- Block: Block A — Firebase Persistence and Rules
+
+### Acceptance Audit
+- Result: PASSED. All tasks for Block A (Persistence foundation and rules) are complete.
+- **SIGNAL: Block [A] is ready for Archival.**
+- Block [A] PASSED. Archivist: update `_PHASES/PHASE_5__Demo_Hardening_and_Deployment_Readiness.md` checkbox states + sync `_PHASES/00_ROADMAP.md`.
+
+### Handover Payload
+- Log: `DB_Module/_DOCS/LOGS/2026-05-17_Firestore_Rules.md`
+- `_PLAN.md` 100% complete for Block A.
+- Ready for Block B transition.
