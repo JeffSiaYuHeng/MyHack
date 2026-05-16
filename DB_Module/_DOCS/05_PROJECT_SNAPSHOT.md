@@ -1,37 +1,48 @@
 # Project Snapshot
 
-**Project**: MyHack  
+**Project**: Verrier  
+**Repository**: MyHack  
 **Event**: Build With AI 2026 KL  
 **Last Updated**: 2026-05-16  
-**Status**: Scaffold and Docker environment verified, product feature pending topic drop  
+**Status**: Verrier PRD initialized in DualBrain docs and phase plan; product code still at scaffold state  
 
 ## Current Architecture State
 
 ### Frontend
 
 - Next.js App Router project is active.
-- `app/page.tsx` renders the Team MyHack landing/status page.
+- `app/page.tsx` still renders the Team MyHack scaffold/status page.
 - `app/layout.tsx` sets metadata, Geist fonts, global styles, and `react-hot-toast`.
 - `components/ui/button.tsx` provides the reusable button primitive.
 - `app/globals.css` defines Tailwind v4 imports and design tokens.
 
+### Product Definition
+
+- Verrier is now the locked product direction.
+- Source PRD lives at `DB_Module/Resource/prd.md`.
+- Design source lives at `DB_Module/Resource/Design.md`.
+- `_DOCS/00_SRS.md` now summarizes the product requirements for Planner use.
+- `_DOCS/01_DB_SCHEMA.md` now defines MVP Firestore collections and TypeScript domain shapes.
+- `_DOCS/02_STYLE_GUIDE.md` now reflects the Morandi Tech design system.
+
 ### AI
 
-- `POST /api/ai` calls Gemini 3 Flash Preview and returns generated text.
-- `lib/gemini.ts` provides both raw text generation and structured JSON analysis helpers.
-- `GEMINI_API_KEY` is required in local and deployment environments.
+- Existing `POST /api/ai` calls Gemini and returns generated text.
+- Existing `lib/gemini.ts` provides raw text and scaffold-level JSON helper functions.
+- Verrier still needs dedicated JSON AI routes for programme fit, mentor matching, meeting analysis, relationship diagnosis, and cohort summary.
 
 ### Data and Auth
 
 - Firebase app, Firestore, and Auth are initialized.
 - Firestore helper `saveResult()` is available.
-- No product-specific collections are finalized.
+- Verrier-specific collections are documented but not implemented in code.
 - Auth UI is not implemented.
+- Firestore rules are not yet collection-aware.
 
 ### State
 
 - Zustand store tracks messages and current user.
-- Shared app types are in `lib/types.ts`.
+- Product domain types still need to be added to `lib/types.ts`.
 
 ### Infrastructure
 
@@ -41,30 +52,29 @@
 
 ### DualBrain
 
-- `DB_Module/` has been added as the project memory and execution protocol layer.
-- `.agent/skills/` defines Planner, Coder, Evaluator, and Archivist roles.
-- `_DOCS` is initialized to describe the actual MyHack scaffold.
-- `_PHASES/00_INIT.md` has been bootstrapped.
-- `_PHASES/00_ROADMAP.md` now points to Phase 2, Block A.
-- Phase 1: Scaffold Operational is complete.
-- `_TASK` contains sample and active task handover files.
+- `_DOCS` has been reinitialized around Verrier.
+- `_PHASES` is being reinitialized around the Verrier MVP build sequence.
+- Phase work should now proceed from the new roadmap rather than the old generic topic-lock phase.
 
 ## Current Gaps
 
-- Final hackathon product idea is not selected.
-- `.env.local` exists with placeholder values and must be populated with real Firebase and Gemini values.
-- Port `3000` may be occupied by another local Docker project; use `APP_PORT=3001 docker compose up -d` until it is free.
-- Firestore schema and rules are still broad and scaffold-level.
-- `README.md` remains the default Next.js README.
+- Product code still shows scaffold page.
+- No Verrier routes have been implemented yet.
+- No seed data module exists yet.
+- No domain-specific Firestore helpers exist yet.
+- No dedicated Gemini prompt modules exist yet.
+- No auth UI exists yet.
+- Firestore rules are still scaffold-level.
+- Recharts and validation libraries are not installed.
 
 ## Recommended Next Milestone
 
-Lock the hackathon topic and define the first product slice:
+Start `_PHASES` Phase 1, Block A:
 
-1. Update `DB_Module/_DOCS/00_SRS.md` with the selected topic and target users.
-2. Update `DB_Module/_DOCS/01_DB_SCHEMA.md` with initial Firestore collections.
-3. Create the first product workflow instruction from Phase 2, Block A.
-4. Replace placeholder env values with real Gemini and Firebase credentials.
+1. Add shared Verrier domain types and seed data.
+2. Add deterministic mock data for programme, applicants, mentors, relationships, meetings, and cohort.
+3. Add small read-only helper functions for dashboard and matching screens.
+4. Keep the first block implementation small enough for one `_TASK/_INSTRUCTION.md`.
 
 ## Known Working Commands
 

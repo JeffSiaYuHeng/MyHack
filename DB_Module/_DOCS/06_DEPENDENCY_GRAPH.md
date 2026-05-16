@@ -2,7 +2,7 @@
 
 **AUTO-GENERATED** by `scripts/generate-dependency-graph.js`
 **DO NOT EDIT MANUALLY** - Regenerate with: `npm run gen:graph`
-**Last Updated:** 05/16/2026, 10:45
+**Last Updated:** 05/16/2026, 12:57
 
 ---
 
@@ -16,8 +16,8 @@ If a file has many importers, changes may require updating Reference Scope or Co
 
 ## Statistics
 
-- **Total Files Analyzed**: 3
-- **Total Dependencies**: 3
+- **Total Files Analyzed**: 4
+- **Total Dependencies**: 4
 - **Average Dependencies per File**: 1.0
 
 ---
@@ -25,6 +25,15 @@ If a file has many importers, changes may require updating Reference Scope or Co
 ## High-Impact Files (Top 20)
 
 These files are imported by many others. Modifying them requires careful impact analysis.
+
+
+### `lib/types.ts`
+- **Impact Level**: HIGH
+- **Imported By**: 2 file(s)
+- **Key Importers**:
+  - `lib/store.ts`
+  - `lib/verrier-analytics.ts`
+
 
 
 ### `components/ui/button.tsx`
@@ -40,14 +49,6 @@ These files are imported by many others. Modifying them requires careful impact 
 - **Imported By**: 1 file(s)
 - **Key Importers**:
   - `components/ui/button.tsx`
-
-
-
-### `lib/types.ts`
-- **Impact Level**: HIGH
-- **Imported By**: 1 file(s)
-- **Key Importers**:
-  - `lib/store.ts`
 
 
 
@@ -67,6 +68,9 @@ These files are imported by many others. Modifying them requires careful impact 
     "lib/utils.ts"
   ],
   "lib/store.ts": [
+    "lib/types.ts"
+  ],
+  "lib/verrier-analytics.ts": [
     "lib/types.ts"
   ]
 }
@@ -90,7 +94,8 @@ These files are imported by many others. Modifying them requires careful impact 
     "components/ui/button.tsx"
   ],
   "lib/types.ts": [
-    "lib/store.ts"
+    "lib/store.ts",
+    "lib/verrier-analytics.ts"
   ]
 }
 ```

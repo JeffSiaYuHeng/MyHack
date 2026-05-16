@@ -1,7 +1,7 @@
 # Project Roadmap
 
-**Current Phase**: Phase 2 — Topic Product Slice
-**Current Block**: Block A
+**Current Phase**: Phase 1 — Verrier Product Foundation
+**Current Block**: Block B
 **Last Updated**: 2026-05-16
 
 ---
@@ -10,15 +10,17 @@
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 1 | Scaffold Operational | COMPLETE |
-| 2 | Topic Product Slice | IN_PROGRESS |
-| 3 | Demo and Deployment Readiness | NOT_STARTED |
+| 1 | Verrier Product Foundation | IN_PROGRESS |
+| 2 | Programme Intake and Applicant Review | NOT_STARTED |
+| 3 | Mentor Matching and Relationship Creation | NOT_STARTED |
+| 4 | Relationship Health and Cohort Intelligence | NOT_STARTED |
+| 5 | Demo Hardening and Deployment Readiness | NOT_STARTED |
 
 ---
 
-## Active: Phase 2 → Block A
+## Active: Phase 1 → Block B
 
-> See `PHASE_2__Topic_Product_Slice.md` for full block details.
+> See `PHASE_1__Verrier_Product_Foundation.md` for full block details.
 
-**What we're building**: A locked hackathon topic, target users, first demo workflow, and initial Firestore collection plan.
-**Acceptance gate**: The SRS and data schema describe a concrete product slice that can be implemented without reinterpreting the idea.
+**What we're building**: Verrier global metadata, Morandi Tech design tokens, and a reusable product shell for coordinator-facing pages.
+**Acceptance gate**: The root app no longer presents as the MyHack scaffold, Verrier styling is applied globally, the product shell works at mobile and desktop widths, and lint succeeds or issues are documented.

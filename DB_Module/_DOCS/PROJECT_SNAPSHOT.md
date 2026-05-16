@@ -1,14 +1,14 @@
-# MyHack Snapshot
+# Verrier Snapshot
 
-**Version**: 0.1.0 scaffold  
+**Version**: 0.2.0 product-initialized  
 **Last Updated**: 2026-05-16  
-**Status**: Hackathon scaffold with verified local Docker environment  
+**Status**: Verrier PRD and design initialized in DualBrain; implementation ready to begin  
 
 ## Summary
 
-MyHack is a Next.js 16, React 19, Firebase, and Gemini scaffold for Build With AI 2026 KL. The application currently shows a Team MyHack landing/status page and includes server-side Gemini access, Firebase helpers, Zustand state, verified Docker support, and Cloud Run deployment automation.
+Verrier is an AI-powered ecosystem relationship management platform for programme administrators. It helps teams create programmes, score startup fit, review applicants, match mentors, monitor mentor-startup relationship health, and generate cohort intelligence.
 
-The repository now also includes the DualBrain Module: a Markdown-based agent workflow and memory system that separates long-term docs, strategic phases, working task instructions, and local agent role skills.
+The repository remains a Next.js 16, React 19, Firebase, and Gemini app scaffold, but the DualBrain Module now points toward Verrier MVP implementation.
 
 ## Quick Links
 
@@ -20,9 +20,12 @@ The repository now also includes the DualBrain Module: a Markdown-based agent wo
 - [Tech Stack](./04_TECH_STACK.md)
 - [Detailed Snapshot](./05_PROJECT_SNAPSHOT.md)
 - [Dependency Graph](./06_DEPENDENCY_GRAPH.md)
+- [Roadmap](../_PHASES/00_ROADMAP.md)
 
 ## Active Work
 
-1. Replace placeholder environment variables with real Gemini and Firebase values.
-2. Continue from `DB_Module/_PHASES/00_ROADMAP.md` Phase 2, Block A.
-3. Replace the scaffold landing/status page with the selected product workflow after topic drop.
+1. Begin `_PHASES` Phase 1, Block A.
+2. Add Verrier domain types and deterministic seed data.
+3. Replace the scaffold page with the first usable command-center surface.
+4. Add dedicated server-side Gemini JSON routes as phases require.
+5. Harden Firebase Auth and Firestore rules before demo deployment.

@@ -1,63 +1,117 @@
-# Task Instruction: Make Docker Local Environment Usable
+# Task Instruction
 
-## Strategic Anchor
-
-- Phase: `PHASE_1__Scaffold_Operational.md`
-- Block: `Block A: Docker Local Environment`
+## Strategic Anchor (MANDATORY)
+- **Phase**: `PHASE_1__Verrier_Product_Foundation.md`
+- **Block**: Block B — App Shell and Design Tokens
 
 ## Context
 
-The current Docker setup cannot be used directly because `docker-compose.yml` requires a missing `.env.local` file and runs `npm run dev` against an image built from a production-only Dockerfile. The goal is to support local Docker development while keeping production standalone builds available.
+Replace the remaining MyHack scaffold presentation with Verrier product metadata and root-route copy. This is the first Block B task and must keep the work inside global metadata and root route presentation.
 
 ---
 
 ## Context Scope (Strict)
 
-- `Dockerfile`
-- `docker-compose.yml`
-- `.dockerignore` (new)
-- `.env.example` (new)
-- `.env.local` (new local placeholder; ignored by Git)
+The Coder agent is ONLY allowed to modify the following files:
+
+- `app/layout.tsx`
+- `app/page.tsx`
+- `DB_Module/_TASK/_Hand_OverLog.md`
 
 ---
 
 ## Reference Scope (Read-Only)
 
-- `package.json`
-- `next.config.ts`
+The Coder agent may read these files for context but MUST NOT modify them:
+
+- `components/ui/button.tsx`
+- `lib/verrier-analytics.ts`
+- `lib/verrier-seed.ts`
+- `DB_Module/_DOCS/00_STRUCTURE.md`
+- `DB_Module/_DOCS/02_STYLE_GUIDE.md`
+- `DB_Module/_DOCS/06_DEPENDENCY_GRAPH.md`
+- `DB_Module/_TASK/_PLAN.md`
+- `DB_Module/_PHASES/PHASE_1__Verrier_Product_Foundation.md`
+
+---
+
+## Dependency Note
+
+- `app/page.tsx` imports `components/ui/button.tsx`.
+- `components/ui/button.tsx` is high-impact with 1 importer: `app/page.tsx`.
+- Do not modify `components/ui/button.tsx`.
+- `app/layout.tsx` imports `app/globals.css`; do not modify `app/globals.css` in this instruction.
 
 ---
 
 ## Steps (Execution Order)
 
-1. Add a `.dockerignore` that excludes local dependencies, build output, Git metadata, logs, and real env files while allowing `.env.example`.
-2. Add `.env.example` documenting all Gemini and Firebase variables required by the app.
-3. Add a local `.env.local` placeholder so Docker Compose can run immediately without a missing env-file error.
-4. Refactor `Dockerfile` into dependency, development, builder, and production runner targets.
-5. Update `docker-compose.yml` to use the development target, mount source code for hot reload, and expose port `3000`.
+1. Modify `app/layout.tsx` metadata:
+   - Set title to `Verrier`
+   - Set description to `AI-powered relationship management for innovation programmes`
+2. Modify `app/page.tsx` to remove MyHack scaffold language:
+   - Remove team-member cards.
+   - Remove hackathon scaffold status.
+   - Remove topic-drop waiting state.
+   - Remove decorative gradient headline treatment.
+3. Render a Verrier root experience using existing local data where useful:
+   - Use product name `Verrier`.
+   - Present active cohort context.
+   - Present compact operational metrics from seed or analytics helpers.
+   - Present relationship health or attention-feed preview.
+4. Keep the root route operational and product-focused:
+   - Use dense readable layout.
+   - Use real Verrier seed data.
+   - Avoid marketing hero layout.
+   - Avoid decorative gradients or orb backgrounds.
+5. Preserve existing shared UI primitives:
+   - Keep `Button` usage only if the root route needs clear actions.
+   - Do not change `components/ui/button.tsx`.
+6. Run `npm run lint`.
+7. Append a Coder handover entry to `DB_Module/_TASK/_Hand_OverLog.md` with:
+   - files changed
+   - summary of root metadata/copy changes
+   - lint result
+   - any exact failure output if lint fails
 
 ---
 
 ## Constraints & Rules
 
-- Do not put real secrets into committed files.
-- Keep `next.config.ts` standalone output unchanged for production Docker builds.
-- Keep Docker local development on port `3000`.
-- Do not introduce extra services or databases.
+- Do not modify any file outside Context Scope.
+- Do not modify `app/globals.css` in this instruction.
+- Do not create a reusable shell component in this instruction.
+- Do not add routes.
+- Do not add dependencies.
+- Do not add Firestore reads or writes.
+- Do not call Gemini.
+- Keep all displayed data deterministic.
 
 ---
 
-## Out of Scope
+## Out of Scope (Hard Stop)
 
-- Do not change app feature code.
-- Do not add Firebase emulators.
-- Do not change GitHub Actions deployment in this task.
+- `app/globals.css`
+- `components/ui/button.tsx`
+- New component files.
+- Dashboard route implementation.
+- Programme intake forms.
+- Applicant review.
+- Matching workflows.
+- Relationship detail pages.
+- API routes.
+- Firebase reads, writes, or rules.
+- Gemini prompt or helper changes.
+- Phase 1 Block C or Block D work.
 
 ---
 
-## Quality Checklist (Self-Review)
+## Quality Checklist
 
-- [x] Context Scope contains ≤ 4 tracked files plus local ignored env placeholder.
-- [x] `docker compose config` succeeds.
-- [x] `docker compose build` succeeds.
-- [x] Docker Compose can start the Next.js dev server.
+- [ ] Metadata says Verrier.
+- [ ] Root page no longer presents as MyHack or topic-drop scaffold.
+- [ ] Root page uses real Verrier seed or analytics data.
+- [ ] Root page follows operational Morandi Tech guidance from the style guide.
+- [ ] No out-of-scope files are modified.
+- [ ] `npm run lint` succeeds or exact failure is logged.
+- [ ] Coder handover note is appended.

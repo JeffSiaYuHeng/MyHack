@@ -2,7 +2,7 @@
 
 **AUTO-GENERATED** by `scripts/generate-structure.js`  
 **DO NOT EDIT MANUALLY** - This file is regenerated before each planning session.  
-**Last Updated:** 05/16/2026, 10:45
+**Last Updated:** 05/16/2026, 12:58
 
 ---
 
@@ -23,7 +23,6 @@ MyHack/
 ├── Dockerfile
 ├── docker-compose.yml
 ├── .dockerignore
-├── .env.example
 ├── README.md
 ├── overview.md
 ├── SetupReport.md
@@ -31,6 +30,7 @@ MyHack/
 │   ├── _DOCS/
 │   │   ├── LOGS/
 │   │   │   ├── 2026-05-16_Docker_Environment.md
+│   │   │   ├── 2026-05-16_Domain_Types.md
 │   │   │   └── LOG(format).md
 │   │   ├── 00_SRS.md
 │   │   ├── 00_STRUCTURE.md
@@ -45,26 +45,23 @@ MyHack/
 │   ├── _PHASES/
 │   │   ├── 00_INIT.md
 │   │   ├── 00_ROADMAP.md
-│   │   ├── PHASE_1__Scaffold_Operational.md
-│   │   ├── PHASE_2__Topic_Product_Slice.md
-│   │   └── PHASE_3__Demo_and_Deployment_Readiness.md
+│   │   ├── PHASE_1__Verrier_Product_Foundation.md
+│   │   ├── PHASE_2__Programme_Intake_and_Applicant_Review.md
+│   │   ├── PHASE_3__Mentor_Matching_and_Relationship_Creation.md
+│   │   ├── PHASE_4__Relationship_Health_and_Cohort_Intelligence.md
+│   │   └── PHASE_5__Demo_Hardening_and_Deployment_Readiness.md
 │   ├── _TASK/
 │   │   ├── _Hand_OverLog.md
 │   │   ├── _INSTRUCTION.md
 │   │   ├── _INSTRUCTION(Sample).md
+│   │   ├── _PLAN.md
 │   │   └── _PLAN(Sample).md
+│   ├── Resource/
+│   │   ├── Design.md
+│   │   └── prd.md
 │   ├── DB_README.md
-│   └── Manual.md
-├── .agent/
-│   └── skills/
-│       ├── dual-brain-archivist/
-│       │   └── SKILL.md
-│       ├── dual-brain-coder/
-│       │   └── SKILL.md
-│       ├── dual-brain-evaluator/
-│       │   └── SKILL.md
-│       └── dual-brain-planner/
-│           └── SKILL.md
+│   ├── Manual.md
+│   └── prd.md
 ├── app/
 │   ├── api/
 │   │   └── ai/
@@ -74,6 +71,7 @@ MyHack/
 │   ├── layout.tsx
 │   └── page.tsx
 ├── components/
+│   ├── features/
 │   └── ui/
 │       └── button.tsx
 ├── lib/
@@ -81,7 +79,9 @@ MyHack/
 │   ├── gemini.ts
 │   ├── store.ts
 │   ├── types.ts
-│   └── utils.ts
+│   ├── utils.ts
+│   ├── verrier-analytics.ts
+│   └── verrier-seed.ts
 ├── public/
 │   ├── file.svg
 │   ├── globe.svg
