@@ -7,9 +7,15 @@
 
 ## Context
 
-Implement the next Phase 4 Block D task from `_PLAN.md`: show cohort stats, health heatmap, milestone distribution, and report action. The `/program/[cohortId]` route and `CohortOverview` shell have passed evaluation.
+Implement the next Phase 4 Block D task from `_PLAN.md`: add `POST /api/ai/cohort-summary`. The cohort overview now shows seeded stats, health heatmap, milestone distribution, and report action.
 
-Latest Evaluator status: PASSED for `/program/[cohortId]`. Overview placeholders are present and ready for seeded metrics.
+Latest Evaluator status: PASSED for `components/features/cohort-overview.tsx`. Ready for AI cohort summary route.
+
+---
+
+## Required Local Framework Doc
+
+- Read `node_modules/next/dist/docs/01-app/01-getting-started/15-route-handlers.md`.
 
 ---
 
@@ -17,7 +23,7 @@ Latest Evaluator status: PASSED for `/program/[cohortId]`. Overview placeholders
 
 The Coder agent is ONLY allowed to modify the following files:
 
-- `components/features/cohort-overview.tsx`
+- `app/api/ai/cohort-summary/route.ts`
 - `DB_Module/_TASK/_Hand_OverLog.md`
 
 ---
@@ -26,68 +32,72 @@ The Coder agent is ONLY allowed to modify the following files:
 
 The Coder agent may read these files for context but MUST NOT modify them:
 
-- `app/program/[cohortId]/page.tsx`
-- `lib/verrier-analytics.ts`
+- `app/api/ai/diagnose/route.ts`
+- `lib/verrier-seed.ts`
 
 ---
 
 ## Dependency Note
 
-- `components/features/cohort-overview.tsx` receives cohort, program, relationships, companies, mentors, and meetings from the route.
-- `lib/verrier-analytics.ts` provides shared health band and urgency helpers.
-- Keep the page route read-only; the required data already reaches the component.
-- `DB_Module/_DOCS/06_DEPENDENCY_GRAPH.md` is stale and does not list the new component.
+- `app/api/ai/cohort-summary/route.ts` is a new route required by Phase 4 Block D.
+- `app/api/ai/diagnose/route.ts` provides the current Gemini JSON response and deterministic fallback pattern.
+- `lib/verrier-seed.ts` provides seeded cohorts, programs, relationships, companies, mentors, and meetings.
+- `DB_Module/_DOCS/06_DEPENDENCY_GRAPH.md` is stale and does not list the new route.
 
 ---
 
 ## Steps (Execution Order)
 
-1. Read `components/features/cohort-overview.tsx`.
-2. Read `app/program/[cohortId]/page.tsx` to confirm props passed into `CohortOverview`.
-3. Read `lib/verrier-analytics.ts` to confirm shared health and urgency helpers.
-4. Replace the health overview placeholder with real seeded stats.
-5. Show total relationships, active relationships, average health score, healthy count, at-risk count, critical count, stale count, and total meeting count.
-6. Add a compact health heatmap using each relationship as a cell or row with company name, health score, health label, urgency label, and days since last meeting.
-7. Sort the heatmap by urgency priority, days since last meeting, health score, then company name.
-8. Add milestone distribution for milestones 1 through 5 using relationship `currentMilestone` and `milestonesCompleted`.
-9. Show distribution counts and simple compact bars or meters.
-10. Add a non-mutating report action area with a button for generating the cohort report in a later task.
-11. Keep the report action disabled or local-only in this task.
-12. Keep the existing cohort header and shell structure.
-13. Do not add `POST /api/ai/cohort-summary` in this task.
-14. Do not render generated narrative content in this task.
-15. Do not modify the dynamic route page.
-16. Do not add Firestore reads or writes.
-17. Do not mutate seed data.
-18. Run `npm run lint`.
-19. Run `npm run build`.
-20. Append a Coder handover entry to `DB_Module/_TASK/_Hand_OverLog.md` with files changed, metrics behavior, heatmap behavior, milestone behavior, report action behavior, verification result, and exact failure output when a command fails.
+1. Read the local Next route handler doc listed above.
+2. Read `app/api/ai/diagnose/route.ts` for validation, prompt, JSON response mode, safe parsing, and fallback patterns.
+3. Read `DB_Module/_DOCS/03_SERVER_ACTIONS.md` for the `POST /api/ai/cohort-summary` request and response contract.
+4. Create `app/api/ai/cohort-summary/route.ts`.
+5. Add `POST(req: Request)` with safe JSON parsing.
+6. Return `400` for invalid JSON, a non-object body, or missing `cohortId`.
+7. Resolve the cohort from `seedCohorts`.
+8. Return `404` when the cohort is missing.
+9. Load related seeded program, companies, mentors, relationships, and meetings.
+10. Compute cohort numbers for total companies, mentors, relationships, meetings, average health score, healthy count, at-risk count, critical count, stale count, and milestone distribution.
+11. Build a cohort summary prompt that includes the specific cohort numbers from step 10.
+12. Require the AI response to contain `narrative`, `keyRisks`, and `recommendedActions`.
+13. Call Gemini server-side with JSON response mode, following the existing route pattern.
+14. Parse Gemini output safely from `unknown`.
+15. Normalize `narrative` to a non-empty string.
+16. Normalize `keyRisks` to a string array.
+17. Normalize `recommendedActions` to a string array.
+18. Add `generatedAt` as an ISO timestamp in every success response.
+19. Add deterministic fallback output for Gemini errors, malformed JSON, missing fields, and empty output.
+20. Ensure fallback `narrative` includes concrete cohort numbers.
+21. Keep the response contract aligned with `POST /api/ai/cohort-summary` in `DB_Module/_DOCS/03_SERVER_ACTIONS.md`.
+22. Do not write to Firestore or mutate seed data.
+23. Do not wire the route into `CohortOverview` in this task.
+24. Run `npm run lint`.
+25. Run `npm run build`.
+26. Append a Coder handover entry to `DB_Module/_TASK/_Hand_OverLog.md` with files changed, validation behavior, AI/fallback behavior, verification result, and exact failure output when a command fails.
 
 ---
 
 ## Constraints & Rules
 
 - Do not modify any file outside Context Scope.
-- Do not modify `app/program/[cohortId]/page.tsx`.
-- Do not modify `lib/verrier-analytics.ts`.
+- Do not modify `components/features/cohort-overview.tsx`.
 - Do not modify `lib/verrier-seed.ts`.
-- Do not add API routes in this task.
+- Do not modify `lib/verrier-analytics.ts`.
 - Do not add Firestore reads or writes.
 - Do not mutate seeded records.
 - Do not add dependencies.
 - Preserve strict TypeScript with no `any`.
-- Use dense operational layout, compact meters, and sparing status colors.
-- Avoid nested cards and decorative backgrounds.
+- Keep Gemini API key usage server-side only.
+- Include specific cohort numbers in the prompt and fallback narrative.
 
 ---
 
 ## Out of Scope (Hard Stop)
 
-- `POST /api/ai/cohort-summary`.
+- Wiring the route into `CohortOverview`.
 - Generated narrative rendering.
 - Copy/export fallback implementation.
 - PDF generation dependency.
-- Dynamic route page changes.
 - Firestore persistence.
 - Seed data mutation.
 - Phase 5 deployment hardening.
@@ -101,11 +111,14 @@ The Coder agent may read these files for context but MUST NOT modify them:
 - [ ] Reference Scope files are not in Context Scope.
 - [ ] No code snippets are included.
 - [ ] Out of Scope is explicit.
-- [ ] Cohort stats render from seeded props.
-- [ ] Health heatmap renders relationship health and urgency.
-- [ ] Milestone distribution renders milestones 1 through 5.
-- [ ] Report action is present and non-mutating.
-- [ ] No API route is added.
+- [ ] `app/api/ai/cohort-summary/route.ts` exists.
+- [ ] Invalid JSON returns `400`.
+- [ ] Missing `cohortId` returns `400`.
+- [ ] Missing cohort returns `404`.
+- [ ] Valid request returns `narrative`, `keyRisks`, `recommendedActions`, and `generatedAt`.
+- [ ] Prompt includes specific cohort numbers.
+- [ ] Fallback narrative includes specific cohort numbers.
+- [ ] AI failure returns deterministic fallback output.
 - [ ] No Firestore or seed mutation is added.
 - [ ] `npm run lint` succeeds or exact failure is logged.
 - [ ] `npm run build` succeeds or exact failure is logged.

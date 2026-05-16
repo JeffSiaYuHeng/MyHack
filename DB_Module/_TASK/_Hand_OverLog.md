@@ -2690,3 +2690,83 @@ Deterministic matches (same as prior task) are always computed before the Gemini
 - `DB_Module/_PHASES/PHASE_4__Relationship_Health_and_Cohort_Intelligence.md`
 - `DB_Module/_TASK/_PLAN.md`
 - `DB_Module/_TASK/_INSTRUCTION.md`
+
+---
+
+## 2026-05-17 03:45 — Coder → Evaluator
+
+**Status**: DONE
+
+### What Was Done
+- Updated `components/features/cohort-overview.tsx` with real seeded stats, health heatmap, and milestone distribution.
+- Added imports: `getRelationshipUrgency`, `RelationshipUrgencyLevel` type from `@/lib/verrier-analytics`; added `MILESTONE_LABELS`, `HEALTH_COLORS`, `urgencyLevelColor` helpers.
+- Now uses all six props including `meetings` (previously unused).
+- Stats section renders: total relationships, active count, average health score (band-coloured), healthy/at-risk/critical counts, stale count (urgency level === "stale"), and total meeting count.
+- Health heatmap: each relationship rendered as a compact row showing a status dot, company name, health score, health label, urgency label (when not healthy), and days since last meeting. Sorted by urgency priority ASC → days since last DESC → health score ASC → company name ASC.
+- Milestone distribution: milestones 1–5 with label, compact progress bar scaled to `totalRelationships`, at-or-past count, completed sub-count, and current-milestone sub-count.
+- Disabled "Generate Narrative" report action button preserved.
+- No API routes added. No Firestore reads/writes. No seed mutation. No new dependencies. `program` and `mentors` props type-safe but `program` unused in JSX (cohort header uses `cohort` directly); no `any` used.
+
+### Verification
+- `npm run lint`: PASSED
+- `npm run build`: PASSED — 18 routes compiled successfully
+
+### Files Changed
+- `components/features/cohort-overview.tsx`
+
+### Handover Payload
+- `components/features/cohort-overview.tsx`
+- `DB_Module/_TASK/_INSTRUCTION.md`
+
+## 2026-05-17 04:00 — Evaluator → Planner
+
+**Status**: PASSED
+
+### What Was Done
+- Build verification: SUCCESS (All 18 routes compile, Next.js build passed).
+- Scope audit: CLEAN (Coder strictly adhered to authorized files).
+- Ticked checkbox: "Show cohort stats, health heatmap..." in `_PLAN.md`.
+- Verified `components/features/cohort-overview.tsx` implementation:
+  - Real seeded metrics (total, active, avg health, band counts, stale, meetings) verified.
+  - Health heatmap with multi-criteria sorting verified.
+  - Milestone distribution with bars verified.
+  - Placeholder report action area verified.
+  - Morandi Tech operational styling verified.
+
+### Strategic Anchor
+- Phase: PHASE_4__Relationship_Health_and_Cohort_Intelligence
+- Block: Block D — Cohort Overview and Narrative
+
+### Acceptance Audit
+- Result: PASSED. Task 2 of Block D is complete.
+
+### Flags / Blockers
+- "Generate Narrative" button is present but disabled as expected.
+- Ready for Task 3: AI cohort summary route.
+
+### Handover Payload
+- Log: _DOCS/LOGS/2026-05-17_Cohort_Metrics.md
+- `_PLAN.md` updated.
+- Ready for next task.
+
+---
+
+## 2026-05-16 18:19 — Planner → Coder
+
+**Status**: DONE
+
+### What Was Done
+- Confirmed latest Evaluator handover passed the Phase 4 Block D cohort metrics task.
+- Marked the completed cohort stats, heatmap, milestone distribution, and report action scope item in `DB_Module/_PHASES/PHASE_4__Relationship_Health_and_Cohort_Intelligence.md`.
+- Updated `_TASK/_PLAN.md` so the current target is `POST /api/ai/cohort-summary`.
+- Replaced `_TASK/_INSTRUCTION.md` with a scoped Coder task for `app/api/ai/cohort-summary/route.ts`.
+
+### Flags / Blockers
+- This task is route-only: no `CohortOverview` wiring, generated narrative rendering, copy/export fallback, Firestore writes, seed mutation, or PDF dependency.
+- The response and fallback must include specific cohort numbers.
+- `app/api/ai/diagnose/route.ts` is the read-only pattern for Gemini JSON handling and fallback behavior.
+
+### Handover Payload
+- `DB_Module/_PHASES/PHASE_4__Relationship_Health_and_Cohort_Intelligence.md`
+- `DB_Module/_TASK/_PLAN.md`
+- `DB_Module/_TASK/_INSTRUCTION.md`

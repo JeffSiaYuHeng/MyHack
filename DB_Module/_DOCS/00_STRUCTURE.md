@@ -2,7 +2,7 @@
 
 **AUTO-GENERATED** by `scripts/generate-structure.js`  
 **DO NOT EDIT MANUALLY** - This file is regenerated before each planning session.  
-**Last Updated:** 05/16/2026, 18:06
+**Last Updated:** 05/16/2026, 18:17
 
 ---
 
@@ -51,6 +51,7 @@ MyHack/
 │   │   │   ├── 2026-05-16_Public_Application.md
 │   │   │   ├── 2026-05-16_Relationship_Detail.md
 │   │   │   ├── 2026-05-16_Relationship_List.md
+│   │   │   ├── 2026-05-17_Cohort_Overview_Shell.md
 │   │   │   ├── 2026-05-17_Dashboard_Attention_Feed.md
 │   │   │   ├── 2026-05-17_Meeting_Analysis_Route.md
 │   │   │   ├── 2026-05-17_Meeting_Form_Wiring.md
@@ -66,6 +67,7 @@ MyHack/
 │   │   ├── 04_TECH_STACK.md
 │   │   ├── 05_PROJECT_SNAPSHOT.md
 │   │   ├── 06_DEPENDENCY_GRAPH.md
+│   │   ├── 07_DATA_FLOW.md
 │   │   └── PROJECT_SNAPSHOT.md
 │   ├── _PHASES/
 │   │   ├── 00_INIT.md

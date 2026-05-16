@@ -69,7 +69,7 @@
 
 ### Scope
 - [x] Implement `/program/[cohortId]`.
-- [ ] Show cohort stats, health heatmap, milestone distribution, and report action.
+- [x] Show cohort stats, health heatmap, milestone distribution, and report action.
 - [ ] Add `POST /api/ai/cohort-summary`.
 - [ ] Render generated narrative, key risks, and recommended actions.
 
