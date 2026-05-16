@@ -7,7 +7,7 @@
 
 ## Context
 
-Add Firebase configuration readiness helpers and safe collection write semantics in `lib/firebase.ts`. This prepares later Firestore persistence tasks to detect missing Firebase config, restrict writes to documented MVP collections, and return fallback-safe results instead of crashing demo flows.
+Replace the current broad Firestore rule set with collection-aware rules for the documented MVP collections. The rules must distinguish admin and viewer access, allow validated public application creation, allow tokenized meeting creation, and deny unknown collections.
 
 ---
 
@@ -15,7 +15,8 @@ Add Firebase configuration readiness helpers and safe collection write semantics
 
 The Coder agent is ONLY allowed to modify the following files:
 
-- `lib/firebase.ts`
+- `firestore.rules`
+- `DB_Module/_DOCS/01_DB_SCHEMA.md`
 - `DB_Module/_DOCS/05_PROJECT_SNAPSHOT.md`
 - `DB_Module/_TASK/_Hand_OverLog.md`
 
@@ -25,44 +26,47 @@ The Coder agent is ONLY allowed to modify the following files:
 
 The Coder agent may read these files for context but MUST NOT modify them:
 
-- `DB_Module/_DOCS/01_DB_SCHEMA.md`
-- `DB_Module/_DOCS/04_TECH_STACK.md`
+- `DB_Module/_DOCS/03_SERVER_ACTIONS.md`
+- `lib/firebase.ts`
 
 ---
 
 ## Dependency Note
 
-- `DB_Module/_DOCS/06_DEPENDENCY_GRAPH.md` is stale and does not list the current app surface.
-- Direct search found no app or component imports of `lib/firebase.ts`.
-- Preserve existing exports `db`, `auth`, and `saveResult` for compatibility.
-- This task does not involve Next.js route, page, metadata, caching, or server/client boundary changes, so no local Next.js doc read is required.
+- `firestore.rules` is not imported by app source code, so `DB_Module/_DOCS/06_DEPENDENCY_GRAPH.md` has no runtime import guidance for this task.
+- `lib/firebase.ts` uses Firebase client SDK writes, so Firestore rules apply to writes made through `safeWrite`.
+- Admin-only writes can return fallback mode until Firebase Auth and ID-token enforcement are wired.
+- Public create rules must stay narrow because public application and meeting flows are unauthenticated by design.
 
 ---
 
 ## Steps (Execution Order)
 
-1. Read `lib/firebase.ts`.
-2. Read `DB_Module/_DOCS/01_DB_SCHEMA.md` for the MVP collection names.
-3. Read `DB_Module/_DOCS/04_TECH_STACK.md` for Firebase and environment expectations.
-4. Preserve Firebase app initialization, Firestore initialization, Auth initialization, and existing named exports.
-5. Add a constant list or readonly set of allowed MVP collection names: `programs`, `applications`, `cohorts`, `companies`, `mentors`, `relationships`, `meetings`, and `users`.
-6. Add an exported collection-name type derived from the allowed collection list.
-7. Add an exported Firebase config status helper that checks all required `NEXT_PUBLIC_FIREBASE_*` values without exposing secret values.
-8. Include missing config key names in the helper result.
-9. Add an exported safe collection write helper for documented MVP collections.
-10. Return a structured result object from the safe write helper with `ok`, `collectionName`, `fallbackUsed`, and either `id` or `error`.
-11. Make the safe write helper return a fallback-safe failure result when Firebase config is incomplete.
-12. Make the safe write helper return a fallback-safe failure result when Firestore throws.
-13. Keep `saveResult(collectionName, data)` backward compatible.
-14. Make `saveResult` delegate to the safe write helper only when doing so preserves its existing Promise behavior.
-15. Do not allow arbitrary collection names in the new safe helper.
-16. Do not add Firebase Admin SDK.
-17. Do not add dependencies.
-18. Do not log environment values.
-19. Update `DB_Module/_DOCS/05_PROJECT_SNAPSHOT.md` to note Firebase readiness helper status, safe write helper status, allowed MVP collections, and seed fallback behavior.
-20. Run `npm run lint`.
-21. Run `npm run build`.
-22. Append a Coder handover entry to `DB_Module/_TASK/_Hand_OverLog.md` with changed files, exported helper names, fallback behavior, verification result, and exact failure output when a command fails.
+1. Read `firestore.rules`.
+2. Read `DB_Module/_DOCS/01_DB_SCHEMA.md` Security Rules Target and collection field contracts.
+3. Read `DB_Module/_DOCS/03_SERVER_ACTIONS.md` route boundary and public flow expectations.
+4. Replace the broad recursive authenticated rule with explicit collection rules.
+5. Add helper functions for signed-in user detection, user profile lookup, admin role check, viewer role check, required field presence, and scalar type checks where Firestore rules support them.
+6. Use `users/{uid}` documents as the role source with `role` equal to `admin` or `viewer`.
+7. Allow admins to read and write admin collections for their own organization where an organization field is present.
+8. Allow viewers to read dashboard-relevant collections and deny viewer writes.
+9. Allow public creation of `applications` only when required fields are present and status is `submitted` or `draft`.
+10. Allow public creation of draft `companies` only when required company fields are present and `isMatched` is `false`.
+11. Allow public creation of `meetings` only when required meeting fields are present, `submittedBy` is `mentor`, and the submitted token matches the referenced mentor token.
+12. Deny public update and delete for `applications`, `companies`, and `meetings`.
+13. Keep `programs`, `cohorts`, `mentors`, `relationships`, and `users` writes admin-only unless a narrower public create rule is explicitly defined.
+14. Allow viewers to read `programs`, `applications`, `cohorts`, `companies`, `mentors`, `relationships`, and `meetings`.
+15. Restrict `users` reads so users can read their own profile and admins can read organization users.
+16. Deny all unknown collections and unmatched paths.
+17. Do not leave a permissive `match /{document=**}` read/write allow rule.
+18. Update `DB_Module/_DOCS/01_DB_SCHEMA.md` Security Rules Target to reflect the actual rule strategy and fallback implication for admin-only writes.
+19. Update `DB_Module/_DOCS/05_PROJECT_SNAPSHOT.md` so Firestore rules are no longer described as scaffold-level.
+20. Do not modify app source code.
+21. Do not add Firebase Admin SDK.
+22. Run a local rules syntax validation command when available in the repo toolchain.
+23. Run `npm run lint`.
+24. Run `npm run build`.
+25. Append a Coder handover entry to `DB_Module/_TASK/_Hand_OverLog.md` with changed files, rule categories, validation result, verification result, and exact failure output when a command fails.
 
 ---
 
@@ -71,25 +75,23 @@ The Coder agent may read these files for context but MUST NOT modify them:
 - Do not modify files outside Context Scope.
 - Do not modify API routes.
 - Do not modify UI components.
-- Do not modify runtime CSV data.
-- Do not modify `firestore.rules`.
-- Do not add Firestore reads.
+- Do not modify `lib/firebase.ts`.
 - Do not add Firebase Admin SDK.
 - Do not add dependencies.
-- Preserve strict TypeScript with no `any`.
-- Do not expose Firebase or Gemini secret values in code, logs, docs, or handover.
-- Keep seed fallback behavior explicit.
+- Do not expose Firebase or Gemini secret values in rules, docs, or handover.
+- Keep public create rules field-validated.
+- Keep seed fallback behavior explicit for admin-only writes that lack authenticated context.
 
 ---
 
 ## Out of Scope (Hard Stop)
 
 - API route persistence wiring.
-- Public application persistence.
-- Meeting submission persistence.
-- Match confirmation persistence.
-- Firestore rules.
-- Authentication enforcement.
+- Public application form changes.
+- Meeting submission form changes.
+- Match confirmation route changes.
+- Firebase Auth UI.
+- ID-token verification.
 - Cloud Run deployment.
 
 ---
@@ -101,14 +103,15 @@ The Coder agent may read these files for context but MUST NOT modify them:
 - [ ] Reference Scope files are not in Context Scope.
 - [ ] No code snippets are included.
 - [ ] Out of Scope is explicit.
-- [ ] `db`, `auth`, and `saveResult` remain exported.
-- [ ] Firebase config readiness helper is exported.
-- [ ] Safe MVP collection write helper is exported.
-- [ ] New safe helper restricts collection names to documented MVP collections.
-- [ ] Missing config returns fallback-safe result.
-- [ ] Firestore write failure returns fallback-safe result.
-- [ ] No secret values are logged or documented.
-- [ ] `DB_Module/_DOCS/05_PROJECT_SNAPSHOT.md` documents helper and fallback status.
+- [ ] Broad authenticated recursive read/write access is removed.
+- [ ] Admin and viewer roles are based on `users/{uid}.role`.
+- [ ] Public `applications` create is validated.
+- [ ] Public draft `companies` create is validated.
+- [ ] Tokenized public `meetings` create is validated against mentor token data.
+- [ ] Unknown collections and unmatched paths are denied.
+- [ ] `DB_Module/_DOCS/01_DB_SCHEMA.md` reflects the rule strategy.
+- [ ] `DB_Module/_DOCS/05_PROJECT_SNAPSHOT.md` reflects collection-aware rules.
+- [ ] Rules syntax validation succeeds or exact failure is logged.
 - [ ] `npm run lint` succeeds or exact failure is logged.
 - [ ] `npm run build` succeeds or exact failure is logged.
 - [ ] Coder handover note is appended.

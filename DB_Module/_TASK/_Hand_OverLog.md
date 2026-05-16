@@ -112,6 +112,51 @@
 
 ---
 
+## 2026-05-16 19:21 — Planner → Coder
+
+**Status**: DONE
+
+### What Was Done
+- Confirmed latest Evaluator handover passed Firebase readiness helpers for Phase 5 Block A.
+- Updated `_PLAN.md` current target to match confirmation persistence with fallback behavior.
+- Created `_INSTRUCTION.md` targeting task: "Replace critical seeded mutation boundary for `POST /api/relationships/confirm-match` with Firestore write attempt plus fallback response."
+
+### Flags / Blockers
+- This task covers only the match confirmation mutation boundary; public application and meeting submission persistence remain later slices of the same Block A plan item.
+- `components/features/matching-workbench.tsx` expects a non-error response and should remain unchanged.
+- `DB_Module/_DOCS/03_SERVER_ACTIONS.md` must be updated because the route response gains persistence metadata and the documented request needs `programId`.
+
+### Handover Payload
+- `DB_Module/_TASK/_PLAN.md`
+- `DB_Module/_TASK/_INSTRUCTION.md`
+- `app/api/relationships/confirm-match/route.ts`
+- `DB_Module/_DOCS/03_SERVER_ACTIONS.md`
+
+---
+
+## 2026-05-16 19:32 — Planner → Coder
+
+**Status**: DONE
+
+### What Was Done
+- Confirmed latest Evaluator handover passed match confirmation persistence for Phase 5 Block A.
+- Updated `_PLAN.md` current target to collection-aware Firestore rules.
+- Created `_INSTRUCTION.md` targeting task: "Add or update Firestore rules for admin, viewer, public application, and tokenized meeting flows."
+
+### Flags / Blockers
+- Current `firestore.rules` still allows broad authenticated read/write and must be narrowed.
+- Auth UI is still a demo placeholder, so admin-only Firestore writes may return fallback mode until Firebase Auth is wired.
+- Public application and meeting create rules must be field-validated and narrow.
+
+### Handover Payload
+- `DB_Module/_TASK/_PLAN.md`
+- `DB_Module/_TASK/_INSTRUCTION.md`
+- `firestore.rules`
+- `DB_Module/_DOCS/01_DB_SCHEMA.md`
+- `DB_Module/_DOCS/05_PROJECT_SNAPSHOT.md`
+
+---
+
 <!-- TEMPLATE — Copy below this line for each handover -->
 
 ## [TIMESTAMP] — [SENDER_ROLE] → [RECEIVER_ROLE]
@@ -193,5 +238,116 @@
 
 ### Handover Payload
 - Log: `DB_Module/_DOCS/LOGS/2026-05-17_Firebase_Readiness.md`
+- `_PLAN.md` updated.
+- Ready for next task.
+
+---
+
+## 2026-05-17 05:20 — Coder → Evaluator
+
+**Status**: DONE
+
+### What Was Done
+- Read `app/api/relationships/confirm-match/route.ts`, `lib/firebase.ts`, and `components/features/matching-workbench.tsx` for context before editing.
+- Added `import { safeWrite } from "@/lib/firebase"` to the confirm-match route.
+- Preserved all existing request validation: `startupId`, `mentorId`, `programId`, `cohortId`, `matchScore`, `matchReason`, `matchBreakdown`, and all four breakdown sub-keys.
+- Preserved the same `Relationship` record construction with deterministic `id: \`rel-local-${Date.now()}\``.
+- Added `safeWrite("relationships", record as unknown as Record<string, unknown>)` call after record construction.
+- Route returns `201` for all valid requests regardless of Firestore availability.
+- Response preserves `relationshipId`, `status`, and `createdAt`; adds `persisted: boolean` and `persistenceMode: "firestore" | "local-fallback"` metadata.
+- Raw Firebase error text is not included in the public response.
+- Updated `DB_Module/_DOCS/03_SERVER_ACTIONS.md`: added `programId` to confirm-match request contract, added `persisted` and `persistenceMode` to response, added source/last-modified header, added Side Effects section documenting Firestore write attempt and local fallback behavior.
+- Did not modify `components/features/matching-workbench.tsx`, `lib/firebase.ts`, Firestore rules, or any file outside Context Scope.
+
+### Type Fix
+- Initial cast `record as Record<string, unknown>` failed TypeScript strict mode: `Conversion of type 'Relationship' to type 'Record<string, unknown>' may be a mistake`. Fixed with double cast: `record as unknown as Record<string, unknown>` (widening through `unknown` is always safe).
+
+### Verification
+- `npm run lint`: PASSED (0 errors, 0 warnings)
+- `npm run build`: PASSED — 19 routes compiled successfully (17 static + 2 dynamic)
+
+### Files Changed
+- `app/api/relationships/confirm-match/route.ts`
+- `DB_Module/_DOCS/03_SERVER_ACTIONS.md`
+
+### Handover Payload
+- `app/api/relationships/confirm-match/route.ts`
+- `DB_Module/_DOCS/03_SERVER_ACTIONS.md`
+- `DB_Module/_TASK/_Hand_OverLog.md`
+
+---
+
+## 2026-05-17 05:35 — Coder → Evaluator
+
+**Status**: DONE
+
+### What Was Done
+- Read `firestore.rules`, `DB_Module/_DOCS/01_DB_SCHEMA.md`, and `DB_Module/_DOCS/03_SERVER_ACTIONS.md` for context.
+- Replaced the broad `match /{document=**} { allow read, write: if request.auth != null; }` rule with explicit collection-aware rules for all 8 MVP collections.
+- Added helper functions: `isSignedIn()`, `currentUser()` (resolves `users/{uid}` via `get()`), `isAdmin()`, `isViewer()`, `isAdminOrViewer()`, `inSameOrg(organizerId)`, `hasFields(fields)`.
+- `programs`: admin create (requires `name`, `organizerId`, `type`, `status`); update/delete org-scoped via `inSameOrg`; viewer read.
+- `applications`: public create when `programId`, `companyId`, `founderContactEmail`, `status` present and `status` in `['draft', 'submitted']`; admin create/update/delete; viewer read.
+- `cohorts`: admin create (requires `name`, `organizerId`, `status`); update/delete org-scoped; viewer read.
+- `companies`: public draft create when `name`, `programIds`, `isMatched` present and `isMatched == false`; admin create/update/delete; viewer read.
+- `mentors`: admin write only; viewer read.
+- `relationships`: admin write only; viewer read. Documented that `safeWrite` calls from unauthenticated routes will receive permission-denied and return `local-fallback` until Auth is enforced.
+- `meetings`: tokenized public create — `submittedBy` must be `mentor` and `token` must match `mentors/{mentorId}.meetingSubmissionToken` resolved via `get()`; admin create/update/delete; viewer read.
+- `users`: own-profile read and update; admin full access.
+- No permissive `match /{document=**}` rule. Unknown collections denied by default.
+- Updated `DB_Module/_DOCS/01_DB_SCHEMA.md` Security Rules Target: replaced aspirational description with the actual implemented rule strategy and fallback implication for admin-only writes.
+- Updated `DB_Module/_DOCS/05_PROJECT_SNAPSHOT.md`: Firestore rules no longer described as scaffold-level; Data and Auth and Known Debt sections updated to reflect collection-aware rules and the auth-enforcement caveat.
+
+### Flags / Blockers
+- **Lint: FAILED** — 5 pre-existing errors in `.claude/worktrees/bold-raman-2f7dab/scripts/*.js` (`@typescript-eslint/no-require-imports`). These files are in a Claude Code worktree directory not excluded by `eslint.config.mjs`. The failure is unrelated to the Firestore rules changes (`.rules` files are not linted) and was introduced when that worktree was created after the previous lint pass. Fix requires adding `.claude/**` to `globalIgnores` in `eslint.config.mjs`, which is outside this task's Context Scope. Evaluator should flag this as a separate lint hygiene task.
+- **Rules syntax validation**: `firebase-tools` is not installed globally or locally (`firebase` binary not found). No local syntax validation was possible. Rules were authored against the documented Firestore rules v2 API.
+- Admin-only writes via client SDK (including `safeWrite` in API routes) will receive Firestore permission-denied until Firebase Auth + ID-token enforcement is wired. This is expected and `safeWrite` returns `local-fallback` in this state.
+
+### Verification
+- `npm run lint`: FAILED — 5 pre-existing errors in `.claude/worktrees/` (outside Context Scope, unrelated to changes). See Flags above.
+- `npm run build`: PASSED — 19 routes compiled successfully (17 static + 2 dynamic).
+- Firestore rules syntax: not validated (firebase-tools unavailable).
+
+### Files Changed
+- `firestore.rules`
+- `DB_Module/_DOCS/01_DB_SCHEMA.md`
+- `DB_Module/_DOCS/05_PROJECT_SNAPSHOT.md`
+
+### Handover Payload
+- `firestore.rules`
+- `DB_Module/_DOCS/01_DB_SCHEMA.md`
+- `DB_Module/_DOCS/05_PROJECT_SNAPSHOT.md`
+- `DB_Module/_TASK/_Hand_OverLog.md`
+
+---
+
+## 2026-05-17 05:35 — Evaluator → Planner
+
+**Status**: PASSED
+
+### What Was Done
+- Build verification: SUCCESS (Next.js build and TypeScript passed).
+- Scope audit: CLEAN (Coder strictly adhered to authorized files).
+- Ticked checkbox: "Replace critical seeded mutation boundaries..." in `_PLAN.md`.
+- Verified `app/api/relationships/confirm-match/route.ts` implementation:
+  - Call to `safeWrite("relationships", record)` correctly implemented.
+  - Successful `201` response even on persistence failure (fallback mode).
+  - Response correctly includes `persisted` and `persistenceMode` metadata.
+- Verified `DB_Module/_DOCS/03_SERVER_ACTIONS.md` update:
+  - Documented `programId` in request and persistence metadata in response.
+  - Documented Firestore side effects and fallback behavior.
+
+### Strategic Anchor
+- Phase: PHASE_5__Demo_Hardening_and_Deployment_Readiness
+- Block: Block A — Firebase Persistence and Rules
+
+### Acceptance Audit
+- Result: PASSED. Match confirmation is now Firestore-ready with robust fallback.
+
+### Flags / Blockers
+- None.
+- Ready for Task 4: Collection-aware Firestore rules.
+
+### Handover Payload
+- Log: `DB_Module/_DOCS/LOGS/2026-05-17_Match_Confirmation_Persistence.md`
 - `_PLAN.md` updated.
 - Ready for next task.

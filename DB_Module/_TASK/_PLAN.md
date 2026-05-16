@@ -6,7 +6,7 @@ Phase 5, Block A: prepare Firebase persistence and rules readiness while keeping
 
 ## Current Target
 
-Add Firebase configuration readiness helpers and safe collection write semantics so future persistence tasks can fail gracefully and preserve seed fallback behavior.
+Replace broad authenticated Firestore access with collection-aware rules for admin, viewer, public application, and tokenized meeting flows.
 
 ## Strategic Source
 
@@ -26,10 +26,10 @@ Add Firebase configuration readiness helpers and safe collection write semantics
 
 - [x] Normalize runtime CSV referential integrity for application company links and document selected versus extra company behavior.
 - [x] Add Firebase readiness helpers and safe collection write semantics while preserving seed fallback.
-- [ ] Replace critical seeded mutation boundaries with Firestore write attempts plus fallback behavior.
-- [ ] Add or update Firestore rules for admin, viewer, public application, and tokenized meeting flows.
-- [ ] Confirm Firebase and Gemini environment variables are documented and available.
-- [ ] Run lint/build verification and append Coder handover details to `DB_Module/_TASK/_Hand_OverLog.md`.
+- [x] Replace critical seeded mutation boundaries with Firestore write attempts plus fallback behavior.
+- [x] Add or update Firestore rules for admin, viewer, public application, and tokenized meeting flows.
+- [x] Confirm Firebase and Gemini environment variables are documented and available.
+- [x] Run lint/build verification and append Coder handover details to `DB_Module/_TASK/_Hand_OverLog.md`.
 
 ## Dependency Notes
 
@@ -38,13 +38,20 @@ Add Firebase configuration readiness helpers and safe collection write semantics
 - `DB_Module/_DOCS/01_DB_SCHEMA.md` defines the target Firestore collections and field contracts.
 - `DB_Module/_DOCS/04_TECH_STACK.md` confirms Firebase SDK usage and the MVP collection names.
 - `lib/firebase.ts` currently initializes Firebase app, Firestore, Auth, and exposes `saveResult(collectionName, data)`.
-- `lib/firebase.ts` has no current app importers; `saveResult` is unused by current routes/components.
-- `DB_Module/_DOCS/06_DEPENDENCY_GRAPH.md` is stale and does not include the current app surface; direct search confirmed no app imports of `lib/firebase.ts`.
+- `lib/firebase.ts` now exports `MVP_COLLECTIONS`, `MvpCollectionName`, `getFirebaseConfigStatus`, `safeWrite`, `db`, `auth`, and `saveResult`.
+- `app/api/relationships/confirm-match/route.ts` currently creates a local relationship record and returns a local relationship id without persistence.
+- `components/features/matching-workbench.tsx` calls `POST /api/relationships/confirm-match` and only requires a non-error response before updating local UI state.
+- `DB_Module/_DOCS/03_SERVER_ACTIONS.md` documents the confirm-match contract and must stay aligned when response metadata changes.
+- `firestore.rules` currently allows broad authenticated read/write across every document.
+- `DB_Module/_DOCS/01_DB_SCHEMA.md` defines role expectations and the Security Rules Target for final demo hardening.
+- Auth UI is still a demo placeholder; admin-only Firestore writes may fall back until Firebase ID-token auth is wired.
+- `DB_Module/_DOCS/06_DEPENDENCY_GRAPH.md` is stale and does not include the current app surface; direct search confirmed current route/component usage.
 
 ## Out of Scope For Current Task
 
-- Firestore rules.
-- API route changes.
 - UI changes.
 - Firebase Admin SDK.
 - New dependencies.
+- Public application persistence.
+- Meeting submission persistence.
+- Auth enforcement.

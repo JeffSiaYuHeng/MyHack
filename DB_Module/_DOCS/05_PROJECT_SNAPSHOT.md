@@ -30,9 +30,9 @@
 - `lib/firebase.ts` exports `safeWrite(collectionName: MvpCollectionName, data)`: restricts writes to the eight documented MVP collections (`programs`, `applications`, `cohorts`, `companies`, `mentors`, `relationships`, `meetings`, `users`). Returns a structured `CollectionWriteResult` with `ok`, `collectionName`, `fallbackUsed`, and either `id` or `error`. Returns a fallback-safe failure result (not a throw) when config is incomplete or Firestore raises an exception. Seed fallback behavior is preserved: when `safeWrite` returns `ok: false`, callers may proceed with seeded or local state.
 - `MvpCollectionName` type is exported for callers that need to type-check collection names at compile time.
 - `saveResult(collectionName: string, data)` and named exports `db` and `auth` are preserved unchanged for backward compatibility.
-- Firestore persistence is not yet wired into demo-critical API routes; those flows still rely on seed/local state.
-- Auth UI is a demo boundary. Production Firebase ID-token enforcement is not implemented yet.
-- Firestore rules are still scaffold-level and require collection-aware tightening before final deployment.
+- `POST /api/relationships/confirm-match` attempts a Firestore write via `safeWrite`; other API routes still rely on seed/local state.
+- Auth UI is a demo boundary. Production Firebase ID-token enforcement is not implemented yet. Until Auth is enforced, `safeWrite` calls from unauthenticated API routes will receive permission-denied and return `local-fallback`.
+- Firestore rules are collection-aware as of 2026-05-17. Admin and viewer roles are resolved from `users/{uid}.role`. Public create rules are field-validated for `applications`, `companies`, and `meetings`. Unknown collections and unmatched paths are denied. See `firestore.rules` and `DB_Module/_DOCS/01_DB_SCHEMA.md` for the full rule strategy.
 
 ### Infrastructure
 
@@ -57,9 +57,9 @@
 
 ## Known Debt / Residual Issues
 
-- Firestore persistence is not wired into demo-critical flows.
-- Firestore rules are not yet collection-aware.
-- Authentication remains a demo placeholder.
+- Firestore persistence is wired only into `POST /api/relationships/confirm-match`; other flows rely on seed/local state.
+- Firestore rules are now collection-aware (Phase 5 Block A).
+- Authentication remains a demo placeholder; admin-only writes fall back to `local-fallback` until ID-token enforcement is added.
 - Seed fallback remains the operational baseline for the demo.
 - `DB_Module/_DOCS/06_DEPENDENCY_GRAPH.md` is stale and should be regenerated before dependency-sensitive planning.
 

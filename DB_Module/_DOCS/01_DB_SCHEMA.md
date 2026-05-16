@@ -296,10 +296,14 @@ Seed data must support dashboard, matching, applicant review, relationship detai
 
 ## Security Rules Target
 
-Before final demo:
+Implemented in `firestore.rules` as of 2026-05-17 (Phase 5 Block A):
 
-- Authenticated admins can read/write admin collections for their organization.
-- Viewers can read dashboard, relationships, meetings, and reports.
-- Public applications can create only valid `applications` and related company draft data for open programmes.
-- Public meeting submissions can create only validated `meetings` using a mentor token.
-- Raw broad authenticated access is acceptable only during early local implementation blocks.
+- Role source: `users/{uid}` document with `role` field equal to `admin` or `viewer`. Roles are resolved via `get()` on each rule evaluation.
+- Admins can read all MVP collections. Admins can create `programs` and `cohorts` with required fields; update/delete is additionally org-scoped via `organizerId == currentUser().organizationId`. Admins can write `mentors`, `relationships`, `applications`, `companies`, `meetings`, and `users` without additional org scoping.
+- Viewers can read `programs`, `applications`, `cohorts`, `companies`, `mentors`, `relationships`, and `meetings`. Viewer writes are denied.
+- Public create for `applications`: requires `programId`, `companyId`, `founderContactEmail`, and `status` fields; `status` must be `draft` or `submitted`. Public update and delete are denied.
+- Public create for `companies`: requires `name`, `programIds`, and `isMatched` fields; `isMatched` must be `false`. Public update and delete are denied.
+- Public create for `meetings`: requires `relationshipId`, `mentorId`, `submittedBy`, and `token` fields; `submittedBy` must be `mentor`; `token` must equal the target mentor's `meetingSubmissionToken` (resolved via `get()`). Public update and delete are denied.
+- `users` reads: each user can read their own profile; admins can read any user document.
+- Unknown collections and unmatched paths are denied. No permissive `match /{document=**}` rule exists.
+- **Fallback implication**: admin-only writes made via the client SDK (e.g., `safeWrite` in API routes) will receive a Firestore permission-denied error until Firebase Auth and ID-token enforcement are wired into the API layer. `safeWrite` returns `local-fallback` in this case; seed fallback behavior remains the operational baseline for the demo.

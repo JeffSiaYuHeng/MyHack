@@ -1,8 +1,129 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if request.auth != null;
+
+    // ─── Helpers ─────────────────────────────────────────────────────────────
+
+    function isSignedIn() {
+      return request.auth != null;
     }
+
+    function currentUser() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && currentUser().role == 'admin';
+    }
+
+    function isViewer() {
+      return isSignedIn() && currentUser().role == 'viewer';
+    }
+
+    function isAdminOrViewer() {
+      return isAdmin() || isViewer();
+    }
+
+    function inSameOrg(organizerId) {
+      return isAdmin() && currentUser().organizationId == organizerId;
+    }
+
+    function hasFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    // ─── programs ─────────────────────────────────────────────────────────────
+    // Admin-only writes (org-scoped for update/delete). Viewer read.
+
+    match /programs/{programId} {
+      allow read: if isAdminOrViewer();
+      allow create: if isAdmin() && hasFields(['name', 'organizerId', 'type', 'status']);
+      allow update: if inSameOrg(resource.data.organizerId);
+      allow delete: if inSameOrg(resource.data.organizerId);
+    }
+
+    // ─── applications ─────────────────────────────────────────────────────────
+    // Admin write. Viewer read. Public create when required fields present and
+    // status is 'draft' or 'submitted'. Public update and delete denied.
+
+    match /applications/{applicationId} {
+      allow read: if isAdminOrViewer();
+      allow create: if isAdmin() ||
+        (hasFields(['programId', 'companyId', 'founderContactEmail', 'status']) &&
+         request.resource.data.status in ['draft', 'submitted']);
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ─── cohorts ──────────────────────────────────────────────────────────────
+    // Admin-only writes (org-scoped for update/delete). Viewer read.
+
+    match /cohorts/{cohortId} {
+      allow read: if isAdminOrViewer();
+      allow create: if isAdmin() && hasFields(['name', 'organizerId', 'status']);
+      allow update: if inSameOrg(resource.data.organizerId);
+      allow delete: if inSameOrg(resource.data.organizerId);
+    }
+
+    // ─── companies ────────────────────────────────────────────────────────────
+    // Admin write. Viewer read. Public draft create when required fields present
+    // and isMatched is false. Public update and delete denied.
+
+    match /companies/{companyId} {
+      allow read: if isAdminOrViewer();
+      allow create: if isAdmin() ||
+        (hasFields(['name', 'programIds', 'isMatched']) &&
+         request.resource.data.isMatched == false);
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ─── mentors ──────────────────────────────────────────────────────────────
+    // Admin-only write. Viewer read.
+
+    match /mentors/{mentorId} {
+      allow read: if isAdminOrViewer();
+      allow write: if isAdmin();
+    }
+
+    // ─── relationships ────────────────────────────────────────────────────────
+    // Admin-only write. Viewer read.
+    // Note: safeWrite calls from unauthenticated API routes will receive
+    // permission-denied and return local-fallback until Auth is enforced.
+
+    match /relationships/{relationshipId} {
+      allow read: if isAdminOrViewer();
+      allow write: if isAdmin();
+    }
+
+    // ─── meetings ─────────────────────────────────────────────────────────────
+    // Admin write. Viewer read. Tokenized public create: submittedBy must be
+    // 'mentor' and the submitted token must match the mentor's
+    // meetingSubmissionToken. Public update and delete denied.
+
+    match /meetings/{meetingId} {
+      allow read: if isAdminOrViewer();
+      allow create: if isAdmin() ||
+        (hasFields(['relationshipId', 'mentorId', 'submittedBy', 'token']) &&
+         request.resource.data.submittedBy == 'mentor' &&
+         get(/databases/$(database)/documents/mentors/$(request.resource.data.mentorId)).data.meetingSubmissionToken
+           == request.resource.data.token);
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ─── users ────────────────────────────────────────────────────────────────
+    // Users can read and update their own profile. Admins can read and write
+    // all user documents in their session context.
+
+    match /users/{userId} {
+      allow read: if (isSignedIn() && request.auth.uid == userId) || isAdmin();
+      allow create: if isAdmin();
+      allow update: if (isSignedIn() && request.auth.uid == userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Unknown collections and unmatched paths are denied by default.
+    // No permissive match /{document=**} rule exists in this rule set.
   }
 }
