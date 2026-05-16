@@ -15,7 +15,7 @@ const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-export async function saveResult(collectionName: string, data: any) {
+export async function saveResult(collectionName: string, data: Record<string, unknown>) {
   return addDoc(collection(db, collectionName), {
     ...data,
     createdAt: serverTimestamp()

@@ -8,14 +8,14 @@ export interface Message {
 export interface ResultType {
   id?: string;
   title: string;
-  data: any;
-  createdAt: any;
+  data: unknown;
+  createdAt: unknown;
 }
 
 export interface AppState {
   messages: Message[];
   addMessage: (message: Message) => void;
   clearMessages: () => void;
-  user: any | null;
-  setUser: (user: any) => void;
+  user: unknown | null;
+  setUser: (user: unknown | null) => void;
 }

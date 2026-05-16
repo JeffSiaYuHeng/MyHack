@@ -6,5 +6,5 @@ export const useStore = create<AppState>((set) => ({
   user: null,
   addMessage: (message: Message) => set((state) => ({ messages: [...state.messages, message] })),
   clearMessages: () => set({ messages: [] }),
-  setUser: (user: any) => set({ user }),
+  setUser: (user: unknown | null) => set({ user }),
 }))

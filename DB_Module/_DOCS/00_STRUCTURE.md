@@ -1,0 +1,96 @@
+# Project Structure Map
+
+**AUTO-GENERATED** by `scripts/generate-structure.js`  
+**DO NOT EDIT MANUALLY** - This file is regenerated before each planning session.  
+**Last Updated:** 05/15/2026, 23:56
+
+---
+
+## Purpose
+This file provides the current valid file tree to prevent AI hallucination of paths.
+It is automatically generated from the actual directory structure.
+
+## Directory Structure
+
+```
+MyHack/
+├── package.json
+├── tsconfig.json
+├── next.config.ts
+├── postcss.config.mjs
+├── eslint.config.mjs
+├── DB_Module/
+│   ├── _DOCS/
+│   │   ├── LOGS/
+│   │   │   └── LOG(format).md
+│   │   ├── 00_SRS.md
+│   │   ├── 00_STRUCTURE.md
+│   │   ├── 01_DB_SCHEMA.md
+│   │   ├── 02_STYLE_GUIDE.md
+│   │   ├── 03_SERVER_ACTIONS.md
+│   │   ├── 04_TECH_STACK.md
+│   │   ├── 05_PROJECT_SNAPSHOT.md
+│   │   ├── 06_DEPENDENCY_GRAPH.md
+│   │   ├── PROJECT_SNAPSHOT.md
+│   │   └── 建议Ryo.md
+│   ├── _PHASES/
+│   │   └── 00_INIT.md
+│   ├── _TASK/
+│   │   ├── _Hand_OverLog.md
+│   │   ├── _INSTRUCTION.md
+│   │   ├── _INSTRUCTION(Sample).md
+│   │   └── _PLAN(Sample).md
+│   ├── DB_README.md
+│   └── Manual.md
+├── .agent/
+│   └── skills/
+│       ├── dual-brain-archivist/
+│       │   └── SKILL.md
+│       ├── dual-brain-coder/
+│       │   └── SKILL.md
+│       ├── dual-brain-evaluator/
+│       │   └── SKILL.md
+│       └── dual-brain-planner/
+│           └── SKILL.md
+├── app/
+│   ├── api/
+│   │   └── ai/
+│   │       └── route.ts
+│   ├── favicon.ico
+│   ├── globals.css
+│   ├── layout.tsx
+│   └── page.tsx
+├── components/
+│   ├── features/
+│   └── ui/
+│       └── button.tsx
+├── lib/
+│   ├── firebase.ts
+│   ├── gemini.ts
+│   ├── store.ts
+│   ├── types.ts
+│   └── utils.ts
+├── public/
+│   ├── file.svg
+│   ├── globe.svg
+│   ├── next.svg
+│   ├── vercel.svg
+│   └── window.svg
+└── scripts/
+    ├── generate-dependency-graph.js
+    └── generate-structure.js
+```
+
+---
+
+## Maintenance
+
+- **Auto-generated:** Run `npm run gen:structure` or `node scripts/generate-structure.js`
+- **Pre-planning hook:** This should run automatically before Planner agent execution
+- **Ignored items:** node_modules, .git, .next, dist, build, .turbo, .vercel, coverage
+- **Scanned directories:** DB_Module, .agent, app, components, context, hooks, lib, public, utils, scripts
+
+## Integration with Dual-Brain System
+
+The Planner agent should always read this file first to ensure accurate path references.
+This eliminates the need for manual updates and prevents outdated structure information.

@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "gen:structure": "node scripts/generate-structure.js",
+    "gen:graph": "node scripts/generate-dependency-graph.js"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
