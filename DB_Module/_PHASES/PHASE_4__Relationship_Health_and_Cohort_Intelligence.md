@@ -11,9 +11,9 @@
 | Block | Name | Depends On | Status |
 |-------|------|------------|--------|
 | A | Relationship Detail Timeline | — | COMPLETED |
-| B | Meeting Submission and AI Analysis | Block A | IN_PROGRESS |
-| C | Relationship Diagnosis and Health Decay | Block B | NOT_STARTED |
-| D | Cohort Overview and Narrative | Block C | NOT_STARTED |
+| B | Meeting Submission and AI Analysis | Block A | COMPLETED |
+| C | Relationship Diagnosis and Health Decay | Block B | COMPLETED |
+| D | Cohort Overview and Narrative | Block C | IN_PROGRESS |
 
 ---
 
@@ -39,7 +39,7 @@
 - [x] Implement `/submit-meeting` public form with token, date, duration, and notes.
 - [x] Add `POST /api/ai/analyze-meeting` or `/api/meetings/submit` route.
 - [x] Add meeting analysis prompt template and structured response parsing.
-- [ ] Update relationship health and meeting timeline state after analysis.
+- [x] Update relationship health and meeting timeline state after analysis.
 
 ### Acceptance Criteria
 - [x] Notes shorter than 50 characters are rejected.
@@ -52,29 +52,29 @@
 ## Block C: Relationship Diagnosis and Health Decay
 
 ### Scope
-- [ ] Add relationship diagnosis prompt template and route.
-- [ ] Add helper logic for days-since-last-meeting and stale relationship urgency.
-- [ ] Update dashboard Attention Feed to use relationship diagnosis or generated reason.
-- [ ] Ensure watch points are visible in relationship detail.
+- [x] Add relationship diagnosis prompt template and route.
+- [x] Add helper logic for days-since-last-meeting and stale relationship urgency.
+- [x] Update dashboard Attention Feed to use relationship diagnosis or generated reason.
+- [x] Ensure watch points are visible in relationship detail.
 
 ### Acceptance Criteria
-- [ ] Critical and stale relationships are ranked correctly.
-- [ ] Diagnosis returns narrative, watch points, and recommendation.
-- [ ] Dashboard and relationship detail share consistent health labels.
-- [ ] AI failure falls back to deterministic risk reason.
+- [x] Critical and stale relationships are ranked correctly.
+- [x] Diagnosis returns narrative, watch points, and recommendation.
+- [x] Dashboard and relationship detail share consistent health labels.
+- [x] AI failure falls back to deterministic risk reason.
 
 ---
 
 ## Block D: Cohort Overview and Narrative
 
 ### Scope
-- [ ] Implement `/program/[cohortId]`.
+- [x] Implement `/program/[cohortId]`.
 - [ ] Show cohort stats, health heatmap, milestone distribution, and report action.
 - [ ] Add `POST /api/ai/cohort-summary`.
 - [ ] Render generated narrative, key risks, and recommended actions.
 
 ### Acceptance Criteria
-- [ ] Cohort overview can be demoed from seeded data.
+- [x] Cohort overview can be demoed from seeded data.
 - [ ] Narrative includes specific cohort numbers.
 - [ ] Copy/export fallback is available without a PDF dependency.
 - [ ] Empty or unavailable AI response does not break the page.

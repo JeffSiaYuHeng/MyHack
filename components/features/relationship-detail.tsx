@@ -10,6 +10,12 @@ import type {
   Program,
   TimestampLike,
 } from "@/lib/types";
+import type { RelationshipUrgencyLevel } from "@/lib/verrier-analytics";
+import {
+  getHealthBand,
+  getHealthBandLabel,
+  getRelationshipUrgency,
+} from "@/lib/verrier-analytics";
 
 const MILESTONE_LABELS = [
   "Discovery",
@@ -43,10 +49,11 @@ const SIGNAL_COLOR: Record<Meeting["signal"], string> = {
   "Friction detected": "var(--status-critical)",
 };
 
-function getHealthBand(score: number): "healthy" | "at-risk" | "critical" {
-  if (score >= 70) return "healthy";
-  if (score >= 40) return "at-risk";
-  return "critical";
+function urgencyLevelColor(level: RelationshipUrgencyLevel): string {
+  if (level === "critical") return "var(--status-critical)";
+  if (level === "stale" || level === "watch") return "var(--status-risk)";
+  if (level === "healthy") return "var(--status-healthy)";
+  return "";
 }
 
 function formatDate(ts: TimestampLike): string {
@@ -81,6 +88,7 @@ export function RelationshipDetail({
 
   const band = getHealthBand(relationship.healthScore);
   const healthColor = HEALTH_COLORS[band];
+  const urgency = getRelationshipUrgency(relationship, meetings);
 
   const sortedMeetings = [...meetings].sort(
     (a, b) => a.meetingNumber - b.meetingNumber
@@ -103,14 +111,22 @@ export function RelationshipDetail({
             </div>
             <div className="flex items-center gap-2 flex-wrap mt-1">
               <span
-                className="text-[10px] font-medium border rounded px-1.5 py-0.5 capitalize"
+                className="text-[10px] font-medium border rounded px-1.5 py-0.5"
                 style={{
                   color: healthColor,
                   borderColor: healthColor,
                 }}
               >
-                {band === "at-risk" ? "At Risk" : band.charAt(0).toUpperCase() + band.slice(1)}
+                {getHealthBandLabel(band)}
               </span>
+              {urgency.level !== "healthy" && (
+                <span
+                  className="text-[10px] font-medium"
+                  style={{ color: urgencyLevelColor(urgency.level) }}
+                >
+                  {urgency.label}
+                </span>
+              )}
               <span className="text-[10px] border border-border rounded px-1.5 py-0.5 text-muted-foreground capitalize">
                 {relationship.status}
               </span>
@@ -155,7 +171,7 @@ export function RelationshipDetail({
           </div>
           <div className="text-muted-foreground">
             <span className="font-medium text-foreground">
-              {relationship.daysSinceLastMeeting}d
+              {urgency.daysSinceLastMeeting}d
             </span>{" "}
             since last
           </div>
@@ -176,9 +192,12 @@ export function RelationshipDetail({
           </div>
         </div>
 
+        {/* Urgency reason */}
+        <p className="text-xs text-muted-foreground pt-1">{urgency.reason}</p>
+
         {/* AI diagnosis */}
         {relationship.aiDiagnosis && (
-          <p className="text-xs text-muted-foreground pt-1">
+          <p className="text-xs text-muted-foreground">
             {relationship.aiDiagnosis}
           </p>
         )}

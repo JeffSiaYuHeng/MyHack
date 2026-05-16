@@ -3,13 +3,13 @@
 ## Strategic Anchor (MANDATORY)
 
 - **Phase**: `PHASE_4__Relationship_Health_and_Cohort_Intelligence.md`
-- **Block**: Block B — Meeting Submission and AI Analysis
+- **Block**: Block D — Cohort Overview and Narrative
 
 ## Context
 
-Implement the next Phase 4 Block B task from `_PLAN.md`: update relationship health and meeting timeline state after analysis. For this task, wire the public mentor meeting form to the existing analysis route and show the returned analysis in local UI state.
+Implement the next Phase 4 Block D task from `_PLAN.md`: show cohort stats, health heatmap, milestone distribution, and report action. The `/program/[cohortId]` route and `CohortOverview` shell have passed evaluation.
 
-Latest Evaluator status: PASSED for `app/api/ai/analyze-meeting/route.ts`. The route already validates notes, returns AI summary and action items, clamps health score output, and falls back deterministically on Gemini failure.
+Latest Evaluator status: PASSED for `/program/[cohortId]`. Overview placeholders are present and ready for seeded metrics.
 
 ---
 
@@ -17,7 +17,7 @@ Latest Evaluator status: PASSED for `app/api/ai/analyze-meeting/route.ts`. The r
 
 The Coder agent is ONLY allowed to modify the following files:
 
-- `components/features/meeting-submission-form.tsx`
+- `components/features/cohort-overview.tsx`
 - `DB_Module/_TASK/_Hand_OverLog.md`
 
 ---
@@ -26,66 +26,71 @@ The Coder agent is ONLY allowed to modify the following files:
 
 The Coder agent may read these files for context but MUST NOT modify them:
 
-- `app/api/ai/analyze-meeting/route.ts`
-- `lib/verrier-seed.ts`
+- `app/program/[cohortId]/page.tsx`
+- `lib/verrier-analytics.ts`
 
 ---
 
 ## Dependency Note
 
-- `DB_Module/_DOCS/06_DEPENDENCY_GRAPH.md` is stale and does not list `components/features/meeting-submission-form.tsx`.
-- Treat `components/features/meeting-submission-form.tsx` as the only source file for this task.
-- Keep `lib/verrier-seed.ts` read-only; use existing token and relationship context already resolved by the form.
-- Keep `app/api/ai/analyze-meeting/route.ts` read-only; consume its existing response contract.
+- `components/features/cohort-overview.tsx` receives cohort, program, relationships, companies, mentors, and meetings from the route.
+- `lib/verrier-analytics.ts` provides shared health band and urgency helpers.
+- Keep the page route read-only; the required data already reaches the component.
+- `DB_Module/_DOCS/06_DEPENDENCY_GRAPH.md` is stale and does not list the new component.
 
 ---
 
 ## Steps (Execution Order)
 
-1. Read `components/features/meeting-submission-form.tsx`.
-2. Read `app/api/ai/analyze-meeting/route.ts` to confirm the request and response fields.
-3. Extend the form state to track submission progress, API errors, and the analysis result.
-4. Keep the existing client validation for token, date, duration, and notes.
-5. On valid submit, call `POST /api/ai/analyze-meeting` with JSON body fields `relationshipId`, `date`, `durationMinutes`, `rawNotes`, and `submittedBy`.
-6. Send `submittedBy` as `"mentor"`.
-7. Convert the duration input to a number before sending the request.
-8. On a non-OK response, show a clear inline error and keep the form available.
-9. On success, store `meetingId`, `aiSummary`, `actionItems`, `signal`, `signalReason`, `healthScoreDelta`, `newHealthScore`, and `watchPoints` in local state.
-10. Replace the current queued confirmation copy with the returned analysis summary.
-11. Render action items with owner, task, and due date when present.
-12. Render signal, signal reason, health score delta, new health score, and watch points.
-13. Keep the confirmation state clear for mentors after success.
-14. Do not mutate seed data, Firestore, or global relationship state.
-15. Do not edit the API route in this task.
-16. Run `npm run lint`.
-17. Run `npm run build`.
-18. Append a Coder handover entry to `DB_Module/_TASK/_Hand_OverLog.md` with files changed, UI behavior, API integration behavior, verification result, and exact failure output when a command fails.
+1. Read `components/features/cohort-overview.tsx`.
+2. Read `app/program/[cohortId]/page.tsx` to confirm props passed into `CohortOverview`.
+3. Read `lib/verrier-analytics.ts` to confirm shared health and urgency helpers.
+4. Replace the health overview placeholder with real seeded stats.
+5. Show total relationships, active relationships, average health score, healthy count, at-risk count, critical count, stale count, and total meeting count.
+6. Add a compact health heatmap using each relationship as a cell or row with company name, health score, health label, urgency label, and days since last meeting.
+7. Sort the heatmap by urgency priority, days since last meeting, health score, then company name.
+8. Add milestone distribution for milestones 1 through 5 using relationship `currentMilestone` and `milestonesCompleted`.
+9. Show distribution counts and simple compact bars or meters.
+10. Add a non-mutating report action area with a button for generating the cohort report in a later task.
+11. Keep the report action disabled or local-only in this task.
+12. Keep the existing cohort header and shell structure.
+13. Do not add `POST /api/ai/cohort-summary` in this task.
+14. Do not render generated narrative content in this task.
+15. Do not modify the dynamic route page.
+16. Do not add Firestore reads or writes.
+17. Do not mutate seed data.
+18. Run `npm run lint`.
+19. Run `npm run build`.
+20. Append a Coder handover entry to `DB_Module/_TASK/_Hand_OverLog.md` with files changed, metrics behavior, heatmap behavior, milestone behavior, report action behavior, verification result, and exact failure output when a command fails.
 
 ---
 
 ## Constraints & Rules
 
 - Do not modify any file outside Context Scope.
-- Do not modify `app/api/ai/analyze-meeting/route.ts`.
+- Do not modify `app/program/[cohortId]/page.tsx`.
+- Do not modify `lib/verrier-analytics.ts`.
 - Do not modify `lib/verrier-seed.ts`.
+- Do not add API routes in this task.
 - Do not add Firestore reads or writes.
-- Do not mutate seeded meetings or relationships.
+- Do not mutate seeded records.
 - Do not add dependencies.
 - Preserve strict TypeScript with no `any`.
-- Preserve the existing token-gated public form behavior.
-- Keep all relationship health and timeline updates local to the form UI for this task.
+- Use dense operational layout, compact meters, and sparing status colors.
+- Avoid nested cards and decorative backgrounds.
 
 ---
 
 ## Out of Scope (Hard Stop)
 
-- API route changes.
+- `POST /api/ai/cohort-summary`.
+- Generated narrative rendering.
+- Copy/export fallback implementation.
+- PDF generation dependency.
+- Dynamic route page changes.
 - Firestore persistence.
 - Seed data mutation.
-- Relationship detail timeline mutation.
-- Dashboard Attention Feed changes.
-- Relationship diagnosis route.
-- Cohort narrative work.
+- Phase 5 deployment hardening.
 
 ---
 
@@ -96,10 +101,11 @@ The Coder agent may read these files for context but MUST NOT modify them:
 - [ ] Reference Scope files are not in Context Scope.
 - [ ] No code snippets are included.
 - [ ] Out of Scope is explicit.
-- [ ] Form calls `POST /api/ai/analyze-meeting` after client validation.
-- [ ] Non-OK API responses show an inline error.
-- [ ] Success state shows AI summary and action items.
-- [ ] Success state shows signal, health score delta, new health score, and watch points.
+- [ ] Cohort stats render from seeded props.
+- [ ] Health heatmap renders relationship health and urgency.
+- [ ] Milestone distribution renders milestones 1 through 5.
+- [ ] Report action is present and non-mutating.
+- [ ] No API route is added.
 - [ ] No Firestore or seed mutation is added.
 - [ ] `npm run lint` succeeds or exact failure is logged.
 - [ ] `npm run build` succeeds or exact failure is logged.

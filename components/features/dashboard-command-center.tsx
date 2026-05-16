@@ -1,10 +1,17 @@
-import type { HealthBand } from "@/lib/verrier-analytics";
+import type { HealthBand, RelationshipUrgencyLevel } from "@/lib/verrier-analytics";
 import {
   getAttentionFeed,
   getDashboardSummary,
   getHealthBandLabel,
   getRecentMeetings,
 } from "@/lib/verrier-analytics";
+
+function urgencyLevelColor(level: RelationshipUrgencyLevel): string {
+  if (level === "critical") return "var(--status-critical)";
+  if (level === "stale" || level === "watch") return "var(--status-risk)";
+  if (level === "healthy") return "var(--status-healthy)";
+  return "";
+}
 
 function bandBadgeClass(band: HealthBand): string {
   if (band === "healthy") return "text-[#55624f] bg-[#d6e4cc]";
@@ -81,29 +88,45 @@ export function DashboardCommandCenter() {
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             Attention Feed
           </h2>
-          {feed.map(({ relationship, company, mentor, band }) => (
+          {feed.map(({ relationship, company, mentor, band, urgency }) => (
             <div
               key={relationship.id}
               className="border border-border rounded-lg bg-card px-4 py-3 space-y-1.5"
             >
               <div className="flex items-center justify-between gap-4">
                 <span className="text-sm font-semibold">{company.name}</span>
-                <span
-                  className={`text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 ${bandBadgeClass(band)}`}
-                >
-                  {getHealthBandLabel(band)}
-                </span>
+                <div className="flex items-center gap-2 shrink-0">
+                  {urgency.level !== "healthy" && (
+                    <span
+                      className="text-[10px] font-medium"
+                      style={{ color: urgencyLevelColor(urgency.level) }}
+                    >
+                      {urgency.label}
+                    </span>
+                  )}
+                  <span
+                    className={`text-xs font-semibold px-2 py-0.5 rounded-full ${bandBadgeClass(band)}`}
+                  >
+                    {getHealthBandLabel(band)}
+                  </span>
+                </div>
               </div>
               <p className="text-xs text-muted-foreground">
                 {mentor.name} &middot; Score {relationship.healthScore} &middot;{" "}
-                {relationship.daysSinceLastMeeting}d since last meeting
+                {urgency.daysSinceLastMeeting}d since last meeting
               </p>
+              <p className="text-xs text-muted-foreground">{urgency.reason}</p>
+              {relationship.aiDiagnosis && (
+                <p className="text-xs text-muted-foreground">{relationship.aiDiagnosis}</p>
+              )}
               {relationship.watchPoints.length > 0 && (
-                <p className="text-xs text-muted-foreground italic">
+                <p
+                  className="text-[10px] font-medium"
+                  style={{ color: "var(--status-risk)" }}
+                >
                   {relationship.watchPoints[0]}
                 </p>
               )}
-              <p className="text-xs text-muted-foreground">{relationship.aiDiagnosis}</p>
             </div>
           ))}
         </section>

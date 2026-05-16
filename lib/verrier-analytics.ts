@@ -106,18 +106,160 @@ export function getDashboardSummary(): DashboardSummary {
   };
 }
 
+// ─── Days Since Last Meeting ──────────────────────────────────────────────────
+
+export function getDaysSinceLastMeeting(
+  relationship: Relationship,
+  meetings?: Meeting[]
+): number {
+  if (
+    typeof relationship.daysSinceLastMeeting === "number" &&
+    relationship.daysSinceLastMeeting >= 0
+  ) {
+    return relationship.daysSinceLastMeeting;
+  }
+
+  if (meetings && meetings.length > 0) {
+    const relMeetings = meetings.filter(
+      (m) => m.relationshipId === relationship.id
+    );
+    if (relMeetings.length > 0) {
+      const latest = relMeetings.reduce((acc, m) =>
+        String(m.date) > String(acc.date) ? m : acc
+      );
+      const latestDate = new Date(String(latest.date));
+      if (!isNaN(latestDate.getTime())) {
+        const diffMs = Date.now() - latestDate.getTime();
+        return Math.max(0, Math.floor(diffMs / 86_400_000));
+      }
+    }
+  }
+
+  return 0;
+}
+
+// ─── Relationship Urgency ─────────────────────────────────────────────────────
+
+export type RelationshipUrgencyLevel =
+  | "critical"
+  | "stale"
+  | "watch"
+  | "healthy"
+  | "inactive";
+
+export interface RelationshipUrgency {
+  level: RelationshipUrgencyLevel;
+  label: string;
+  reason: string;
+  priority: number;
+  daysSinceLastMeeting: number;
+}
+
+const STALE_THRESHOLD_DAYS = 14;
+
+export function getRelationshipUrgency(
+  relationship: Relationship,
+  meetings?: Meeting[]
+): RelationshipUrgency {
+  const days = getDaysSinceLastMeeting(relationship, meetings);
+  const band = getHealthBand(relationship.healthScore);
+  const isInactive =
+    relationship.status === "terminated" ||
+    relationship.status === "completed" ||
+    relationship.status === "paused";
+
+  if (isInactive) {
+    return {
+      level: "inactive",
+      label: "Inactive",
+      reason: `Relationship is ${relationship.status}.`,
+      priority: 50,
+      daysSinceLastMeeting: days,
+    };
+  }
+
+  if (band === "critical") {
+    return {
+      level: "critical",
+      label: "Critical",
+      reason: `Health score is critically low at ${relationship.healthScore}.`,
+      priority: 0,
+      daysSinceLastMeeting: days,
+    };
+  }
+
+  if (days > STALE_THRESHOLD_DAYS) {
+    return {
+      level: "stale",
+      label: "Stale",
+      reason: `No meeting logged in ${days} days.`,
+      priority: 10,
+      daysSinceLastMeeting: days,
+    };
+  }
+
+  if (band === "at-risk" && relationship.healthTrend === "deteriorating") {
+    return {
+      level: "watch",
+      label: "Watch",
+      reason: `Health score is declining (${relationship.healthScore}, deteriorating).`,
+      priority: 20,
+      daysSinceLastMeeting: days,
+    };
+  }
+
+  if (band === "at-risk" || relationship.watchPoints.length > 0) {
+    const reason =
+      band === "at-risk"
+        ? `Health score is at risk (${relationship.healthScore}).`
+        : `${relationship.watchPoints.length} watch point${relationship.watchPoints.length > 1 ? "s" : ""} flagged.`;
+    return {
+      level: "watch",
+      label: "Watch",
+      reason,
+      priority: 30,
+      daysSinceLastMeeting: days,
+    };
+  }
+
+  return {
+    level: "healthy",
+    label: "Healthy",
+    reason: "Relationship is progressing well.",
+    priority: 40,
+    daysSinceLastMeeting: days,
+  };
+}
+
+// ─── Ranking Helper ───────────────────────────────────────────────────────────
+
+export function compareRelationshipsByUrgency(
+  a: Relationship,
+  b: Relationship
+): number {
+  const ua = getRelationshipUrgency(a);
+  const ub = getRelationshipUrgency(b);
+
+  if (ua.priority !== ub.priority) return ua.priority - ub.priority;
+
+  if (ub.daysSinceLastMeeting !== ua.daysSinceLastMeeting) {
+    return ub.daysSinceLastMeeting - ua.daysSinceLastMeeting;
+  }
+
+  if (a.healthScore !== b.healthScore) return a.healthScore - b.healthScore;
+
+  return a.id < b.id ? -1 : 1;
+}
+
+// ─── Attention Feed ───────────────────────────────────────────────────────────
+
 export interface AttentionFeedEntry {
   relationship: Relationship;
   company: Company;
   mentor: Mentor;
   band: HealthBand;
+  urgency: RelationshipUrgency;
 }
-
-const BAND_RANK: Record<HealthBand, number> = {
-  critical: 0,
-  "at-risk": 1,
-  healthy: 2,
-};
 
 export function getAttentionFeed(): AttentionFeedEntry[] {
   const companyMap = new Map(seedCompanies.map((c) => [c.id, c]));
@@ -130,22 +272,12 @@ export function getAttentionFeed(): AttentionFeedEntry[] {
       company: companyMap.get(r.companyId) as Company,
       mentor: mentorMap.get(r.mentorId) as Mentor,
       band: getHealthBand(r.healthScore),
+      urgency: getRelationshipUrgency(r),
     }));
 
-  return entries.sort((a, b) => {
-    const bandDiff = BAND_RANK[a.band] - BAND_RANK[b.band];
-    if (bandDiff !== 0) return bandDiff;
-
-    const daysDiff =
-      b.relationship.daysSinceLastMeeting -
-      a.relationship.daysSinceLastMeeting;
-    if (daysDiff !== 0) return daysDiff;
-
-    const scoreDiff = a.relationship.healthScore - b.relationship.healthScore;
-    if (scoreDiff !== 0) return scoreDiff;
-
-    return a.relationship.id < b.relationship.id ? -1 : 1;
-  });
+  return entries.sort((a, b) =>
+    compareRelationshipsByUrgency(a.relationship, b.relationship)
+  );
 }
 
 export interface RecentMeetingEntry {

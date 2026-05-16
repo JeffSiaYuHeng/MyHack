@@ -1,7 +1,7 @@
 # Project Roadmap
 
 **Current Phase**: Phase 4 — Relationship Health and Cohort Intelligence
-**Current Block**: Block B
+**Current Block**: Block D
 **Last Updated**: 2026-05-16
 
 ---
@@ -18,9 +18,9 @@
 
 ---
 
-## Active: Phase 4 → Block B
+## Active: Phase 4 → Block D
 
 > See `PHASE_4__Relationship_Health_and_Cohort_Intelligence.md` for full block details.
 
-**What we're building**: A public mentor meeting submission flow with token, date, duration, notes validation, and AI-ready submission boundaries.
-**Acceptance gate**: Notes shorter than 50 characters are rejected, successful submission returns AI summary and action items, health score updates are clamped between 0 and 100, and the mentor sees a clear confirmation state.
+**What we're building**: Cohort overview, portfolio health intelligence, and management-ready narrative output.
+**Acceptance gate**: Cohort overview can be demoed from seeded data, narrative includes specific cohort numbers, copy/export fallback is available without a PDF dependency, and unavailable AI output does not break the page.

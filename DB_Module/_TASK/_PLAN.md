@@ -2,41 +2,41 @@
 
 ## Current Focus
 
-Phase 4, Block B: implement the public mentor meeting submission and AI analysis flow for relationship health updates.
+Phase 4, Block D: implement cohort overview and narrative reporting for portfolio health intelligence.
 
 ## Current Target
 
-Wire `/submit-meeting` to `POST /api/ai/analyze-meeting` and show the returned AI summary, action items, signal, watch points, and local health score update.
+Show cohort stats, health heatmap, milestone distribution, and report action in the cohort overview component.
 
 ## Strategic Source
 
 - Roadmap: `DB_Module/_PHASES/00_ROADMAP.md`
 - Phase file: `DB_Module/_PHASES/PHASE_4__Relationship_Health_and_Cohort_Intelligence.md`
-- Active block: `Block B: Meeting Submission and AI Analysis`
+- Active block: `Block D: Cohort Overview and Narrative`
 
 ## Atomic Sub-Tasks
 
-- [x] Implement `/submit-meeting` public form with token, date, duration, and notes.
-- [x] Add `POST /api/ai/analyze-meeting` or `/api/meetings/submit` route.
-- [x] Add meeting analysis prompt template and structured response parsing.
-- [x] Update relationship health and meeting timeline state after analysis.
-- [x] Run lint/build verification and append Coder handover details to `DB_Module/_TASK/_Hand_OverLog.md`.
+- [x] Implement `/program/[cohortId]`.
+- [ ] Show cohort stats, health heatmap, milestone distribution, and report action.
+- [ ] Add `POST /api/ai/cohort-summary`.
+- [ ] Render generated narrative, key risks, and recommended actions.
+- [ ] Run lint/build verification and append Coder handover details to `DB_Module/_TASK/_Hand_OverLog.md`.
 
 ## Dependency Notes
 
-- `components/features/relationship-detail.tsx` includes a disabled meeting upload shell from Block A.
-- `components/features/meeting-submission-form.tsx` owns the public mentor submission UI and currently uses local confirmation state.
-- `app/api/ai/analyze-meeting/route.ts` now provides validated meeting analysis output with deterministic fallback behavior.
-- `lib/verrier-seed.ts` exports mentor meeting submission tokens, relationships, companies, mentors, and meetings.
-- `DB_Module/_DOCS/03_SERVER_ACTIONS.md` documents `POST /api/ai/analyze-meeting` and the public meeting submission boundary.
-- `DB_Module/_DOCS/01_DB_SCHEMA.md` defines `Meeting`, `ActionItem`, and health score update rules.
-- `DB_Module/_DOCS/02_STYLE_GUIDE.md` calls for a mobile-first public meeting form.
+- `app/relationships/[id]/page.tsx` shows the current dynamic route pattern with promised `params`.
+- `node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/dynamic-routes.md` confirms current dynamic segment conventions.
+- `components/features/product-shell.tsx` provides the standard coordinator shell.
+- `components/features/cohort-overview.tsx` now renders the cohort overview shell and receives seeded cohort context from `/program/[cohortId]`.
+- `lib/verrier-seed.ts` provides seeded programs, cohorts, companies, mentors, relationships, and meetings.
+- `lib/verrier-analytics.ts` provides reusable health band and urgency helpers from Block C.
+- `DB_Module/_DOCS/01_DB_SCHEMA.md` defines cohort and relationship fields needed for overview metrics.
+- `DB_Module/_DOCS/02_STYLE_GUIDE.md` calls for dense operational views and visible cohort risk state.
 - `DB_Module/_DOCS/06_DEPENDENCY_GRAPH.md` is stale and should be treated as a baseline only.
 
 ## Out of Scope For This Block
 
 - Firestore writes.
-- Relationship diagnosis route.
-- Dashboard Attention Feed changes.
-- Cohort overview or narrative work.
-- PDF or report export.
+- PDF generation dependency.
+- Phase 5 deployment hardening.
+- Authentication hardening.

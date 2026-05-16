@@ -2212,3 +2212,481 @@ Deterministic matches (same as prior task) are always computed before the Gemini
 - Log: _DOCS/LOGS/2026-05-17_Meeting_Form_Wiring.md
 - `_PLAN.md` 100% complete for Block B.
 - Ready for Block C transition.
+
+---
+
+## 2026-05-16 17:16 — Planner → Coder
+
+**Status**: DONE
+
+### What Was Done
+- Confirmed latest Evaluator handover passed Phase 4 Block B and signaled Block B ready for archival.
+- Marked Phase 4 Block B as complete and advanced Phase 4 Block C to in progress in `DB_Module/_PHASES/PHASE_4__Relationship_Health_and_Cohort_Intelligence.md`.
+- Updated `DB_Module/_PHASES/00_ROADMAP.md` to Phase 4, Block C.
+- Replaced `_TASK/_PLAN.md` with the Phase 4 Block C task plan.
+- Created `_TASK/_INSTRUCTION.md` targeting task: "Add relationship diagnosis prompt template and `POST /api/ai/diagnose` route."
+
+### Flags / Blockers
+- This task is route-only: no dashboard Attention Feed, relationship detail UI, Firestore writes, or seed mutation.
+- `app/api/ai/analyze-meeting/route.ts` is the read-only pattern for Gemini JSON handling and fallback behavior.
+- `DB_Module/_DOCS/06_DEPENDENCY_GRAPH.md` is stale and does not list this new route.
+
+### Handover Payload
+- `DB_Module/_PHASES/00_ROADMAP.md`
+- `DB_Module/_PHASES/PHASE_4__Relationship_Health_and_Cohort_Intelligence.md`
+- `DB_Module/_TASK/_PLAN.md`
+- `DB_Module/_TASK/_INSTRUCTION.md`
+
+---
+
+## 2026-05-17 01:45 — Coder → Evaluator
+
+**Status**: DONE
+
+### What Was Done
+- Created `app/api/ai/diagnose/route.ts` — POST route handler for relationship diagnosis.
+  - Safe JSON parsing; returns `400` for invalid JSON or non-object body.
+  - Validates `relationshipId` (required string); returns `400` when missing or wrong type.
+  - Resolves relationship from `seedRelationships`; returns `404` when not found.
+  - Loads seeded `company`, `mentor`, and up to 3 most-recent `meetings` (sorted by `meetingNumber` DESC).
+  - Extracts `recentSignals` and `recentSummaries` from loaded meetings; detects `hasFriction` when any signal is `"Friction detected"`.
+  - `buildFallbackDiagnosis(...)`: deterministic narrative and recommendation based on health score (<40 = critical, <70 + deteriorating = at-risk), `hasFriction`, `daysSinceLastMeeting > 14` (stale), and `healthTrend === "deteriorating"`. Falls back to existing `relationship.aiDiagnosis` and `relationship.watchPoints` when present.
+  - `buildDiagnosePrompt(...)`: includes company, mentor, health score, trend, meeting count, days since last, current milestone, existing diagnosis, existing watch points, recent signals, and recent summaries. Malaysia 3R guardrail included. Requires JSON with `narrative`, `watchPoints`, `recommendation`.
+  - Gemini call with `responseMimeType: "application/json"` following the `analyze-meeting` route pattern.
+  - Safe parse from `unknown`; falls back on malformed JSON or non-object result.
+  - `narrative`: non-empty string or fallback.
+  - `watchPoints`: filtered string array or fallback.
+  - `recommendation`: non-empty string or fallback.
+  - `updatedAt`: ISO timestamp added to every response path.
+  - Response shape aligned with `POST /api/ai/diagnose` in `03_SERVER_ACTIONS.md`.
+  - No Firestore reads or writes. No seed data mutation.
+
+### Validation Behavior
+- 400: invalid JSON, non-object body, missing/wrong-type `relationshipId`.
+- 404: relationship not found in seed data.
+
+### AI / Fallback Behavior
+- Gemini attempted with JSON response mode.
+- Fallback triggers: Gemini error, malformed JSON, non-object parse result.
+- Fallback severity ladder: critical (score < 40 or score < 70 + deteriorating) → friction → stale (>14 days) → deteriorating trend → stable.
+- `updatedAt` ISO timestamp included in all response paths.
+
+### Verification
+- `npm run lint` — PASSED (zero errors, zero warnings).
+- `npm run build` — PASSED. 17 routes including `/api/ai/diagnose` as dynamic (`ƒ`).
+
+### Flags / Blockers
+- No files modified outside Context Scope.
+- No dashboard Attention Feed, relationship UI, Firestore, or seed mutation added.
+- Ready for Evaluator audit.
+
+---
+
+## 2026-05-17 01:55 — Evaluator → Planner
+
+**Status**: PASSED
+
+### What Was Done
+- Build verification: SUCCESS (All 17 routes compile cleanly).
+- Scope audit: CLEAN (Coder strictly adhered to authorized files).
+- Ticked checkbox: "Add relationship diagnosis prompt template and POST /api/ai/diagnose route" in `_PLAN.md`.
+- Verified `app/api/ai/diagnose/route.ts` implementation:
+  - Input validation for `relationshipId` verified.
+  - Multi-data join (Relationship, Company, Mentor, Meetings) verified.
+  - Gemini prompt with Malaysia guardrail and JSON contract verified.
+  - Deterministic fallback logic (severity ladder: critical -> friction -> stale -> deteriorating) verified.
+  - `updatedAt` timestamp included in all responses.
+
+### Strategic Anchor
+- Phase: PHASE_4__Relationship_Health_and_Cohort_Intelligence
+- Block: Block C — Relationship Diagnosis and Health Decay
+
+### Acceptance Audit
+- Result: PASSED. AI diagnosis route is fully functional and resilient.
+
+### Flags / Blockers
+- No data mutation added (as requested).
+- Ready for Task 2: Analytics helper logic for staleness and urgency.
+
+### Handover Payload
+- Log: `DB_Module/_DOCS/LOGS/2026-05-17_Relationship_Diagnosis_Route.md`
+- `_PLAN.md` updated.
+- Ready for next task.
+
+---
+
+## 2026-05-16 17:29 — Planner → Coder
+
+**Status**: DONE
+
+### What Was Done
+- Confirmed latest Evaluator handover passed the Phase 4 Block C diagnosis route task.
+- Marked the completed diagnosis route scope item and related acceptance items in `DB_Module/_PHASES/PHASE_4__Relationship_Health_and_Cohort_Intelligence.md`.
+- Updated `_TASK/_PLAN.md` so the current target is reusable analytics helper logic for staleness and urgency.
+- Replaced `_TASK/_INSTRUCTION.md` with a scoped Coder task for `lib/verrier-analytics.ts`.
+
+### Flags / Blockers
+- This task is analytics-helper only: no dashboard UI, relationship detail UI, diagnosis route, Firestore writes, or seed mutation.
+- `DB_Module/_DOCS/06_DEPENDENCY_GRAPH.md` is stale; repository search shows multiple analytics consumers, so preserve existing exports and return shape compatibility.
+
+### Handover Payload
+- `DB_Module/_PHASES/PHASE_4__Relationship_Health_and_Cohort_Intelligence.md`
+- `DB_Module/_TASK/_PLAN.md`
+- `DB_Module/_TASK/_INSTRUCTION.md`
+
+---
+
+## 2026-05-17 02:15 — Coder → Evaluator
+
+**Status**: DONE
+
+### What Was Done
+- Updated `lib/verrier-analytics.ts` — added staleness, urgency, and ranking helpers. All existing exports preserved backward-compatible.
+
+#### `getDaysSinceLastMeeting(relationship, meetings?): number`
+- Primary: returns `relationship.daysSinceLastMeeting` when valid non-negative number.
+- Fallback: filters meetings by `relationshipId`, finds latest by date string comparison, computes floor of `diffMs / 86_400_000`.
+- Returns `0` when no valid stored value or meeting date exists.
+
+#### `RelationshipUrgencyLevel` type
+- `"critical" | "stale" | "watch" | "healthy" | "inactive"`
+
+#### `RelationshipUrgency` interface
+- `{ level, label, reason, priority, daysSinceLastMeeting }`
+
+#### `getRelationshipUrgency(relationship, meetings?): RelationshipUrgency`
+- `inactive` (terminated/completed/paused): priority 50.
+- `critical` (health band critical): priority 0 — outranks stale.
+- `stale` (days > 14, not critical): priority 10.
+- `watch` (at-risk + deteriorating, not stale): priority 20.
+- `watch` (at-risk stable or has watchPoints, not stale): priority 30.
+- `healthy`: priority 40.
+
+#### `compareRelationshipsByUrgency(a, b): number`
+- Sorts by: urgency priority ASC → days since last meeting DESC → health score ASC → id ASC.
+
+#### `AttentionFeedEntry` — extended
+- Added `urgency: RelationshipUrgency` field (backward compatible; existing fields preserved).
+
+#### `getAttentionFeed` — internals updated
+- Builds `urgency` per entry and sorts via `compareRelationshipsByUrgency`. `BAND_RANK` constant removed (subsumed by urgency priority). Return shape unchanged.
+
+### Verification
+- `npm run lint` — PASSED (zero errors, zero warnings).
+- `npm run build` — PASSED. 17 routes, all compile cleanly. Dashboard, relationship list, and matching pages build without TypeScript errors.
+
+### Flags / Blockers
+- No dashboard, relationship detail, relationship list, or route files modified.
+- No Firestore, seed mutation added.
+- No files modified outside Context Scope.
+- Ready for Evaluator audit.
+
+---
+
+## 2026-05-17 02:30 — Evaluator → Planner
+
+**Status**: PASSED
+
+### What Was Done
+- Build verification: SUCCESS (All 17 routes compile, Next.js build passed).
+- Scope audit: CLEAN (Coder strictly adhered to authorized files).
+- Ticked checkbox: "Add helper logic for days-since-last-meeting and stale relationship urgency" in `_PLAN.md`.
+- Verified `lib/verrier-analytics.ts` implementation:
+  - `getDaysSinceLastMeeting` with robust fallback to latest meeting date verified.
+  - `getRelationshipUrgency` with correct priority ladder (Critical=0, Stale=10, Watch=20/30) verified.
+  - `compareRelationshipsByUrgency` deterministic ranking verified.
+  - `AttentionFeedEntry` extension verified (backward-compatible).
+  - `getAttentionFeed` updated to use new ranking.
+
+### Strategic Anchor
+- Phase: PHASE_4__Relationship_Health_and_Cohort_Intelligence
+- Block: Block C — Relationship Diagnosis and Health Decay
+
+### Acceptance Audit
+- Result: PASSED. Analytics foundation for Block C urgency and triage is complete.
+
+### Flags / Blockers
+- Urgency metadata is now available but not yet rendered in the UI.
+- Ready for Task 3: Render AI diagnosis and urgency reasons in the dashboard Attention Feed.
+
+### Handover Payload
+- Log: `DB_Module/_DOCS/LOGS/2026-05-17_Staleness_Analytics.md`
+- `_PLAN.md` updated.
+- Ready for next task.
+
+---
+
+## 2026-05-16 17:44 — Planner → Coder
+
+**Status**: DONE
+
+### What Was Done
+- Confirmed latest Evaluator handover passed the Phase 4 Block C staleness analytics helper task.
+- Marked the completed helper scope item and critical/stale ranking acceptance item in `DB_Module/_PHASES/PHASE_4__Relationship_Health_and_Cohort_Intelligence.md`.
+- Updated `_TASK/_PLAN.md` so the current target is dashboard Attention Feed rendering for urgency, diagnosis, and generated risk reasons.
+- Replaced `_TASK/_INSTRUCTION.md` with a scoped Coder task for `components/features/dashboard-command-center.tsx`.
+
+### Flags / Blockers
+- This task is dashboard UI only: no analytics helper edits, diagnosis route edits, relationship detail UI, Firestore writes, or seed mutation.
+- `getAttentionFeed()` already provides `urgency` metadata and ordering.
+- `DB_Module/_DOCS/06_DEPENDENCY_GRAPH.md` is stale and does not list the dashboard component.
+
+### Handover Payload
+- `DB_Module/_PHASES/PHASE_4__Relationship_Health_and_Cohort_Intelligence.md`
+- `DB_Module/_TASK/_PLAN.md`
+- `DB_Module/_TASK/_INSTRUCTION.md`
+
+---
+
+## 2026-05-17 02:35 — Coder → Evaluator
+
+**Status**: DONE
+
+### What Was Done
+- Updated `components/features/dashboard-command-center.tsx` — Attention Feed cards now surface urgency metadata.
+  - Added `RelationshipUrgencyLevel` to the type import from `@/lib/verrier-analytics`.
+  - Added `urgencyLevelColor(level): string` helper: `critical` → `--status-critical`, `stale`/`watch` → `--status-risk`, `healthy` → `--status-healthy`, `inactive` → empty string.
+  - Updated `feed.map` destructuring to include `urgency`.
+  - Header row: urgency label rendered left of health band badge when `urgency.level !== "healthy"`, coloured via `urgencyLevelColor`.
+  - Stat row: `urgency.daysSinceLastMeeting` replaces `relationship.daysSinceLastMeeting` for displayed days.
+  - `urgency.reason` added as a dedicated line below stat row (generated risk reason).
+  - `relationship.aiDiagnosis` rendered when non-empty (unchanged).
+  - `relationship.watchPoints[0]` rendered in `--status-risk` colour when watch points exist (compact).
+  - Metric row and Recent Meetings section: unchanged.
+  - No API calls added. No analytics helpers modified.
+
+### Dashboard Behavior
+- Critical: urgency label "Critical" in red beside health band badge.
+- Stale / Watch: urgency label in amber.
+- Healthy: no urgency label shown.
+- Each card: urgency reason → AI diagnosis (if set) → first watch point (if set).
+- Days since last sourced from `urgency.daysSinceLastMeeting`.
+
+### Verification
+- `npm run lint` — PASSED (zero errors, zero warnings).
+- `npm run build` — PASSED. 17 routes, all compile cleanly.
+
+### Flags / Blockers
+- No analytics, route, relationship detail, or relationship list files modified.
+- No files modified outside Context Scope.
+- Ready for Evaluator audit.
+
+---
+
+## 2026-05-17 02:40 — Evaluator → Planner
+
+**Status**: PASSED
+
+### What Was Done
+- Build verification: SUCCESS (All 17 routes compile cleanly).
+- Scope audit: CLEAN (Coder strictly adhered to authorized files).
+- Ticked checkbox: "Update dashboard Attention Feed..." in `_PLAN.md`.
+- Verified `components/features/dashboard-command-center.tsx` implementation:
+  - Surfaces `urgency.label` and `urgency.reason`.
+  - Displays actual days since last meeting from analytics.
+  - Keeps AI diagnosis and compact watch point visible.
+  - Uses Morandi/status tokens for urgency levels.
+
+### Strategic Anchor
+- Phase: PHASE_4__Relationship_Health_and_Cohort_Intelligence
+- Block: Block C — Relationship Diagnosis and Health Decay
+
+### Acceptance Audit
+- Result: PASSED. Attention Feed now leverages AI-driven risk intelligence.
+
+### Flags / Blockers
+- None.
+- Ready for Task 4: UI update for relationship detail watch points.
+
+### Handover Payload
+- Log: `DB_Module/_DOCS/LOGS/2026-05-17_Dashboard_Attention_Feed.md`
+- `_PLAN.md` updated.
+- Ready for next task.
+
+---
+
+## 2026-05-16 17:50 — Planner → Coder
+
+**Status**: DONE
+
+### What Was Done
+- Confirmed latest Evaluator handover passed the Phase 4 Block C dashboard Attention Feed task.
+- Marked the completed dashboard scope item in `DB_Module/_PHASES/PHASE_4__Relationship_Health_and_Cohort_Intelligence.md`.
+- Updated `_TASK/_PLAN.md` so the current target is relationship detail watch point and shared health label visibility.
+- Replaced `_TASK/_INSTRUCTION.md` with a scoped Coder task for `components/features/relationship-detail.tsx`.
+
+### Flags / Blockers
+- This task is relationship detail UI only: no analytics helper edits, dashboard edits, diagnosis route edits, Firestore writes, or seed mutation.
+- `lib/verrier-analytics.ts` already provides shared health and urgency helpers for label consistency.
+- `DB_Module/_DOCS/06_DEPENDENCY_GRAPH.md` is stale and does not list the relationship detail component.
+
+### Handover Payload
+- `DB_Module/_PHASES/PHASE_4__Relationship_Health_and_Cohort_Intelligence.md`
+- `DB_Module/_TASK/_PLAN.md`
+- `DB_Module/_TASK/_INSTRUCTION.md`
+
+---
+
+## 2026-05-17 03:10 — Coder → Evaluator
+
+**Status**: DONE
+
+### What Was Done
+- Updated `components/features/relationship-detail.tsx` to align with shared analytics helpers and dashboard health language.
+- Added imports: `RelationshipUrgencyLevel` type, `getHealthBand`, `getHealthBandLabel`, `getRelationshipUrgency` from `@/lib/verrier-analytics`.
+- Removed local `getHealthBand` function; replaced with `urgencyLevelColor(level: RelationshipUrgencyLevel)` helper matching dashboard implementation.
+- Added `const urgency = getRelationshipUrgency(relationship, meetings)` in component body.
+- Header badge: replaced manual label ternary with `getHealthBandLabel(band)` from shared analytics.
+- Added urgency label chip in header badges row when `urgency.level !== "healthy"`, styled with `urgencyLevelColor`.
+- Stat row: replaced `relationship.daysSinceLastMeeting` with `urgency.daysSinceLastMeeting`.
+- Added `urgency.reason` paragraph before `relationship.aiDiagnosis` in the diagnosis area.
+- Relationship-level watch points render as compact chips with `--status-risk` color (unchanged, already correct).
+- Meeting-level watch points inside each timeline card: unchanged and preserved.
+- Milestone tracker, meeting timeline, and disabled meeting upload shell: all preserved.
+- No analytics helpers modified. No Firestore reads/writes added. No seed data mutated.
+
+### Verification
+- `npm run lint`: PASSED
+- `npm run build`: PASSED — 17 routes compiled successfully
+
+### Files Changed
+- `components/features/relationship-detail.tsx`
+
+### Handover Payload
+- `components/features/relationship-detail.tsx`
+- `DB_Module/_TASK/_INSTRUCTION.md`
+
+---
+
+## 2026-05-17 03:20 — Evaluator → Planner
+
+**Status**: PASSED
+
+### What Was Done
+- Build verification: SUCCESS (All 17 routes compile, Next.js build passed).
+- Scope audit: CLEAN (Coder strictly adhered to authorized files).
+- Ticked final checkboxes in `_PLAN.md` for Block C.
+- Verified `components/features/relationship-detail.tsx` implementation:
+  - Integration with shared analytics helpers (`getHealthBand`, `getRelationshipUrgency`) verified.
+  - Urgency label and reason rendering verified.
+  - Relationship-level watch points as chips verified.
+  - Consistent health language with dashboard verified.
+  - Days since last meeting sourced from urgency metadata verified.
+
+### Strategic Anchor
+- Phase: PHASE_4__Relationship_Health_and_Cohort_Intelligence
+- Block: Block C — Relationship Diagnosis and Health Decay
+
+### Acceptance Audit
+- Result: PASSED. Block C is 100% complete.
+
+### Flags / Blockers
+- **SIGNAL: Block [C] is ready for Archival.**
+- Block [C] PASSED. Archivist: update `_PHASES/PHASE_4__Relationship_Health_and_Cohort_Intelligence.md` checkbox states + sync `_PHASES/00_ROADMAP.md`.
+
+### Handover Payload
+- Log: `DB_Module/_DOCS/LOGS/2026-05-17_Relationship_Detail_Intelligence.md`
+- `_PLAN.md` updated.
+- Ready for Block D: Reporting and Portfolio Export.
+
+---
+
+## 2026-05-16 18:00 — Planner → Coder
+
+**Status**: DONE
+
+### What Was Done
+- Confirmed latest Evaluator handover passed Phase 4 Block C and signaled Block C ready for archival.
+- Marked Phase 4 Block C as complete and advanced Phase 4 Block D to in progress in `DB_Module/_PHASES/PHASE_4__Relationship_Health_and_Cohort_Intelligence.md`.
+- Updated `DB_Module/_PHASES/00_ROADMAP.md` to Phase 4, Block D.
+- Replaced `_TASK/_PLAN.md` with the Phase 4 Block D task plan.
+- Created `_TASK/_INSTRUCTION.md` targeting task: "Implement `/program/[cohortId]`."
+
+### Flags / Blockers
+- This task creates the cohort overview route and shell only.
+- Full stats, heatmap, milestone distribution, AI summary route, and generated narrative rendering are later Block D tasks.
+- No Firestore writes, seed mutation, or PDF dependency.
+
+### Handover Payload
+- `DB_Module/_PHASES/00_ROADMAP.md`
+- `DB_Module/_PHASES/PHASE_4__Relationship_Health_and_Cohort_Intelligence.md`
+- `DB_Module/_TASK/_PLAN.md`
+- `DB_Module/_TASK/_INSTRUCTION.md`
+
+---
+
+## 2026-05-17 03:30 — Coder → Evaluator
+
+**Status**: DONE
+
+### What Was Done
+- Created `app/program/[cohortId]/page.tsx`: async server component, awaits `params` Promise, resolves cohort from `seedCohorts` by `cohortId`. Renders not-found state inside `ProductShell` when cohort is missing. Filters `seedRelationships`, `seedCompanies`, `seedMentors`, and `seedMeetings` to the cohort and passes them to `CohortOverview`.
+- Created `components/features/cohort-overview.tsx`: renders cohort header (name, status badge, duration, start–end date, company count, mentor count, relationship count). Includes shell sections for health overview (healthy/at-risk/critical counts from `getHealthBand`), milestone distribution placeholder, and report narrative placeholder with a disabled "Generate Narrative" button. Layout follows dashboard/relationship-detail density and token conventions.
+- Read Next.js 16 local docs confirming `params` is `Promise<{ cohortId: string }>` and must be awaited in async server components.
+- No API routes added. No Firestore reads/writes. No seed mutation. No new dependencies.
+
+### Verification
+- `npm run lint`: PASSED
+- `npm run build`: PASSED — 18 routes compiled successfully (`/program/[cohortId]` appears as Dynamic ƒ)
+
+### Files Changed
+- `app/program/[cohortId]/page.tsx` (created)
+- `components/features/cohort-overview.tsx` (created)
+
+### Handover Payload
+- `app/program/[cohortId]/page.tsx`
+- `components/features/cohort-overview.tsx`
+- `DB_Module/_TASK/_INSTRUCTION.md`
+
+## 2026-05-17 03:50 — Evaluator → Planner
+
+**Status**: PASSED
+
+### What Was Done
+- Build verification: SUCCESS (All 18 routes compile, Next.js build passed).
+- Scope audit: CLEAN (Coder strictly adhered to authorized files).
+- Ticked checkbox: "Implement /program/[cohortId]" in `_PLAN.md`.
+- Verified `/program/[cohortId]` dynamic route and `CohortOverview` implementation:
+  - Cohort lookup and context resolution from seed data verified.
+  - Promised params handled correctly in server component.
+  - Header, stats, and health count overview verified.
+  - Placeholder shells for heatmap, milestones, and report verified.
+  - Morandi Tech operational styling verified.
+
+### Strategic Anchor
+- Phase: PHASE_4__Relationship_Health_and_Cohort_Intelligence
+- Block: Block D — Cohort Overview and Narrative
+
+### Acceptance Audit
+- Result: PASSED. Task 1 of Block D is complete.
+
+### Flags / Blockers
+- Overview includes placeholders only for metrics and AI reporting.
+- Ready for Task 2: Implement full health heatmap and milestone distribution.
+
+### Handover Payload
+- Log: _DOCS/LOGS/2026-05-17_Cohort_Overview_Shell.md
+- `_PLAN.md` updated.
+- Ready for next task.
+
+---
+
+## 2026-05-16 18:11 — Planner → Coder
+
+**Status**: DONE
+
+### What Was Done
+- Confirmed latest Evaluator handover passed the Phase 4 Block D `/program/[cohortId]` route task.
+- Marked the completed route scope item and seeded overview acceptance item in `DB_Module/_PHASES/PHASE_4__Relationship_Health_and_Cohort_Intelligence.md`.
+- Updated `_TASK/_PLAN.md` so the current target is cohort stats, health heatmap, milestone distribution, and report action.
+- Replaced `_TASK/_INSTRUCTION.md` with a scoped Coder task for `components/features/cohort-overview.tsx`.
+
+### Flags / Blockers
+- This task is component-only: no route page edits, API route edits, Firestore writes, seed mutation, generated narrative, or PDF dependency.
+- `CohortOverview` already receives the seeded data needed for metrics and distribution.
+- `DB_Module/_DOCS/06_DEPENDENCY_GRAPH.md` is stale and does not list the new component.
+
+### Handover Payload
+- `DB_Module/_PHASES/PHASE_4__Relationship_Health_and_Cohort_Intelligence.md`
+- `DB_Module/_TASK/_PLAN.md`
+- `DB_Module/_TASK/_INSTRUCTION.md`
