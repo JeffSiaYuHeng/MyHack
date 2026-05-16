@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import toast from "react-hot-toast";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { StateBlock } from "@/components/ui/state-block";
 import type { Application, ApplicationStatus, Company } from "@/lib/types";
 import { seedApplications, seedCompanies } from "@/lib/verrier-seed";
 
@@ -15,6 +18,15 @@ const FILTERS: { label: string; value: Filter }[] = [
   { label: "Waitlisted", value: "waitlisted" },
   { label: "Declined", value: "declined" },
 ];
+
+const DECISION_LABELS: Record<ApplicationStatus, string> = {
+  approved: "Approve",
+  shortlisted: "Shortlist",
+  waitlisted: "Waitlist",
+  declined: "Decline",
+  submitted: "Submit",
+  draft: "Draft",
+};
 
 function getStatusStyle(status: ApplicationStatus): { color: string; bg: string } {
   switch (status) {
@@ -53,6 +65,10 @@ export function ApplicantReviewPool() {
   const [selectedId, setSelectedId] = useState<string | null>(seedApplications[0]?.id ?? null);
   const [isLoading] = useState(false);
   const [error] = useState<string | null>(null);
+  const [pendingDecision, setPendingDecision] = useState<{
+    applicationId: string;
+    status: ApplicationStatus;
+  } | null>(null);
 
   const companyMap = new Map<string, Company>(seedCompanies.map((c) => [c.id, c]));
 
@@ -73,8 +89,18 @@ export function ApplicantReviewPool() {
     }
   }
 
-  function handleDecision(applicationId: string, status: ApplicationStatus) {
+  function applyDecision(applicationId: string, status: ApplicationStatus) {
     setApplications((prev) => applyLocalDecision(prev, applicationId, status));
+    toast.success(`Applicant marked as ${status}.`);
+  }
+
+  function handleDecision(applicationId: string, status: ApplicationStatus) {
+    if (status === "approved" || status === "declined") {
+      setPendingDecision({ applicationId, status });
+      return;
+    }
+
+    applyDecision(applicationId, status);
   }
 
   if (isLoading) {
@@ -155,7 +181,19 @@ export function ApplicantReviewPool() {
         {/* List */}
         <div className="w-64 shrink-0 bg-card border border-border rounded-xl overflow-hidden">
           {filtered.length === 0 ? (
-            <div className="p-5 text-sm text-muted-foreground">No applicants match this filter.</div>
+            <StateBlock
+              className="m-4"
+              title="No applicants match this filter"
+              description="Clear or change the current review filter to see more applications."
+              action={
+                <button
+                  onClick={() => setActiveFilter("all")}
+                  className="px-3 py-1.5 text-xs font-medium rounded border border-border text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Clear filter
+                </button>
+              }
+            />
           ) : (
             <ul className="divide-y divide-border">
               {filtered.map((app) => {
@@ -239,14 +277,6 @@ export function ApplicantReviewPool() {
               {(["approved", "shortlisted", "waitlisted", "declined"] as ApplicationStatus[]).map((action) => {
                 const style = getStatusStyle(action);
                 const isCurrentStatus = selected.status === action;
-                const labels: Record<ApplicationStatus, string> = {
-                  approved: "Approve",
-                  shortlisted: "Shortlist",
-                  waitlisted: "Waitlist",
-                  declined: "Decline",
-                  submitted: "Submit",
-                  draft: "Draft",
-                };
                 return (
                   <button
                     key={action}
@@ -257,9 +287,9 @@ export function ApplicantReviewPool() {
                       color: style.color,
                       borderColor: style.color,
                       background: isCurrentStatus ? style.bg : "transparent",
-                    }}
-                  >
-                    {labels[action]}
+                  }}
+                >
+                    {DECISION_LABELS[action]}
                   </button>
                 );
               })}
@@ -425,11 +455,52 @@ export function ApplicantReviewPool() {
             )}
           </div>
         ) : (
-          <div className="flex-1 bg-card border border-border rounded-xl p-8 text-sm text-muted-foreground text-center">
-            Select an applicant to view details.
-          </div>
+          <StateBlock
+            className="flex-1"
+            title="Select an applicant"
+            description="Choose a startup from the review queue to inspect fit score, documents, and AI recommendation."
+          />
         )}
       </div>
+      <ConfirmDialog
+        open={!!pendingDecision}
+        title={
+          pendingDecision?.status === "approved"
+            ? "Approve this applicant?"
+            : "Decline this applicant?"
+        }
+        description={
+          pendingDecision?.status === "approved"
+            ? "Approved applicants become eligible for mentor matching in the coordinator workflow."
+            : "Declined applicants will be removed from the active review path."
+        }
+        confirmLabel={pendingDecision ? DECISION_LABELS[pendingDecision.status] : "Confirm"}
+        destructive={pendingDecision?.status === "declined"}
+        onCancel={() => setPendingDecision(null)}
+        onConfirm={() => {
+          if (!pendingDecision) return;
+          applyDecision(pendingDecision.applicationId, pendingDecision.status);
+          setPendingDecision(null);
+        }}
+      >
+        {pendingDecision && (
+          <div className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+            <div className="flex justify-between gap-4">
+              <span>Applicant</span>
+              <span className="font-medium text-foreground">
+                {companyMap.get(applications.find((app) => app.id === pendingDecision.applicationId)?.companyId ?? "")?.name ??
+                  pendingDecision.applicationId}
+              </span>
+            </div>
+            <div className="mt-1 flex justify-between gap-4">
+              <span>Decision</span>
+              <span className="font-medium capitalize text-foreground">
+                {pendingDecision.status}
+              </span>
+            </div>
+          </div>
+        )}
+      </ConfirmDialog>
     </div>
   );
 }

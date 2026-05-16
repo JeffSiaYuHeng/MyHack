@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import toast from "react-hot-toast";
+import { AiOperationLoader } from "@/components/ui/ai-operation-loader";
 import { seedMentors, seedRelationships, seedCompanies } from "@/lib/verrier-seed";
 import type { ActionItem } from "@/lib/types";
 
@@ -147,6 +149,7 @@ export function MeetingSubmissionForm() {
 
     setFormState("submitting");
     setApiError(null);
+    const toastId = toast.loading("Analyzing meeting notes...");
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => { controller.abort(); }, 10000);
@@ -178,6 +181,7 @@ export function MeetingSubmissionForm() {
             : "Submission failed. Please try again.";
         setApiError(msg);
         setFormState("idle");
+        toast.error(msg, { id: toastId });
         return;
       }
 
@@ -211,6 +215,7 @@ export function MeetingSubmissionForm() {
         analysis,
       });
       setFormState("confirmed");
+      toast.success("Meeting logged and analyzed.", { id: toastId });
     } catch (err: unknown) {
       clearTimeout(timeoutId);
       const isTimeout = err instanceof Error && err.name === "AbortError";
@@ -237,6 +242,7 @@ export function MeetingSubmissionForm() {
         analysis: fallbackAnalysis,
       });
       setFormState("confirmed");
+      toast.error("AI analysis unavailable. Meeting logged with fallback state.", { id: toastId });
     }
   }
 
@@ -491,6 +497,19 @@ export function MeetingSubmissionForm() {
         <p className="text-[10px]" style={{ color: "var(--status-critical)" }}>
           {apiError}
         </p>
+      )}
+
+      {formState === "submitting" && (
+        <AiOperationLoader
+          title="Analyzing meeting"
+          description="Verrier is extracting signals and preparing the relationship health update."
+          steps={[
+            "Extracting summary",
+            "Identifying action items",
+            "Checking friction signals",
+            "Recalculating health",
+          ]}
+        />
       )}
 
       <button

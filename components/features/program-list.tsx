@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import toast from "react-hot-toast";
 import type { Program } from "@/lib/types";
 import { seedApplications } from "@/lib/verrier-seed";
 
@@ -38,6 +39,7 @@ export function ProgramList({ programs: initialPrograms }: ProgramListProps) {
   function confirmDelete(id: string) {
     setPrograms((prev) => prev.filter((p) => p.id !== id));
     setDeleteId(null);
+    toast.success("Programme deleted locally.");
   }
 
   const appCountMap = new Map<string, number>();

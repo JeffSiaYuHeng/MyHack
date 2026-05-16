@@ -2,6 +2,7 @@
 
 import { useState, useReducer } from "react";
 import toast from "react-hot-toast";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type {
   ApprovedStartupQueueItem,
   MentorPoolItem,
@@ -114,6 +115,7 @@ export function MatchingWorkbench({
   const [selectedStartupId, setSelectedStartupId] = useState<string | null>(
     displayQueue[0]?.company.id ?? null
   );
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [store, dispatch] = useReducer(matchReducer, INITIAL_STORE);
 
   const mentorPoolMap = new Map<string, MentorPoolItem>(
@@ -163,6 +165,7 @@ export function MatchingWorkbench({
     if (!selectedStartupId || !store.selectedMentorId || store.confirmState === "confirming") return;
     const match = store.matches.find((m) => m.mentorId === store.selectedMentorId);
     if (!match) return;
+    setConfirmDialogOpen(false);
     dispatch({ type: "CONFIRM_START" });
     const toastId = toast.loading("Confirming mentor match...");
 
@@ -208,6 +211,7 @@ export function MatchingWorkbench({
 
   const { matchState, matches, errorMessage, selectedMentorId, confirmState, confirmError } = store;
   const selectedStartup = displayQueue.find((item) => item.company.id === selectedStartupId) ?? null;
+  const selectedMatch = matches.find((match) => match.mentorId === selectedMentorId) ?? null;
 
   if (displayQueue.length === 0) {
     return (
@@ -507,7 +511,7 @@ export function MatchingWorkbench({
                         {confirmError}
                       </p>
                       <button
-                        onClick={handleConfirm}
+                        onClick={() => setConfirmDialogOpen(true)}
                         className="px-5 py-2.5 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:opacity-90 transition-opacity"
                       >
                         Retry
@@ -515,7 +519,7 @@ export function MatchingWorkbench({
                     </div>
                   ) : (
                     <button
-                      onClick={handleConfirm}
+                      onClick={() => setConfirmDialogOpen(true)}
                       disabled={confirmState === "confirming"}
                       className="w-full md:w-auto px-8 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -534,6 +538,41 @@ export function MatchingWorkbench({
           )}
         </div>
       </div>
+      <ConfirmDialog
+        open={confirmDialogOpen}
+        title="Confirm this mentor match?"
+        description="A relationship record will be created for this startup and mentor using the current AI match score and explanation."
+        confirmLabel={confirmState === "confirming" ? "Confirming..." : "Confirm match"}
+        disabled={confirmState === "confirming"}
+        onCancel={() => setConfirmDialogOpen(false)}
+        onConfirm={() => { void handleConfirm(); }}
+      >
+        <div className="space-y-2 rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+          <div className="flex justify-between gap-4">
+            <span>Startup</span>
+            <span className="font-medium text-foreground">
+              {selectedStartup?.company.name ?? selectedStartupId}
+            </span>
+          </div>
+          <div className="flex justify-between gap-4">
+            <span>Mentor</span>
+            <span className="font-medium text-foreground">
+              {selectedMatch?.mentorName ?? selectedMentorId}
+            </span>
+          </div>
+          <div className="flex justify-between gap-4">
+            <span>Match score</span>
+            <span className="font-medium text-foreground">
+              {selectedMatch?.overallScore ?? 0}/100
+            </span>
+          </div>
+          {selectedMatch?.reason && (
+            <p className="border-t border-border pt-2 leading-relaxed">
+              {selectedMatch.reason}
+            </p>
+          )}
+        </div>
+      </ConfirmDialog>
     </div>
   );
 }

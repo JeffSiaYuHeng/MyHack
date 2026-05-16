@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 import type { Program, ProgramType, SelectionCriteria } from "@/lib/types";
 import { seedApplications, seedMentors } from "@/lib/verrier-seed";
 
@@ -83,15 +84,18 @@ export function ProgramDetail({ program: initialProgram }: ProgramDetailProps) {
   function saveEdit() {
     setProgram(draft);
     setEditing(false);
+    toast.success("Programme changes saved locally.");
   }
 
   function cancelEdit() {
     setDraft(program);
     setEditing(false);
+    toast.success("Programme edit discarded.");
   }
 
   function handleDelete() {
     setDeleted(true);
+    toast.success("Programme deleted locally.");
     setTimeout(() => router.push("/programs"), 1200);
   }
 

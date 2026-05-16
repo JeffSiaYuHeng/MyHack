@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import toast from "react-hot-toast";
 import type { Program, ProgramType, SelectionCriteria } from "@/lib/types";
 import { seedMentors } from "@/lib/verrier-seed";
 
@@ -135,6 +136,17 @@ export function ProgramSetupWizard() {
       ...s,
       selectionCriteria: { ...s.selectionCriteria, [key]: value },
     }));
+  }
+
+  function saveProgramme() {
+    setSaved(true);
+    toast.success("Programme saved locally.");
+  }
+
+  function resetProgramme() {
+    setState(DEFAULT_STATE);
+    setSaved(false);
+    toast.success("Ready for a new programme.");
   }
 
   const inputCls =
@@ -498,7 +510,7 @@ export function ProgramSetupWizard() {
             {isReady && !saved && (
               <div className="border-t border-border pt-3">
                 <button
-                  onClick={() => setSaved(true)}
+                  onClick={saveProgramme}
                   className="w-full px-3 py-2 text-xs font-semibold rounded border transition-colors"
                   style={{
                     color: "var(--status-healthy)",
@@ -522,7 +534,7 @@ export function ProgramSetupWizard() {
                   /apply/{previewProgram.id}
                 </p>
                 <button
-                  onClick={() => { setState(DEFAULT_STATE); setSaved(false); }}
+                  onClick={resetProgramme}
                   className="w-full mt-1 px-3 py-1.5 text-xs font-medium rounded border border-border text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
                 >
                   Create another

@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import toast from "react-hot-toast";
+import { AiOperationLoader } from "@/components/ui/ai-operation-loader";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { Application, Company, Founder } from "@/lib/types";
 
 const STAGE_OPTIONS = [
@@ -144,6 +147,7 @@ export function PublicApplicationForm({
   const [submittedApp, setSubmittedApp] = useState<Application | null>(null);
   const [fitState, setFitState] = useState<FitState>("idle");
   const [fitResult, setFitResult] = useState<FitResult | null>(null);
+  const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
 
   const errors: string[] = [];
   if (!company.name.trim()) errors.push("Company name is required");
@@ -165,6 +169,7 @@ export function PublicApplicationForm({
     // Phase 1: request fit score when not yet scored
     if (fitState === "idle" || fitState === "error") {
       setFitState("loading");
+      const toastId = toast.loading("Scoring programme fit...");
       const controller = new AbortController();
       const timeoutId = setTimeout(() => { controller.abort(); }, 10000);
 
@@ -198,12 +203,19 @@ export function PublicApplicationForm({
 
         if (!res.ok) {
           setFitState("error");
+          toast.error("Fit scoring failed. Please try again.", { id: toastId });
           return;
         }
 
         const data = (await res.json()) as FitResult;
         setFitResult(data);
         setFitState(data.status === "pending" ? "pending" : "scored");
+        toast.success(
+          data.status === "pending"
+            ? "Application can proceed with manual review."
+            : "Fit score is ready for review.",
+          { id: toastId }
+        );
       } catch (err: unknown) {
         clearTimeout(timeoutId);
         // Local fallback for timeout or network failure
@@ -227,39 +239,47 @@ export function PublicApplicationForm({
         };
         setFitResult(fallback);
         setFitState("pending");
+        toast.error("AI scoring unavailable. Manual review fallback is ready.", { id: toastId });
       }
       return;
     }
 
     // Phase 2: local submit using scored values
     if (fitState === "scored" || fitState === "pending") {
-      const application: Application = {
-        id: "application-draft-local",
-        programId,
-        companyId: "company-draft-local",
-        founderContactEmail: appFields.founderContactEmail,
-        status: "submitted",
-        supportNeeds: appFields.supportNeeds,
-        founderSummary: appFields.founderSummary,
-        documentUrls: appFields.documentUrls,
-        submittedAt: SESSION_ISO,
-        fitScore: fitResult?.fitScore ?? 0,
-        fitLabel: fitResult?.fitLabel ?? "Potential fit",
-        fitBreakdown: {
-          stageFit: fitResult?.breakdown.stageFit ?? 0,
-          industryFit: fitResult?.breakdown.industryFit ?? 0,
-          tractionFit: fitResult?.breakdown.tractionFit ?? 0,
-          teamFit: fitResult?.breakdown.teamFit ?? 0,
-          needsFit: fitResult?.breakdown.needsFit ?? 0,
-        },
-        eligibilityFlags: fitResult?.eligibilityFlags ?? [],
-        aiInsight: fitResult?.aiInsight ?? "",
-        aiRecommendation: fitResult?.aiRecommendation ?? "review",
-        createdAt: SESSION_ISO,
-        updatedAt: SESSION_ISO,
-      };
-      setSubmittedApp(application);
+      setSubmitDialogOpen(true);
     }
+  }
+
+  function finalizeSubmit() {
+    const application: Application = {
+      id: "application-draft-local",
+      programId,
+      companyId: "company-draft-local",
+      founderContactEmail: appFields.founderContactEmail,
+      status: "submitted",
+      supportNeeds: appFields.supportNeeds,
+      founderSummary: appFields.founderSummary,
+      documentUrls: appFields.documentUrls,
+      submittedAt: SESSION_ISO,
+      fitScore: fitResult?.fitScore ?? 0,
+      fitLabel: fitResult?.fitLabel ?? "Potential fit",
+      fitBreakdown: {
+        stageFit: fitResult?.breakdown.stageFit ?? 0,
+        industryFit: fitResult?.breakdown.industryFit ?? 0,
+        tractionFit: fitResult?.breakdown.tractionFit ?? 0,
+        teamFit: fitResult?.breakdown.teamFit ?? 0,
+        needsFit: fitResult?.breakdown.needsFit ?? 0,
+      },
+      eligibilityFlags: fitResult?.eligibilityFlags ?? [],
+      aiInsight: fitResult?.aiInsight ?? "",
+      aiRecommendation: fitResult?.aiRecommendation ?? "review",
+      createdAt: SESSION_ISO,
+      updatedAt: SESSION_ISO,
+    };
+
+    setSubmittedApp(application);
+    setSubmitDialogOpen(false);
+    toast.success("Application submitted.");
   }
 
   const submitDisabled = errors.length > 0 || fitState === "loading";
@@ -589,7 +609,17 @@ export function PublicApplicationForm({
             )}
 
             {fitState === "loading" && (
-              <p className="text-sm text-muted-foreground">Calculating fit score&hellip;</p>
+              <AiOperationLoader
+                title="Calculating fit score"
+                description="The application is being compared with programme criteria and support needs."
+                className="border-0 bg-transparent px-0 py-0"
+                steps={[
+                  "Reading company profile",
+                  "Checking programme criteria",
+                  "Reviewing support needs",
+                  "Preparing recommendation",
+                ]}
+              />
             )}
 
             {fitState === "error" && (
@@ -667,6 +697,27 @@ export function PublicApplicationForm({
           </button>
         </div>
       </div>
+      <ConfirmDialog
+        open={submitDialogOpen}
+        title="Submit this application?"
+        description="The application will be recorded with the current fit score and recommendation for coordinator review."
+        confirmLabel="Submit application"
+        onCancel={() => setSubmitDialogOpen(false)}
+        onConfirm={finalizeSubmit}
+      >
+        <div className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+          <div className="flex justify-between gap-4">
+            <span>Company</span>
+            <span className="font-medium text-foreground">{company.name}</span>
+          </div>
+          <div className="mt-1 flex justify-between gap-4">
+            <span>Fit</span>
+            <span className="font-medium text-foreground">
+              {fitResult?.fitLabel ?? "Potential fit"} · {fitResult?.fitScore ?? 0}/100
+            </span>
+          </div>
+        </div>
+      </ConfirmDialog>
     </div>
   );
 }
