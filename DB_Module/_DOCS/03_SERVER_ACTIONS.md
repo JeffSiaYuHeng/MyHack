@@ -352,6 +352,10 @@ Response:
 
 Generates a management-ready cohort narrative.
 
+Source: `app/api/ai/cohort-summary/route.ts`
+
+Last modified: 2026-05-17
+
 Request:
 
 ```ts
@@ -368,6 +372,16 @@ Response:
   generatedAt: string;
 }
 ```
+
+Side Effects:
+
+- None. This route reads seeded cohort and relationship context and returns a generated or deterministic fallback summary.
+- It does not write to Firestore, mutate seed data, create files, or change relationship health.
+
+Fallback behavior:
+
+- Missing or unavailable Gemini output returns a deterministic narrative, key risks, and recommended actions from cohort metrics.
+- Invalid `cohortId` returns a route error response rather than an empty success payload.
 
 ### Public Meeting Submission
 

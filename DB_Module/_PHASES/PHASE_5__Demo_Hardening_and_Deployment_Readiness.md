@@ -1,6 +1,6 @@
 # Phase 5: Demo Hardening and Deployment Readiness
 
-**Status**: NOT_STARTED
+**Status**: IN_PROGRESS
 **Prerequisite**: Phase 4 must be COMPLETE
 **Required _DOCS**: `00_SRS.md`, `01_DB_SCHEMA.md`, `02_STYLE_GUIDE.md`, `03_SERVER_ACTIONS.md`, `04_TECH_STACK.md`, `05_PROJECT_SNAPSHOT.md`, `06_DEPENDENCY_GRAPH.md`
 
@@ -10,7 +10,7 @@
 
 | Block | Name | Depends On | Status |
 |-------|------|------------|--------|
-| A | Firebase Persistence and Rules | — | NOT_STARTED |
+| A | Firebase Persistence and Rules | — | IN_PROGRESS |
 | B | Demo Resilience and Fallbacks | Block A | NOT_STARTED |
 | C | Cloud Run Deployment Verification | Block B | NOT_STARTED |
 | D | Final Pitch Walkthrough Polish | Block C | NOT_STARTED |

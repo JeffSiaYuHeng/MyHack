@@ -1,6 +1,6 @@
 # Phase 4: Relationship Health and Cohort Intelligence
 
-**Status**: IN_PROGRESS
+**Status**: COMPLETED
 **Prerequisite**: Phase 3 must be COMPLETE
 **Required _DOCS**: `00_SRS.md`, `01_DB_SCHEMA.md`, `02_STYLE_GUIDE.md`, `03_SERVER_ACTIONS.md`, `04_TECH_STACK.md`, `05_PROJECT_SNAPSHOT.md`, `06_DEPENDENCY_GRAPH.md`
 
@@ -13,7 +13,7 @@
 | A | Relationship Detail Timeline | — | COMPLETED |
 | B | Meeting Submission and AI Analysis | Block A | COMPLETED |
 | C | Relationship Diagnosis and Health Decay | Block B | COMPLETED |
-| D | Cohort Overview and Narrative | Block C | IN_PROGRESS |
+| D | Cohort Overview and Narrative | Block C | COMPLETED |
 
 ---
 
@@ -66,15 +66,17 @@
 ---
 
 ## Block D: Cohort Overview and Narrative
+- **Status**: [x] Completed (Archived on 2026-05-16)
+- **Evaluator Sign-off**: Verified via `_DOCS/LOGS/2026-05-17_Cohort_Report_UI.md`
 
 ### Scope
 - [x] Implement `/program/[cohortId]`.
 - [x] Show cohort stats, health heatmap, milestone distribution, and report action.
-- [ ] Add `POST /api/ai/cohort-summary`.
-- [ ] Render generated narrative, key risks, and recommended actions.
+- [x] Add `POST /api/ai/cohort-summary`.
+- [x] Render generated narrative, key risks, and recommended actions.
 
 ### Acceptance Criteria
 - [x] Cohort overview can be demoed from seeded data.
-- [ ] Narrative includes specific cohort numbers.
-- [ ] Copy/export fallback is available without a PDF dependency.
-- [ ] Empty or unavailable AI response does not break the page.
+- [x] Narrative includes specific cohort numbers.
+- [x] Copy/export fallback is available without a PDF dependency.
+- [x] Empty or unavailable AI response does not break the page.

@@ -1,91 +1,68 @@
 # Project Snapshot
 
-**Project**: Verrier  
-**Repository**: MyHack  
-**Event**: Build With AI 2026 KL  
-**Last Updated**: 2026-05-16  
-**Status**: Verrier PRD initialized in DualBrain docs and phase plan; product code still at scaffold state  
+**Project**: Verrier
+**Repository**: MyHack
+**Event**: Build With AI 2026 KL
+**Last Updated**: 2026-05-16
+**Status**: Phase 4 shipped; awaiting next planning instruction
 
 ## Current Architecture State
 
 ### Frontend
 
-- Next.js App Router project is active.
-- `app/page.tsx` still renders the Team MyHack scaffold/status page.
-- `app/layout.tsx` sets metadata, Geist fonts, global styles, and `react-hot-toast`.
-- `components/ui/button.tsx` provides the reusable button primitive.
-- `app/globals.css` defines Tailwind v4 imports and design tokens.
+- Next.js App Router project now contains the Verrier coordinator demo surface.
+- Core routes are live for dashboard, programme setup, public application intake, applicant review, matching, relationship list/detail, meeting submission, and cohort overview.
+- `components/features/product-shell.tsx` provides the coordinator shell and demo route boundary.
+- `components/features/cohort-overview.tsx` renders cohort stats, health heatmap, milestone distribution, AI-generated narrative, key risks, recommended actions, and copy fallback.
 
-### Product Definition
+### Backend and AI
 
-- Verrier is now the locked product direction.
-- Source PRD lives at `DB_Module/Resource/prd.md`.
-- Design source lives at `DB_Module/Resource/Design.md`.
-- `_DOCS/00_SRS.md` now summarizes the product requirements for Planner use.
-- `_DOCS/01_DB_SCHEMA.md` now defines MVP Firestore collections and TypeScript domain shapes.
-- `_DOCS/02_STYLE_GUIDE.md` now reflects the Morandi Tech design system.
-
-### AI
-
-- Existing `POST /api/ai` calls Gemini and returns generated text.
-- Existing `lib/gemini.ts` provides raw text and scaffold-level JSON helper functions.
-- Verrier still needs dedicated JSON AI routes for programme fit, mentor matching, meeting analysis, relationship diagnosis, and cohort summary.
+- API route contracts are route-handler based under `app/api/`.
+- Structured Gemini-backed routes exist for programme fit, mentor matching, meeting analysis, relationship diagnosis, and cohort summary.
+- Each AI workflow keeps deterministic fallback behavior when Gemini is unavailable or output is malformed.
+- `POST /api/relationships/confirm-match` creates demo relationship responses from seed-backed inputs.
 
 ### Data and Auth
 
-- Firebase app, Firestore, and Auth are initialized.
-- Firestore helper `saveResult()` is available.
-- Verrier-specific collections are documented but not implemented in code.
-- Auth UI is not implemented.
-- Firestore rules are not yet collection-aware.
-
-### State
-
-- Zustand store tracks messages and current user.
-- Product domain types still need to be added to `lib/types.ts`.
+- Seed-backed Verrier domain data supports the current demo flow.
+- Firebase app, Firestore, and Auth are initialized through `lib/firebase.ts`.
+- `lib/firebase.ts` exports `getFirebaseConfigStatus()`: checks all six `NEXT_PUBLIC_FIREBASE_*` keys and returns `{ ready: boolean, missingKeys: string[] }` without exposing values. Call this before any write to detect misconfigured environments.
+- `lib/firebase.ts` exports `safeWrite(collectionName: MvpCollectionName, data)`: restricts writes to the eight documented MVP collections (`programs`, `applications`, `cohorts`, `companies`, `mentors`, `relationships`, `meetings`, `users`). Returns a structured `CollectionWriteResult` with `ok`, `collectionName`, `fallbackUsed`, and either `id` or `error`. Returns a fallback-safe failure result (not a throw) when config is incomplete or Firestore raises an exception. Seed fallback behavior is preserved: when `safeWrite` returns `ok: false`, callers may proceed with seeded or local state.
+- `MvpCollectionName` type is exported for callers that need to type-check collection names at compile time.
+- `saveResult(collectionName: string, data)` and named exports `db` and `auth` are preserved unchanged for backward compatibility.
+- Firestore persistence is not yet wired into demo-critical API routes; those flows still rely on seed/local state.
+- Auth UI is a demo boundary. Production Firebase ID-token enforcement is not implemented yet.
+- Firestore rules are still scaffold-level and require collection-aware tightening before final deployment.
 
 ### Infrastructure
 
-- Dockerfile supports separate dependency, development, builder, and standalone production runner targets.
-- Docker Compose runs local development with `.env.local`, source mounts, hot reload, and optional `APP_PORT` override.
-- GitHub Actions deploys to Cloud Run on pushes to `main`.
+- Docker development and standalone production build scaffolding exist.
+- GitHub Actions Cloud Run deployment workflow exists.
+- Known verification commands remain `npm run lint` and `npm run build`.
 
-### DualBrain
+## Completed Milestones
 
-- `_DOCS` has been reinitialized around Verrier.
-- `_PHASES` is being reinitialized around the Verrier MVP build sequence.
-- Phase work should now proceed from the new roadmap rather than the old generic topic-lock phase.
+- Phase 1: Verrier Product Foundation. Completed on 2026-05-16. Product shell, domain model, seed data, dashboard foundation, Docker environment, and route boundary were established.
+- Phase 2: Programme Intake and Applicant Review. Completed on 2026-05-16. Programme setup, public intake, AI fit scoring, and applicant review were established.
+- Phase 3: Mentor Matching and Relationship Creation. Completed on 2026-05-16. Matching workbench, AI match route, confirmation flow, and relationship list were established.
+- Phase 4: Relationship Health and Cohort Intelligence. Completed on 2026-05-16. Relationship detail, meeting analysis, diagnosis, health decay, cohort overview, and cohort narrative reporting were established.
 
-## Current Gaps
+## Current Milestone Progress
 
-- Product code still shows scaffold page.
-- No Verrier routes have been implemented yet.
-- No seed data module exists yet.
-- No domain-specific Firestore helpers exist yet.
-- No dedicated Gemini prompt modules exist yet.
-- No auth UI exists yet.
-- Firestore rules are still scaffold-level.
-- Recharts and validation libraries are not installed.
+- Phase 1: 100%
+- Phase 2: 100%
+- Phase 3: 100%
+- Phase 4: 100%
+- Phase 5: 0%
+
+## Known Debt / Residual Issues
+
+- Firestore persistence is not wired into demo-critical flows.
+- Firestore rules are not yet collection-aware.
+- Authentication remains a demo placeholder.
+- Seed fallback remains the operational baseline for the demo.
+- `DB_Module/_DOCS/06_DEPENDENCY_GRAPH.md` is stale and should be regenerated before dependency-sensitive planning.
 
 ## Recommended Next Milestone
 
-Start `_PHASES` Phase 1, Block A:
-
-1. Add shared Verrier domain types and seed data.
-2. Add deterministic mock data for programme, applicants, mentors, relationships, meetings, and cohort.
-3. Add small read-only helper functions for dashboard and matching screens.
-4. Keep the first block implementation small enough for one `_TASK/_INSTRUCTION.md`.
-
-## Known Working Commands
-
-```bash
-npm run dev
-npm run build
-npm run start
-npm run lint
-npm run gen:structure
-npm run gen:graph
-docker compose config
-docker compose build
-APP_PORT=3001 docker compose up -d
-```
+Wait for explicit human approval before preparing the next phase or block.

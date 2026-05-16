@@ -2,20 +2,12 @@
 
 ## Strategic Anchor (MANDATORY)
 
-- **Phase**: `PHASE_4__Relationship_Health_and_Cohort_Intelligence.md`
-- **Block**: Block D — Cohort Overview and Narrative
+- **Phase**: `PHASE_5__Demo_Hardening_and_Deployment_Readiness.md`
+- **Block**: Block A — Firebase Persistence and Rules
 
 ## Context
 
-Implement the next Phase 4 Block D task from `_PLAN.md`: add `POST /api/ai/cohort-summary`. The cohort overview now shows seeded stats, health heatmap, milestone distribution, and report action.
-
-Latest Evaluator status: PASSED for `components/features/cohort-overview.tsx`. Ready for AI cohort summary route.
-
----
-
-## Required Local Framework Doc
-
-- Read `node_modules/next/dist/docs/01-app/01-getting-started/15-route-handlers.md`.
+Add Firebase configuration readiness helpers and safe collection write semantics in `lib/firebase.ts`. This prepares later Firestore persistence tasks to detect missing Firebase config, restrict writes to documented MVP collections, and return fallback-safe results instead of crashing demo flows.
 
 ---
 
@@ -23,7 +15,8 @@ Latest Evaluator status: PASSED for `components/features/cohort-overview.tsx`. R
 
 The Coder agent is ONLY allowed to modify the following files:
 
-- `app/api/ai/cohort-summary/route.ts`
+- `lib/firebase.ts`
+- `DB_Module/_DOCS/05_PROJECT_SNAPSHOT.md`
 - `DB_Module/_TASK/_Hand_OverLog.md`
 
 ---
@@ -32,75 +25,72 @@ The Coder agent is ONLY allowed to modify the following files:
 
 The Coder agent may read these files for context but MUST NOT modify them:
 
-- `app/api/ai/diagnose/route.ts`
-- `lib/verrier-seed.ts`
+- `DB_Module/_DOCS/01_DB_SCHEMA.md`
+- `DB_Module/_DOCS/04_TECH_STACK.md`
 
 ---
 
 ## Dependency Note
 
-- `app/api/ai/cohort-summary/route.ts` is a new route required by Phase 4 Block D.
-- `app/api/ai/diagnose/route.ts` provides the current Gemini JSON response and deterministic fallback pattern.
-- `lib/verrier-seed.ts` provides seeded cohorts, programs, relationships, companies, mentors, and meetings.
-- `DB_Module/_DOCS/06_DEPENDENCY_GRAPH.md` is stale and does not list the new route.
+- `DB_Module/_DOCS/06_DEPENDENCY_GRAPH.md` is stale and does not list the current app surface.
+- Direct search found no app or component imports of `lib/firebase.ts`.
+- Preserve existing exports `db`, `auth`, and `saveResult` for compatibility.
+- This task does not involve Next.js route, page, metadata, caching, or server/client boundary changes, so no local Next.js doc read is required.
 
 ---
 
 ## Steps (Execution Order)
 
-1. Read the local Next route handler doc listed above.
-2. Read `app/api/ai/diagnose/route.ts` for validation, prompt, JSON response mode, safe parsing, and fallback patterns.
-3. Read `DB_Module/_DOCS/03_SERVER_ACTIONS.md` for the `POST /api/ai/cohort-summary` request and response contract.
-4. Create `app/api/ai/cohort-summary/route.ts`.
-5. Add `POST(req: Request)` with safe JSON parsing.
-6. Return `400` for invalid JSON, a non-object body, or missing `cohortId`.
-7. Resolve the cohort from `seedCohorts`.
-8. Return `404` when the cohort is missing.
-9. Load related seeded program, companies, mentors, relationships, and meetings.
-10. Compute cohort numbers for total companies, mentors, relationships, meetings, average health score, healthy count, at-risk count, critical count, stale count, and milestone distribution.
-11. Build a cohort summary prompt that includes the specific cohort numbers from step 10.
-12. Require the AI response to contain `narrative`, `keyRisks`, and `recommendedActions`.
-13. Call Gemini server-side with JSON response mode, following the existing route pattern.
-14. Parse Gemini output safely from `unknown`.
-15. Normalize `narrative` to a non-empty string.
-16. Normalize `keyRisks` to a string array.
-17. Normalize `recommendedActions` to a string array.
-18. Add `generatedAt` as an ISO timestamp in every success response.
-19. Add deterministic fallback output for Gemini errors, malformed JSON, missing fields, and empty output.
-20. Ensure fallback `narrative` includes concrete cohort numbers.
-21. Keep the response contract aligned with `POST /api/ai/cohort-summary` in `DB_Module/_DOCS/03_SERVER_ACTIONS.md`.
-22. Do not write to Firestore or mutate seed data.
-23. Do not wire the route into `CohortOverview` in this task.
-24. Run `npm run lint`.
-25. Run `npm run build`.
-26. Append a Coder handover entry to `DB_Module/_TASK/_Hand_OverLog.md` with files changed, validation behavior, AI/fallback behavior, verification result, and exact failure output when a command fails.
+1. Read `lib/firebase.ts`.
+2. Read `DB_Module/_DOCS/01_DB_SCHEMA.md` for the MVP collection names.
+3. Read `DB_Module/_DOCS/04_TECH_STACK.md` for Firebase and environment expectations.
+4. Preserve Firebase app initialization, Firestore initialization, Auth initialization, and existing named exports.
+5. Add a constant list or readonly set of allowed MVP collection names: `programs`, `applications`, `cohorts`, `companies`, `mentors`, `relationships`, `meetings`, and `users`.
+6. Add an exported collection-name type derived from the allowed collection list.
+7. Add an exported Firebase config status helper that checks all required `NEXT_PUBLIC_FIREBASE_*` values without exposing secret values.
+8. Include missing config key names in the helper result.
+9. Add an exported safe collection write helper for documented MVP collections.
+10. Return a structured result object from the safe write helper with `ok`, `collectionName`, `fallbackUsed`, and either `id` or `error`.
+11. Make the safe write helper return a fallback-safe failure result when Firebase config is incomplete.
+12. Make the safe write helper return a fallback-safe failure result when Firestore throws.
+13. Keep `saveResult(collectionName, data)` backward compatible.
+14. Make `saveResult` delegate to the safe write helper only when doing so preserves its existing Promise behavior.
+15. Do not allow arbitrary collection names in the new safe helper.
+16. Do not add Firebase Admin SDK.
+17. Do not add dependencies.
+18. Do not log environment values.
+19. Update `DB_Module/_DOCS/05_PROJECT_SNAPSHOT.md` to note Firebase readiness helper status, safe write helper status, allowed MVP collections, and seed fallback behavior.
+20. Run `npm run lint`.
+21. Run `npm run build`.
+22. Append a Coder handover entry to `DB_Module/_TASK/_Hand_OverLog.md` with changed files, exported helper names, fallback behavior, verification result, and exact failure output when a command fails.
 
 ---
 
 ## Constraints & Rules
 
-- Do not modify any file outside Context Scope.
-- Do not modify `components/features/cohort-overview.tsx`.
-- Do not modify `lib/verrier-seed.ts`.
-- Do not modify `lib/verrier-analytics.ts`.
-- Do not add Firestore reads or writes.
-- Do not mutate seeded records.
+- Do not modify files outside Context Scope.
+- Do not modify API routes.
+- Do not modify UI components.
+- Do not modify runtime CSV data.
+- Do not modify `firestore.rules`.
+- Do not add Firestore reads.
+- Do not add Firebase Admin SDK.
 - Do not add dependencies.
 - Preserve strict TypeScript with no `any`.
-- Keep Gemini API key usage server-side only.
-- Include specific cohort numbers in the prompt and fallback narrative.
+- Do not expose Firebase or Gemini secret values in code, logs, docs, or handover.
+- Keep seed fallback behavior explicit.
 
 ---
 
 ## Out of Scope (Hard Stop)
 
-- Wiring the route into `CohortOverview`.
-- Generated narrative rendering.
-- Copy/export fallback implementation.
-- PDF generation dependency.
-- Firestore persistence.
-- Seed data mutation.
-- Phase 5 deployment hardening.
+- API route persistence wiring.
+- Public application persistence.
+- Meeting submission persistence.
+- Match confirmation persistence.
+- Firestore rules.
+- Authentication enforcement.
+- Cloud Run deployment.
 
 ---
 
@@ -111,15 +101,14 @@ The Coder agent may read these files for context but MUST NOT modify them:
 - [ ] Reference Scope files are not in Context Scope.
 - [ ] No code snippets are included.
 - [ ] Out of Scope is explicit.
-- [ ] `app/api/ai/cohort-summary/route.ts` exists.
-- [ ] Invalid JSON returns `400`.
-- [ ] Missing `cohortId` returns `400`.
-- [ ] Missing cohort returns `404`.
-- [ ] Valid request returns `narrative`, `keyRisks`, `recommendedActions`, and `generatedAt`.
-- [ ] Prompt includes specific cohort numbers.
-- [ ] Fallback narrative includes specific cohort numbers.
-- [ ] AI failure returns deterministic fallback output.
-- [ ] No Firestore or seed mutation is added.
+- [ ] `db`, `auth`, and `saveResult` remain exported.
+- [ ] Firebase config readiness helper is exported.
+- [ ] Safe MVP collection write helper is exported.
+- [ ] New safe helper restricts collection names to documented MVP collections.
+- [ ] Missing config returns fallback-safe result.
+- [ ] Firestore write failure returns fallback-safe result.
+- [ ] No secret values are logged or documented.
+- [ ] `DB_Module/_DOCS/05_PROJECT_SNAPSHOT.md` documents helper and fallback status.
 - [ ] `npm run lint` succeeds or exact failure is logged.
 - [ ] `npm run build` succeeds or exact failure is logged.
 - [ ] Coder handover note is appended.

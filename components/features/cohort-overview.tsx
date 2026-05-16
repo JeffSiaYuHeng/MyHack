@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import type {
   Cohort,
   Company,
@@ -46,6 +49,13 @@ function formatDate(ts: TimestampLike): string {
   return String(ts);
 }
 
+interface CohortReport {
+  narrative: string;
+  keyRisks: string[];
+  recommendedActions: string[];
+  generatedAt: string;
+}
+
 interface CohortOverviewProps {
   cohort: Cohort;
   program: Program;
@@ -62,6 +72,16 @@ export function CohortOverview({
   mentors,
   meetings,
 }: CohortOverviewProps) {
+  const [reportStatus, setReportStatus] = useState<
+    "idle" | "loading" | "done" | "error"
+  >("idle");
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [report, setReport] = useState<CohortReport | null>(null);
+  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "fallback">(
+    "idle"
+  );
+  const [copyText, setCopyText] = useState("");
+
   const companyMap = new Map(companies.map((c) => [c.id, c]));
 
   const relWithMeta = relationships.map((r) => ({
@@ -71,7 +91,6 @@ export function CohortOverview({
     band: getHealthBand(r.healthScore),
   }));
 
-  // Stats
   const totalRelationships = relationships.length;
   const activeCount = relationships.filter((r) => r.status === "active").length;
   const avgHealthScore =
@@ -83,13 +102,14 @@ export function CohortOverview({
       : 0;
   const healthyCount = relWithMeta.filter((x) => x.band === "healthy").length;
   const atRiskCount = relWithMeta.filter((x) => x.band === "at-risk").length;
-  const criticalCount = relWithMeta.filter((x) => x.band === "critical").length;
+  const criticalCount = relWithMeta.filter(
+    (x) => x.band === "critical"
+  ).length;
   const staleCount = relWithMeta.filter(
     (x) => x.urgency.level === "stale"
   ).length;
   const totalMeetings = meetings.length;
 
-  // Heatmap sorted: urgency priority ASC → days since last DESC → health score ASC → company name ASC
   const heatmap = [...relWithMeta].sort((a, b) => {
     if (a.urgency.priority !== b.urgency.priority)
       return a.urgency.priority - b.urgency.priority;
@@ -102,7 +122,6 @@ export function CohortOverview({
     return nameA < nameB ? -1 : nameA > nameB ? 1 : 0;
   });
 
-  // Milestone distribution: count relationships at or past each milestone
   const milestoneDistribution = [1, 2, 3, 4, 5].map((num) => ({
     num,
     completed: relationships.filter((r) =>
@@ -113,6 +132,62 @@ export function CohortOverview({
         r.currentMilestone === num && !r.milestonesCompleted.includes(num)
     ).length,
   }));
+
+  async function handleGenerate() {
+    setReportStatus("loading");
+    setApiError(null);
+    setCopyStatus("idle");
+    try {
+      const res = await fetch("/api/ai/cohort-summary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cohortId: cohort.id }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Request failed" }));
+        setApiError(
+          typeof err.error === "string" ? err.error : "Request failed"
+        );
+        setReportStatus("error");
+        return;
+      }
+      const data = (await res.json()) as CohortReport;
+      setReport(data);
+      setReportStatus("done");
+    } catch {
+      setApiError("Network error — please try again.");
+      setReportStatus("error");
+    }
+  }
+
+  function buildPlainText(r: CohortReport): string {
+    const risks = r.keyRisks.map((k) => `- ${k}`).join("\n");
+    const actions = r.recommendedActions.map((a) => `- ${a}`).join("\n");
+    return [
+      `COHORT REPORT: ${cohort.name}`,
+      `Generated: ${r.generatedAt.slice(0, 19).replace("T", " ")} UTC`,
+      "",
+      r.narrative,
+      "",
+      "KEY RISKS:",
+      risks,
+      "",
+      "RECOMMENDED ACTIONS:",
+      actions,
+    ].join("\n");
+  }
+
+  async function handleCopy() {
+    if (!report) return;
+    const text = buildPlainText(report);
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopyStatus("copied");
+    } catch {
+      setCopyText(text);
+      setCopyStatus("fallback");
+    }
+  }
 
   return (
     <div className="px-4 md:px-12 py-6 space-y-6">
@@ -138,7 +213,6 @@ export function CohortOverview({
           </div>
         </div>
 
-        {/* Stat row */}
         <div className="flex flex-wrap gap-4 pt-1 text-[10px]">
           <div className="text-muted-foreground">
             <span className="font-medium text-foreground">
@@ -147,7 +221,9 @@ export function CohortOverview({
             {companies.length === 1 ? "company" : "companies"}
           </div>
           <div className="text-muted-foreground">
-            <span className="font-medium text-foreground">{mentors.length}</span>{" "}
+            <span className="font-medium text-foreground">
+              {mentors.length}
+            </span>{" "}
             {mentors.length === 1 ? "mentor" : "mentors"}
           </div>
           <div className="text-muted-foreground">
@@ -165,7 +241,6 @@ export function CohortOverview({
           Health Overview
         </p>
         <div className="border border-border rounded px-4 py-4 space-y-3">
-          {/* Summary stats */}
           <div className="flex flex-wrap gap-6 text-[10px]">
             <div>
               <span className="text-lg font-bold leading-none text-foreground">
@@ -240,7 +315,6 @@ export function CohortOverview({
             </div>
           </div>
 
-          {/* Health heatmap */}
           {heatmap.length > 0 && (
             <div className="pt-1">
               <p className="text-[10px] text-muted-foreground mb-1.5">
@@ -342,25 +416,125 @@ export function CohortOverview({
         </div>
       </div>
 
-      {/* Cohort report action */}
+      {/* Cohort report */}
       <div>
         <div className="flex items-center justify-between mb-2">
           <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
             Cohort Report
           </p>
-          <button
-            disabled
-            className="px-2.5 py-1 text-[10px] font-medium rounded border border-border text-muted-foreground cursor-not-allowed"
+          <div className="flex items-center gap-2">
+            {report && (
+              <button
+                onClick={handleCopy}
+                className="px-2.5 py-1 text-[10px] font-medium rounded border border-border text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
+              >
+                {copyStatus === "copied" ? "Copied" : "Copy Report"}
+              </button>
+            )}
+            <button
+              onClick={handleGenerate}
+              disabled={reportStatus === "loading"}
+              className={`px-2.5 py-1 text-[10px] font-medium rounded border transition-colors ${
+                reportStatus === "loading"
+                  ? "border-border text-muted-foreground cursor-not-allowed"
+                  : "border-border text-muted-foreground hover:text-foreground hover:border-foreground"
+              }`}
+            >
+              {reportStatus === "loading"
+                ? "Generating…"
+                : reportStatus === "done"
+                ? "Regenerate"
+                : "Generate Report"}
+            </button>
+          </div>
+        </div>
+
+        {/* Error state */}
+        {reportStatus === "error" && apiError && (
+          <p
+            className="text-[10px] mb-2"
+            style={{ color: "var(--status-critical)" }}
           >
-            Generate Narrative — coming in Block D
-          </button>
-        </div>
-        <div className="border border-border rounded px-4 py-4">
-          <p className="text-[10px] text-muted-foreground">
-            AI-generated cohort narrative and programme health report — coming
-            in Block D.
+            {apiError}
           </p>
-        </div>
+        )}
+
+        {/* Report content */}
+        {report ? (
+          <div className="border border-border rounded px-4 py-4 space-y-3">
+            <p className="text-[10px] text-muted-foreground">
+              {report.narrative}
+            </p>
+
+            {report.keyRisks.length > 0 && (
+              <div>
+                <p className="text-[10px] font-semibold text-foreground mb-1">
+                  Key Risks
+                </p>
+                <ul className="space-y-0.5">
+                  {report.keyRisks.map((risk, i) => (
+                    <li key={i} className="flex items-start gap-1.5 text-[10px]">
+                      <span
+                        className="shrink-0 mt-0.5"
+                        style={{ color: "var(--status-risk)" }}
+                      >
+                        ·
+                      </span>
+                      <span className="text-muted-foreground">{risk}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {report.recommendedActions.length > 0 && (
+              <div>
+                <p className="text-[10px] font-semibold text-foreground mb-1">
+                  Recommended Actions
+                </p>
+                <ul className="space-y-0.5">
+                  {report.recommendedActions.map((action, i) => (
+                    <li key={i} className="flex items-start gap-1.5 text-[10px]">
+                      <span className="text-muted-foreground shrink-0 mt-0.5">
+                        →
+                      </span>
+                      <span className="text-muted-foreground">{action}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <p className="text-[9px] text-muted-foreground pt-1">
+              Generated{" "}
+              {report.generatedAt.slice(0, 19).replace("T", " ")} UTC
+            </p>
+
+            {/* Clipboard fallback textarea */}
+            {copyStatus === "fallback" && (
+              <div className="pt-1">
+                <p className="text-[10px] text-muted-foreground mb-1">
+                  Clipboard unavailable — select all and copy manually:
+                </p>
+                <textarea
+                  readOnly
+                  rows={8}
+                  value={copyText}
+                  className="w-full border border-border rounded px-2 py-1.5 text-[10px] bg-muted text-muted-foreground resize-none font-mono"
+                  onFocus={(e) => e.target.select()}
+                />
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="border border-border rounded px-4 py-4">
+            <p className="text-[10px] text-muted-foreground">
+              {reportStatus === "loading"
+                ? "Generating cohort narrative…"
+                : "Generate a management-ready narrative using live cohort health data."}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

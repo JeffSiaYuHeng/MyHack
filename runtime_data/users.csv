@@ -1,0 +1,3 @@
+id,email,displayName,photoURL,role,organizationId,createdAt,lastLoginAt
+user-sarah-admin,sarah@verrier.demo,Sarah Lim,,admin,org-sunway-innovation-lab,2026-05-16T09:00:00.000Z,2026-05-16T08:45:00.000Z
+user-aaron-viewer,aaron@verrier.demo,Aaron Tan,,viewer,org-sunway-innovation-lab,2026-05-16T09:00:00.000Z,2026-05-16T08:10:00.000Z
