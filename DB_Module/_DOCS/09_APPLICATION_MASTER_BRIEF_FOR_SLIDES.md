@@ -604,6 +604,13 @@ Current status:
 
 > Feature-complete MVP with interaction polish, explicit AI triggers, live demo routes, deterministic fallback behavior, and passing lint/build.
 
+Verification status:
+
+- `npm run lint` passes.
+- `npm run build` passes.
+- Next.js 16.2.6 Turbopack root is explicitly configured in `next.config.ts`.
+- Production build generates all core demo routes and AI API routes.
+
 Completed:
 
 - Programme foundation.
@@ -632,8 +639,6 @@ Known technical debt:
 - Programme CRUD is local state only.
 - Firestore persistence is mainly wired to match confirmation.
 - Auth is a demo placeholder.
-- `lib/gemini.ts` wrapper is unused.
-- Build prints a Next.js workspace-root warning due to multiple lockfiles.
 - Mentor link token should be aligned with the public meeting form’s expected `meetingSubmissionToken`.
 
 ---
@@ -693,7 +698,255 @@ What makes it different:
 
 ---
 
-## 22. Suggested Slide Structure
+## 22. Judging Criteria Alignment
+
+This section maps Verrier directly to the judging rubric.
+
+Estimated current scoring position after demo hardening:
+
+| Rubric area | Estimated score | Rationale |
+|---|---:|---|
+| Technical Implementation and Architecture | 32-35 / 40 | Working Next.js MVP, server-side Gemini routes, Firestore readiness, Cloud Run workflow, passing lint/build |
+| Business Innovation and Problem Solving | 33-36 / 40 | Strong problem-solution fit around programmable relationship entities; clear ecosystem stakeholders |
+| Presentation and Pitching | 15-17 / 20 | Strong narrative and demo flow; final score depends on slide quality and live demo execution |
+| Overall | 80-88 / 100 | Strong hackathon-ready MVP with remaining gaps in production auth, full persistence, and measured AI evaluation |
+
+### Technical Implementation and Architecture
+
+Verrier demonstrates a working Next.js and React prototype with server-side AI API routes, structured domain types, seed-backed demo data, Firebase readiness helpers, Firestore rules, Docker configuration, and a Google Cloud Run deployment workflow.
+
+Relevant evidence:
+
+- Next.js App Router pages cover the full operating flow: dashboard, programmes, public application, applicant review, matching, relationships, meeting submission, and cohort overview.
+- Server-side AI routes keep `GEMINI_API_KEY` private and return structured JSON.
+- `safeWrite` restricts Firestore writes to documented MVP collections and returns clear fallback metadata.
+- `firestore.rules` defines collection-specific access patterns for programmes, applications, companies, mentors, relationships, meetings, cohorts, and users.
+- Docker and GitHub Actions provide a feasible deployment path to Cloud Run.
+- `npm run lint` and `npm run build` pass after final demo hardening.
+
+### Google Technology Integration
+
+Verrier uses Google technologies as part of the core product, not as a side feature.
+
+| Google technology | Where used | Why it matters |
+|---|---|---|
+| Gemini API | Programme fit scoring, mentor matching, meeting analysis, relationship diagnosis, cohort summary, programme brief parsing | Converts unstructured ecosystem data into structured recommendations, signals, and reports |
+| Firebase Firestore | MVP collection model, Firestore rules, safe write boundary, match confirmation persistence path | Provides the relationship graph data layer needed for reusable ecosystem entities |
+| Firebase Auth | Initialized as the production auth direction | Supports coordinator/admin and viewer role separation in a production version |
+| Google Cloud Run | GitHub Actions deploy workflow targets Cloud Run in `asia-southeast1` | Gives the app a realistic deployment path for Malaysia and Southeast Asia demos |
+
+Technology choice rationale:
+
+- Gemini is appropriate because the hard parts of the problem are judgment-heavy: scoring programme fit, comparing mentor compatibility, summarizing meeting notes, detecting relationship risk, and producing management-ready cohort narratives.
+- Firestore fits the MVP because ecosystem entities are document-oriented and relationship records can evolve over time with meetings, health scores, diagnosis, watch points, and milestones.
+- Cloud Run fits the deployment model because the Next.js standalone build can run as a containerized web service with server-side AI routes.
+
+### AI Implementation Quality
+
+AI is essential to Verrier because the product value depends on converting messy coordination inputs into reusable operational intelligence.
+
+Core AI jobs:
+
+- Score startup applications against programme criteria.
+- Rank mentors for approved startups.
+- Summarize meeting notes and extract action items.
+- Detect relationship health signals.
+- Generate relationship diagnosis and cohort reports.
+- Extract programme setup parameters from a brief.
+
+Human oversight:
+
+- AI calls are triggered by explicit user actions.
+- AI recommendations are shown with rationale and score breakdowns.
+- Coordinators approve applicants, select mentors, confirm matches, and decide interventions.
+- The product principle is: AI does the analysis; humans make the call.
+
+Ethical AI considerations:
+
+- Prompts instruct Gemini to evaluate only professional and business criteria.
+- Prompts explicitly exclude race, religion, and royalty from assessment.
+- The UI labels AI-generated outputs with `✦ AI`.
+- Private Gemini credentials stay server-side.
+- Meeting notes and founder data are only sent to AI when the user triggers an AI action.
+- Production roadmap should add explicit consent copy for founders and mentors before AI analysis.
+
+### AI Model Performance
+
+The MVP contains engineering controls that reduce hallucinations and malformed outputs.
+
+Implemented controls:
+
+- `responseMimeType: "application/json"` is used for structured Gemini responses.
+- API routes parse and validate AI output before returning it to the UI.
+- Numeric scores are clamped into expected ranges.
+- Mentor IDs returned by Gemini are checked against the known mentor pool.
+- If Gemini fails, times out, or returns malformed JSON, deterministic fallback logic keeps the demo usable.
+- Meeting analysis, diagnosis, cohort summary, matching, and programme fit scoring all have fallback behavior.
+
+Suggested evidence slide:
+
+| Evaluation area | Demo evidence to show |
+|---|---|
+| Accuracy | Compare AI top-3 mentor recommendations against a manually selected best mentor for 10 demo startups |
+| Consistency | Show that identical seed inputs produce stable score ranges and valid JSON output |
+| Hallucination reduction | Demonstrate that invalid Gemini mentor IDs are rejected and local fallback ranking is used |
+| Efficiency | Record average response time for fit scoring, matching, meeting analysis, and cohort summary |
+| Reliability | Show the fallback state when Gemini is unavailable and confirm the user can continue the workflow |
+
+Suggested pitch metric language:
+
+> In the MVP, we evaluate AI quality through recommendation agreement, valid structured output rate, response time, and fallback recovery. The system is designed so malformed AI output cannot directly create an invalid relationship record.
+
+### Working Demo and UI/UX
+
+The demo demonstrates the complete core workflow:
+
+```text
+Programme setup
+-> founder application
+-> Gemini fit score
+-> applicant review
+-> Gemini mentor matching
+-> human match confirmation
+-> relationship record
+-> meeting submission
+-> Gemini meeting analysis
+-> relationship diagnosis
+-> cohort report
+```
+
+UI strengths:
+
+- Operational dashboard starts from attention and risk, not marketing copy.
+- AI features are button-driven and visible.
+- Loading states, toast feedback, confirmations, and fallback states are designed.
+- Relationship cards expose health score, trend, meeting count, last activity, match breakdown, watch points, and AI insight.
+- Public forms reduce friction for founders and mentors.
+
+---
+
+## 23. Business Model and Scalability
+
+Primary customers:
+
+- Accelerators and incubators.
+- Government innovation agencies.
+- University entrepreneurship programmes.
+- Corporate innovation teams.
+- Regional ecosystem platforms.
+
+Primary beneficiaries:
+
+- Programme administrators reduce manual review, matching, follow-up, and reporting work.
+- Startups receive more relevant mentor and programme support.
+- Mentors get cleaner context and lower admin burden.
+- Programme owners get earlier visibility into cohort risk and outcomes.
+
+Business model options:
+
+| Model | Fit |
+|---|---|
+| SaaS per programme team | Best MVP path; charge by active programme, seats, and relationship volume |
+| Ecosystem platform license | Suitable for government or regional operators managing multiple initiatives |
+| Usage-based AI add-on | Charge for AI scoring, matching, diagnosis, and reports above included quota |
+| Services plus platform | Useful for first deployments where customers need onboarding and data migration |
+
+Scalability considerations:
+
+- Firestore collections map cleanly to programmes, applications, companies, mentors, relationships, meetings, cohorts, and users.
+- Relationship records are reusable across reporting, diagnosis, health monitoring, and future matching.
+- Gemini calls are explicit rather than passive, which controls cost and avoids background AI spend.
+- Deterministic fallback logic allows the demo and future product to remain usable during AI failures.
+- Cloud Run provides a path to horizontal scaling for the web app and API routes.
+
+Cost controls:
+
+- Use Gemini Flash-class models for fast, lower-cost operational analysis.
+- Trigger AI only when the user requests scoring, matching, diagnosis, meeting analysis, or report generation.
+- Cache or persist AI outputs such as match rationale, diagnosis, and cohort reports.
+- Use deterministic heuristics for pre-filtering and fallback before asking Gemini for narrative reasoning.
+
+---
+
+## 24. Deployment Readiness
+
+Current deployment path:
+
+- Next.js standalone output is enabled.
+- Dockerfile builds the application into a production runner image.
+- Docker Compose supports local development.
+- GitHub Actions authenticates to Google Cloud and deploys to Cloud Run.
+- Cloud Run service is configured for `asia-southeast1`.
+- Runtime environment variables include Gemini and Firebase configuration.
+
+Production hardening roadmap:
+
+- Enforce Firebase Auth on coordinator/admin routes.
+- Add Firebase ID token verification in server routes before privileged writes.
+- Persist programme CRUD, application decisions, meeting analysis, and diagnosis updates to Firestore.
+- Align mentor meeting links with secure `meetingSubmissionToken` flow.
+- Add audit logs for AI decisions, human overrides, and relationship changes.
+- Add evaluation dashboard for AI latency, fallback rate, and recommendation acceptance rate.
+
+Deployment pitch line:
+
+> Verrier is deployable today as a Cloud Run-hosted Next.js service, with Gemini server routes and Firebase-ready data boundaries. The remaining work is production auth enforcement and full Firestore persistence beyond the match-confirmation path.
+
+---
+
+## 25. Presentation Scoring Strategy
+
+Recommended pitch narrative:
+
+```text
+Problem:
+Ecosystem relationships are still coordinated manually.
+
+Insight:
+The core asset is not the application spreadsheet. It is the relationship graph.
+
+Solution:
+Verrier turns linkages into first-class programmable entities.
+
+AI:
+Gemini scores fit, ranks mentors, analyzes meetings, diagnoses relationship risk, and generates cohort intelligence.
+
+Impact:
+Programme teams reduce manual coordination, catch relationship drift earlier, and reuse engagement data across programmes.
+```
+
+Recommended diagram:
+
+```text
+Actors
+  Founder -> Application
+  Mentor -> Meeting Notes
+  Coordinator -> Decisions
+
+Programmable Entities
+  Programme -> Application -> Company
+  Company + Mentor -> Relationship
+  Relationship -> Meetings -> Health -> Diagnosis
+  Cohort -> Report
+
+AI Layer
+  Fit Scoring
+  Mentor Matching
+  Meeting Analysis
+  Relationship Diagnosis
+  Cohort Summary
+```
+
+Recommended demo emphasis:
+
+- Do not demo every page equally.
+- Spend most time on the transformation from approved startup to AI match to living relationship record.
+- Show one fallback or governance detail briefly to prove reliability.
+- End on cohort report because it shows the management-level value of relationship data.
+
+---
+
+## 26. Suggested Slide Structure
 
 ### Slide 1. Title
 
@@ -748,21 +1001,33 @@ Verrier generates management-ready narrative, key risks, and recommended actions
 
 Next.js, React, Firebase, Firestore, Gemini, server-side AI APIs, deterministic fallbacks.
 
-### Slide 13. Demo Status
+### Slide 13. Google Technology Choices
+
+Explain why Gemini, Firebase, Firestore, and Cloud Run were selected.
+
+### Slide 14. AI Safety and Reliability
+
+Human-in-loop decisions, bias guardrails, JSON validation, deterministic fallbacks, privacy boundary.
+
+### Slide 15. Business Model and Scale
+
+SaaS for programme teams, ecosystem platform licenses, usage-based AI add-ons.
+
+### Slide 16. Demo Status
 
 Feature-complete MVP: all core routes live, all five AI routes wired, lint/build passing.
 
-### Slide 14. Roadmap
+### Slide 17. Roadmap
 
 Persist programme CRUD, enforce production auth, add exports, add notifications, deepen analytics.
 
-### Slide 15. Closing
+### Slide 18. Closing
 
 Verrier helps programme teams know who belongs together and when relationships are drifting before anyone notices.
 
 ---
 
-## 23. Demo Script
+## 27. Demo Script
 
 1. Open dashboard.
    Show metric cards, attention feed, and relationship health.
@@ -796,7 +1061,7 @@ Verrier helps programme teams know who belongs together and when relationships a
 
 ---
 
-## 24. Key Phrases for Pitch
+## 28. Key Phrases for Pitch
 
 - "Verrier is the operating system for accelerator relationships."
 - "AI does the analysis; humans make the call."
@@ -805,10 +1070,13 @@ Verrier helps programme teams know who belongs together and when relationships a
 - "Every mentor-startup pair becomes a living relationship record."
 - "Programme managers get early warning before relationships drift."
 - "Cohort reporting becomes a generated output of live relationship data."
+- "The relationship is the reusable unit of ecosystem coordination."
+- "Gemini helps convert scattered programme signals into structured relationship intelligence."
+- "Verrier does not automate away the coordinator; it gives the coordinator a better operating system."
 
 ---
 
-## 25. Final Product Summary
+## 29. Final Product Summary
 
 Verrier is a feature-complete MVP for AI-assisted innovation programme management. It begins with programme setup and startup applications, uses Gemini to score programme fit, helps coordinators approve applicants, ranks mentor matches, creates tracked relationships, analyzes meeting notes, diagnoses relationship health, and generates cohort intelligence.
 
