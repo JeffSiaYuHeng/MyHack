@@ -766,3 +766,165 @@
 ### Handover Payload
 - Modified files: `DB_Module/_DOCS/05_PROJECT_SNAPSHOT.md`, `DB_Module/_DOCS/07_DATA_FLOW.md`, `DB_Module/_TASK/_Hand_OverLog.md`
 - Ready for documentation verification.
+
+---
+
+## 2026-05-17 08:30 — Evaluator → Planner
+
+**Status**: PASSED
+
+### What Was Done
+- Build verification: SUCCESS (All 19 routes compile cleanly).
+- Scope audit: CLEAN (Coder adhered to authorized documentation files).
+- Ticked checkboxes in `_PLAN.md` for Task 4 of Block B.
+- Verified `DB_Module/_DOCS/05_PROJECT_SNAPSHOT.md`:
+  - Status advanced to Phase 5 Block B.
+  - Timeout (10s) and visible fallback behavior documented.
+  - Seed and empty-state guards documented.
+  - External worktree lint debt identified.
+- Verified `DB_Module/_DOCS/07_DATA_FLOW.md`:
+  - "Demo Backup Path (Resilience & Fallback)" section added.
+  - Detailed flow-by-flow fallback matrix verified.
+  - Live vs. Backup sequence for the 5 core demo steps verified.
+
+### Strategic Anchor
+- Phase: PHASE_5__Demo_Hardening_and_Deployment_Readiness
+- Block: Block B — Demo Resilience and Fallbacks
+
+### Acceptance Audit
+- Result: PASSED. Block B is 100% complete. Demo resilience is fully implemented and documented.
+
+### Flags / Blockers
+- **SIGNAL: Block [B] is ready for Archival.**
+- Block [B] PASSED. Archivist: update all `PHASE_5` statuses and sync roadmap. Milestone reached: Demo Resilience and Fallbacks.
+
+### Handover Payload
+- Log: `DB_Module/_DOCS/LOGS/2026-05-17_Resilience_Docs.md`
+- `_PLAN.md` 100% complete for Block B.
+- Ready for Block C transition.
+
+---
+
+## 2026-05-17 08:45 — Planner → Coder
+
+**Status**: DONE
+
+### What Was Done
+- Confirmed Evaluator passed Block B and signaled Block B ready for archival.
+- Advanced `DB_Module/_PHASES/00_ROADMAP.md` Current Block from B to C.
+- Updated `DB_Module/_PHASES/PHASE_5__Demo_Hardening_and_Deployment_Readiness.md`: marked all Block B scope items and acceptance criteria as `[x]`, advanced Block B status to COMPLETED, advanced Block C status to IN_PROGRESS.
+- Replaced `_PLAN.md` with Phase 5 Block C task plan.
+- Created `_INSTRUCTION.md` targeting task: "Update deploy.yml with all required Firebase env var secret references and restore `.env.example` with all required keys."
+
+### Key Finding
+- `.github/workflows/deploy.yml` passes only `GEMINI_API_KEY` to Cloud Run. All 6 `NEXT_PUBLIC_FIREBASE_*` keys are absent. Without them, `getFirebaseConfigStatus()` returns `ready: false` in production and all `safeWrite` calls return `local-fallback`. This is the primary deployment gap for Block C.
+
+### Flags / Blockers
+- `.env.example` was previously tracked in git but has been deleted from the working tree; Coder must create it fresh.
+- Secret names in `deploy.yml` must exactly match the env var names so GitHub Actions secrets align with `process.env` reads.
+- Cloud Run service deployment itself requires live GCP access and is out of scope for the Coder.
+
+### Handover Payload
+- `DB_Module/_PHASES/00_ROADMAP.md`
+- `DB_Module/_PHASES/PHASE_5__Demo_Hardening_and_Deployment_Readiness.md`
+- `DB_Module/_TASK/_PLAN.md`
+- `DB_Module/_TASK/_INSTRUCTION.md`
+- `.github/workflows/deploy.yml` (read-only for Coder reference)
+- `lib/firebase.ts` (read-only for Coder reference)
+
+---
+
+## 2026-05-17 08:55 — Coder → Evaluator
+
+**Status**: DONE
+
+### What Was Done
+- Updated `.github/workflows/deploy.yml`:
+  - Added all 6 missing `NEXT_PUBLIC_FIREBASE_*` environment variables to the `env_vars` block.
+  - Each variable references a GitHub secret with the same name, ensuring production Firestore persistence is reachable.
+  - Preserved `GEMINI_API_KEY` secret reference.
+- Restored `.env.example`:
+  - Created a canonical environment template at the repo root.
+  - Included all 7 required keys (`GEMINI_API_KEY` + 6 Firebase keys) with placeholder values.
+  - Added header comments and a note about GitHub Actions secret naming alignment.
+- Verified implementation with `npm run build`.
+
+### List of Env Vars Added to deploy.yml
+1. `NEXT_PUBLIC_FIREBASE_API_KEY`
+2. `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`
+3. `NEXT_PUBLIC_FIREBASE_PROJECT_ID`
+4. `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`
+5. `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
+6. `NEXT_PUBLIC_FIREBASE_APP_ID`
+
+### Verification Result
+- `npm run lint`: FAILED due to pre-existing errors in `.claude/worktrees/` (unrelated to current changes). Target files are clean.
+- `npm run build`: PASSED. All 19 routes compile cleanly.
+
+### Flags / Blockers
+- None. Real secrets must be set in GitHub repository settings for the deployment to function correctly.
+
+### Handover Payload
+- Modified files: `.github/workflows/deploy.yml`, `.env.example`, `DB_Module/_TASK/_Hand_OverLog.md`
+- Ready for deployment configuration audit.
+
+---
+
+## 2026-05-17 09:05 — Evaluator → Planner
+
+**Status**: PASSED
+
+### What Was Done
+- Build verification: SUCCESS (All 19 routes compile cleanly).
+- Scope audit: CLEAN (Coder strictly adhered to authorized files).
+- Ticked checkbox: "Update deploy.yml..." in `_PLAN.md`.
+- Verified `.github/workflows/deploy.yml` update:
+  - All 6 `NEXT_PUBLIC_FIREBASE_*` environment variables added to `env_vars`.
+  - Secret references match env var names exactly.
+  - `GEMINI_API_KEY` preserved.
+- Verified `.env.example` restoration:
+  - Canonical template created with all 7 required keys.
+  - Informative header and Cloud Run secret note included.
+
+### Strategic Anchor
+- Phase: PHASE_5__Demo_Hardening_and_Deployment_Readiness
+- Block: Block C — Cloud Run Deployment Verification
+
+### Acceptance Audit
+- Result: PASSED. CI configuration is now complete for Firebase production initialization.
+
+### Flags / Blockers
+- Production secrets must be set in GitHub repository settings manually.
+- Ready for Task 2: Dockerfile verification for standalone output.
+
+### Handover Payload
+- Log: `DB_Module/_DOCS/LOGS/2026-05-17_Deployment_Config.md`
+- `_PLAN.md` updated.
+- Ready for next task.
+
+---
+
+## 2026-05-17 09:15 — Planner → Coder
+
+**Status**: DONE
+
+### What Was Done
+- Confirmed user marked Block C complete; Evaluator had already passed Task 1 (deploy.yml + .env.example).
+- Marked all Block C scope items and acceptance criteria as `[x]` in `PHASE_5__Demo_Hardening_and_Deployment_Readiness.md`. Advanced Block C status to COMPLETED, Block D to IN_PROGRESS.
+- Updated `DB_Module/_PHASES/00_ROADMAP.md` Current Block to D.
+- Replaced `_PLAN.md` with Phase 5 Block D task plan (5 tasks: entry-point copy, dashboard polish, AI moment framing, health/narrative close, final docs).
+- Created `_INSTRUCTION.md` targeting task: "Polish app metadata, login page, and product shell to frame the product problem for judges in 30 seconds."
+
+### Flags / Blockers
+- `app/login/page.tsx` must remain a demo placeholder — do not add Firebase Auth sign-in logic.
+- All copy must be drawn from `DB_Module/_DOCS/00_SRS.md` language (product thesis, core promise). No placeholder marketing copy.
+- Style Guide forbids decorative gradients and orb backgrounds on the login page.
+- Core promise to embed: "Verrier calculates who belongs together, and when relationships are drifting, before anyone notices."
+
+### Handover Payload
+- `DB_Module/_PHASES/00_ROADMAP.md`
+- `DB_Module/_PHASES/PHASE_5__Demo_Hardening_and_Deployment_Readiness.md`
+- `DB_Module/_TASK/_PLAN.md`
+- `DB_Module/_TASK/_INSTRUCTION.md`
+- `DB_Module/_DOCS/00_SRS.md` (read-only reference for Coder)
+- `DB_Module/_DOCS/02_STYLE_GUIDE.md` (read-only reference for Coder)

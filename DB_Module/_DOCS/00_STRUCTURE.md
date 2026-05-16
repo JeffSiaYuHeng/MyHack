@@ -2,7 +2,7 @@
 
 **AUTO-GENERATED** by `scripts/generate-structure.js`  
 **DO NOT EDIT MANUALLY** - This file is regenerated before each planning session.  
-**Last Updated:** 05/16/2026, 20:33
+**Last Updated:** 05/16/2026, 20:45
 
 ---
 
@@ -23,6 +23,7 @@ MyHack/
 ├── Dockerfile
 ├── docker-compose.yml
 ├── .dockerignore
+├── .env.example
 ├── README.md
 ├── overview.md
 ├── SetupReport.md
@@ -63,6 +64,7 @@ MyHack/
 │   │   │   ├── 2026-05-17_Meeting_Form_Wiring.md
 │   │   │   ├── 2026-05-17_Relationship_Detail_Intelligence.md
 │   │   │   ├── 2026-05-17_Relationship_Diagnosis_Route.md
+│   │   │   ├── 2026-05-17_Resilience_Docs.md
 │   │   │   ├── 2026-05-17_Resilience_Hardening_Correction.md
 │   │   │   ├── 2026-05-17_Resilience_Hardening_Part2_FAIL.md
 │   │   │   ├── 2026-05-17_Resilience_Hardening.md

@@ -2,61 +2,62 @@
 
 ## Current Focus
 
-Phase 5, Block B: harden the final demo against slow Gemini, failed Firestore writes, empty data, and missing live services.
+Phase 5, Block D: polish the final pitch walkthrough so judges can understand the product problem in 30 seconds, see two clear AI moments, and follow the relationship health and cohort narrative close.
 
 ## Current Target
 
-Document the backup demo path and fallback behavior for Phase 5 Block B resilience.
+Polish app metadata, login page, and product shell branding to establish clear product identity and problem framing at the demo entry point.
 
 ## Strategic Source
 
 - Roadmap: `DB_Module/_PHASES/00_ROADMAP.md`
 - Phase file: `DB_Module/_PHASES/PHASE_5__Demo_Hardening_and_Deployment_Readiness.md`
-- Active block: `Block B: Demo Resilience and Fallbacks`
+- Active block: `Block D: Final Pitch Walkthrough Polish`
 
-## Block A Completion Notes
+## Block C Completion Notes
 
-- Runtime CSV data is normalized and import-ready.
-- Firebase readiness helpers and safe MVP collection writes are available in `lib/firebase.ts`.
-- Match confirmation attempts Firestore persistence and falls back to a local response when Firebase is unavailable.
-- Firestore rules are collection-aware and narrower than broad authenticated access.
-- Environment variables were confirmed and documented during Block A evaluation.
+- Production build verified: `npm run build` passes (19 routes, TypeScript clean).
+- `deploy.yml` updated with all 6 `NEXT_PUBLIC_FIREBASE_*` env var secret references alongside `GEMINI_API_KEY`.
+- `.env.example` restored with all 7 required keys and placeholder values.
+- Runtime env gaps are documented; seed fallback remains the operational baseline when Firebase is unavailable in production.
+
+## Judge Success Criteria (from SRS)
+
+1. Judge can understand the product problem in 30 seconds.
+2. Judge can see AI doing something a spreadsheet cannot.
+3. Judge believes this could work at scale.
+
+## 4-Step Demo Path
+
+1. **Dashboard** — command center with metric row and AI Attention Feed.
+2. **Applicant scoring** — AI programme-fit scoring with explanation and recommendation.
+3. **Mentor matching** — AI top-3 match ranking with breakdown scores and reasoning.
+4. **Meeting health / cohort report** — HealthScore timeline, AI diagnosis, and generated management narrative.
 
 ## Atomic Sub-Tasks
 
-- [x] Add timeout handling and deterministic fallback confirmation states to public application and meeting submission flows.
-- [x] Add timeout, empty, and fallback states to matching and cohort report demo flows.
-- [x] Add missing-seed and empty-state guards to demo-critical pages and components.
-- [ ] Document the backup demo path and fallback behavior in project docs and handover notes.
-- [ ] Run lint/build verification and append Coder handover details to `DB_Module/_TASK/_Hand_OverLog.md`.
+- [ ] Polish app metadata, login page, and product shell to frame the product problem for judges in 30 seconds.
+- [ ] Polish dashboard command center copy and stat labels to make the AI Attention Feed scannable at a glance.
+- [ ] Polish applicant review pool and public application page to highlight the AI fit scoring moment.
+- [ ] Polish matching workbench and relationship detail to highlight the AI matching and health diagnosis moments.
+- [ ] Update `05_PROJECT_SNAPSHOT.md` with final shipped state and append final demo instructions to `_Hand_OverLog.md`.
 
 ## Dependency Notes
 
-- `components/features/public-application-form.tsx` calls `POST /api/ai/program-fit` and currently enters an error state on network failure.
-- `components/features/meeting-submission-form.tsx` calls `POST /api/ai/analyze-meeting` and currently enters an error state on network failure.
-- Both public flows are pitch-critical and should support a deterministic local fallback when live API/Gemini calls fail or time out.
-- `app/api/ai/program-fit/route.ts` and `app/api/ai/analyze-meeting/route.ts` already provide server-side fallback behavior when the route is reachable.
-- Public application and meeting submission timeout/fallback states passed evaluation.
-- `components/features/matching-workbench.tsx` calls `POST /api/ai/match` and currently shows an error with manual selection when matching fails.
-- `components/features/cohort-overview.tsx` calls `POST /api/ai/cohort-summary` and currently shows an error state when the report call fails.
-- `app/api/ai/match/route.ts` and `app/api/ai/cohort-summary/route.ts` already provide deterministic server fallback behavior when reachable.
-- Matching and cohort report timeout/fallback logic was implemented, but the Evaluator failed the task because visible fallback copy is missing from both components.
-- Matching and cohort report fallback indicators passed re-audit.
-- `app/dashboard/page.tsx`, `app/matching/page.tsx`, and `app/relationships/page.tsx` assume `seedPrograms[0]` and `seedCohorts[0]` exist.
-- `components/features/dashboard-command-center.tsx` maps attention feed and recent meetings without local empty-state messaging.
-- Top-level dashboard, matching, and relationships seed guards passed evaluation.
-- `DB_Module/_DOCS/05_PROJECT_SNAPSHOT.md` still reports Phase 4 shipped and should record the current Phase 5 Block B resilience state.
-- `DB_Module/_DOCS/07_DATA_FLOW.md` describes data movement but does not yet summarize the fallback demo path.
-- `DB_Module/_DOCS/06_DEPENDENCY_GRAPH.md` is stale and does not include the current component graph; direct file inspection confirmed the relevant components.
+- `app/layout.tsx` sets the browser tab title and `<meta>` description used in all link previews.
+- `app/login/page.tsx` is the first screen judges see; it is currently a demo placeholder with no product copy.
+- `components/features/product-shell.tsx` wraps every coordinator route and frames the product identity.
+- `app/page.tsx` currently redirects to `/dashboard`; if it renders no user-visible content, metadata is the only change needed.
+- SRS Product Thesis: "Verrier calculates who belongs together, and when relationships are drifting, before anyone notices." This is the core promise for all copy.
+- SRS problem framing: "Innovation programmes currently manage relationships through spreadsheets, forms, WhatsApp groups, and memory."
+- Style Guide: no decorative gradients, no visible UI instructions, use actual product language, Inter typography, Morandi Tech palette.
+- `DB_Module/_DOCS/06_DEPENDENCY_GRAPH.md` is stale; direct inspection confirmed component structure.
 
-## Out of Scope For Current Task
+## Out of Scope For Current Block
 
-- API route changes.
-- Firestore rules.
-- Firebase helper changes.
-- Public application resilience.
-- Meeting submission resilience.
-- Fallback scoring/report generation rewrites.
-- Dynamic relationship and cohort detail page guards.
-- Source code changes.
-- Cloud Run deployment.
+- Firebase Auth sign-in logic (login page remains a demo placeholder).
+- New npm dependencies.
+- New API routes.
+- Firestore rule changes.
+- Seed data changes.
+- Phase 6 planning.
