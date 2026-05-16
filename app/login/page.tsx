@@ -16,7 +16,13 @@ export default function LoginPage() {
         style={{ background: "#0b0b0b" }}
       >
         <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: "#f36458" }} />
+          <div className="w-6 h-6 relative shrink-0 overflow-hidden rounded-md">
+            <img
+              src="/Verrier Logo.png"
+              alt="Verrier Logo"
+              className="w-full h-full object-cover"
+            />
+          </div>
           <span className="text-white font-semibold text-sm tracking-tight">Verrier</span>
         </div>
 
@@ -65,7 +71,13 @@ export default function LoginPage() {
         <div className="w-full max-w-sm">
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-2 mb-8">
-            <span className="w-2 h-2 rounded-full shrink-0" style={{ background: "#f36458" }} />
+            <div className="w-6 h-6 relative shrink-0 overflow-hidden rounded-md">
+              <img
+                src="/Verrier Logo.png"
+                alt="Verrier Logo"
+                className="w-full h-full object-cover"
+              />
+            </div>
             <span className="font-semibold text-sm">Verrier</span>
           </div>
 

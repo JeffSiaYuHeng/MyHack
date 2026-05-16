@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import type { Program, ProgramType, SelectionCriteria } from "@/lib/types";
 import { seedMentors } from "@/lib/verrier-seed";
@@ -43,6 +43,15 @@ const CRITERIA_FIELDS: { key: keyof SelectionCriteria; label: string }[] = [
 
 const DRAFT_PROGRAM_ID = "program-draft-local";
 const SESSION_ISO = new Date().toISOString();
+const DRAFT_STORAGE_KEY = "verrier:program-draft";
+
+function formatSavedTime(iso: string): string {
+  const diffMin = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+  if (diffMin < 1) return "just now";
+  if (diffMin === 1) return "1 min ago";
+  if (diffMin < 60) return `${diffMin} min ago`;
+  return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
 
 interface WizardState {
   name: string;
@@ -140,7 +149,19 @@ function PillGroup({
 
 export function ProgramSetupWizard() {
   const [state, setState] = useState<WizardState>(DEFAULT_STATE);
-  const [saved, setSaved] = useState(false);
+  const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
+  const [published, setPublished] = useState(false);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
+      if (raw) {
+        const { wizardState, savedAt } = JSON.parse(raw) as { wizardState: WizardState; savedAt: string };
+        setState(wizardState);
+        setDraftSavedAt(savedAt);
+      }
+    } catch {}
+  }, []);
 
   const weightTotal =
     state.selectionCriteria.stageWeight +
@@ -165,7 +186,7 @@ export function ProgramSetupWizard() {
     applicationCloseAt: state.applicationCloseAt || SESSION_ISO,
     startDate: state.startDate || SESSION_ISO,
     endDate: state.endDate || SESSION_ISO,
-    status: "draft",
+    status: published ? "open" : "draft",
     mentorIds: state.mentorIds,
     selectedCompanyIds: [],
     createdAt: SESSION_ISO,
@@ -191,14 +212,33 @@ export function ProgramSetupWizard() {
     }));
   }
 
+  function saveDraft() {
+    const savedAt = new Date().toISOString();
+    try {
+      localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify({ wizardState: state, savedAt }));
+    } catch {}
+    setDraftSavedAt(savedAt);
+    toast.success("Draft saved.");
+  }
+
+  function discardDraft() {
+    try { localStorage.removeItem(DRAFT_STORAGE_KEY); } catch {}
+    setState(DEFAULT_STATE);
+    setDraftSavedAt(null);
+    toast.success("Draft discarded.");
+  }
+
   function saveProgramme() {
-    setSaved(true);
-    toast.success("Programme saved locally.");
+    try { localStorage.removeItem(DRAFT_STORAGE_KEY); } catch {}
+    setDraftSavedAt(null);
+    setPublished(true);
+    toast.success("Programme published.");
   }
 
   function resetProgramme() {
     setState(DEFAULT_STATE);
-    setSaved(false);
+    setDraftSavedAt(null);
+    setPublished(false);
     toast.success("Ready for a new programme.");
   }
 
@@ -572,8 +612,34 @@ export function ProgramSetupWizard() {
             </div>
 
             {/* Actions */}
-            {!saved && (
-              <div className="mt-4 pt-4 border-t border-border">
+            {!published && (
+              <div className="mt-4 pt-4 border-t border-border space-y-2.5">
+                {/* Save as Draft — always enabled */}
+                <button
+                  onClick={saveDraft}
+                  className="w-full px-4 py-2.5 text-xs font-semibold rounded-full border border-border bg-background hover:bg-muted transition-all text-foreground"
+                >
+                  {draftSavedAt ? "Update Draft" : "Save as Draft"}
+                </button>
+
+                {draftSavedAt && (
+                  <div className="flex items-center justify-between px-0.5">
+                    <p className="text-[10px] text-muted-foreground">
+                      Draft · {formatSavedTime(draftSavedAt)}
+                    </p>
+                    <button
+                      onClick={discardDraft}
+                      className="text-[10px] text-muted-foreground hover:text-[var(--status-critical)] transition-colors"
+                    >
+                      Discard
+                    </button>
+                  </div>
+                )}
+
+                {/* Divider */}
+                <div className="h-px bg-border" />
+
+                {/* Publish — only when ready */}
                 <button
                   onClick={saveProgramme}
                   disabled={!isReady}
@@ -586,17 +652,19 @@ export function ProgramSetupWizard() {
                 >
                   Save Programme
                 </button>
+
                 {!isReady && (
-                  <p className="text-[10px] text-muted-foreground text-center mt-2">
-                    Complete the checklist above
+                  <p className="text-[10px] text-muted-foreground text-center">
+                    Complete the checklist to publish
                   </p>
                 )}
               </div>
             )}
-            {saved && (
+
+            {published && (
               <div className="mt-4 pt-4 border-t border-border space-y-3">
                 <p className="text-xs font-semibold text-[var(--status-healthy)] flex items-center gap-1.5">
-                  <span>✓</span> Programme saved
+                  <span>✓</span> Programme published
                 </p>
                 <button
                   onClick={resetProgramme}

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+
+<html class="h-full bg-[#f4f2ee]" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Matching Workbench - Verrier</title>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<style data-purpose="custom-typography">
+    body { font-family: 'Inter', sans-serif; }
+    .font-serif-display { font-family: 'Georgia', serif; }
+  </style>
+<style data-purpose="custom-scrollbar">
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+  </style>
+</head>
+<body class="h-full overflow-hidden flex">
+<!-- BEGIN: Sidebar -->
+<aside class="w-64 bg-[#0a0a0a] text-gray-400 flex flex-col h-screen shrink-0 border-r border-gray-800">
+<div class="p-6 border-b border-gray-800">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 bg-red-600 rounded-sm flex items-center justify-center text-white text-[10px] font-bold">V</div>
+<span class="text-white font-semibold tracking-tight">Verrier</span>
+</div>
+<p class="text-[10px] mt-1 text-gray-500 uppercase tracking-widest">Cradle Startup Accelerator 20...</p>
+</div>
+<div class="flex-1 py-6 overflow-y-auto">
+<div class="px-6 mb-4">
+<h3 class="text-[10px] font-bold text-gray-600 uppercase tracking-widest">Workspace</h3>
+</div>
+<nav class="space-y-1 px-3">
+<a class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors" href="#">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+          Dashboard
+        </a>
+<a class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors" href="#">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+          Programmes
+        </a>
+<a class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold rounded-lg bg-[#6b38d4] text-white" href="#">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+          Matching
+        </a>
+<a class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors" href="#">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+          Relationships
+        </a>
+</nav>
+</div>
+<!-- Sidebar Bottom Section -->
+<div class="p-4 border-t border-gray-800">
+<div class="bg-[#1a1a1a] p-4 rounded-lg border border-gray-800 mb-4">
+<div class="flex items-center gap-2 mb-2">
+<div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+<span class="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">Active Cohort</span>
+</div>
+<h4 class="text-white text-sm font-medium">Cradle Q2 2026</h4>
+<p class="text-[10px] text-gray-500 mt-1">24w • Active</p>
+</div>
+<div class="flex items-center gap-3 px-2">
+<div class="w-8 h-8 rounded-full bg-[#1a1a1a] flex items-center justify-center text-xs font-bold border border-gray-800">N</div>
+<span class="text-sm font-medium">Login</span>
+</div>
+</div>
+</aside>
+<!-- END: Sidebar -->
+<!-- BEGIN: Main Content -->
+<main class="flex-1 h-screen overflow-y-auto bg-[#f5f3ef]">
+<!-- Header -->
+<header class="pt-10 pb-6 px-10 max-w-7xl mx-auto">
+<h1 class="text-2xl font-serif-display font-medium text-gray-900">Matching Workbench</h1>
+<p class="text-xs text-gray-500 mt-1">1 startup awaiting mentor match</p>
+</header>
+<div class="px-10 pb-20 max-w-7xl mx-auto">
+<div class="grid grid-cols-12 gap-8 border-t border-gray-300 pt-4">
+<!-- BEGIN: Queue Column (Left) -->
+<div class="col-span-3">
+<h2 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Queue</h2>
+<div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-bold text-sm text-gray-800">HalalTrace</h3>
+<span class="text-[10px] bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full font-medium">pre-seed</span>
+</div>
+<p class="text-[10px] text-gray-500 mb-4">SaaS, FoodTech</p>
+<div class="relative pt-1">
+<div class="flex items-center justify-between mb-1">
+<div class="h-1 bg-gray-100 flex-grow rounded-full overflow-hidden mr-3">
+<div class="bg-red-500 h-full w-[71%]"></div>
+</div>
+<span class="text-[10px] font-bold text-gray-500">Fit 71</span>
+</div>
+</div>
+</div>
+</div>
+<!-- END: Queue Column -->
+<!-- BEGIN: Matching Dashboard (Right) -->
+<div class="col-span-9 bg-[#fcfcfb] rounded-xl border border-gray-300 p-8 min-h-[80vh]">
+<!-- Top Summary Card -->
+<div class="bg-white border border-gray-200 rounded-xl p-8 mb-8 shadow-sm">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h2 class="text-2xl font-bold text-[#1b1c1a]">HalalTrace</h2>
+<div class="flex items-center gap-2 mt-1">
+<span class="text-xs font-semibold text-[#6b38d4] bg-purple-50 px-2 py-0.5 rounded">pre-seed</span>
+<span class="text-xs text-gray-400">• SaaS, FoodTech</span>
+</div>
+</div>
+<div class="bg-purple-100 text-purple-700 text-xs font-bold px-3 py-1 rounded-full">
+                Fit 71%
+              </div>
+</div>
+<p class="text-[14px] text-gray-600 leading-relaxed mb-6 max-w-2xl">
+              Mentor matching · Market access — Traceability startup helping SME food producers manage certification workflows with automated documentation and supply chain transparency.
+            </p>
+<button class="bg-[#6b38d4] hover:bg-[#5516be] text-white text-xs font-semibold px-5 py-2.5 rounded-lg flex items-center gap-2 transition-all shadow-sm">
+<span class="text-base">✦</span> Generate AI Matches
+            </button>
+</div>
+<!-- Matches Section -->
+<div class="space-y-6">
+<div class="flex items-center gap-2 mb-4">
+<h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Ranked Matches (3)</h3>
+</div>
+<!-- Mentor Match Card 1 -->
+<div class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+<div class="p-8">
+<div class="flex justify-between items-start mb-8">
+<div class="flex gap-4">
+<div class="w-8 h-8 bg-[#6b38d4] text-white rounded-lg flex items-center justify-center text-sm font-bold shadow-sm">1</div>
+<div>
+<h4 class="font-bold text-lg text-gray-900 leading-none">Badrul Hisham</h4>
+<p class="text-xs font-medium text-gray-500 mt-2 uppercase tracking-wide">SME Market Access Lead · MySME Connect</p>
+</div>
+</div>
+<div class="text-right bg-gray-50 px-4 py-2 rounded-lg border border-gray-100">
+<div class="text-3xl font-bold text-[#6b38d4] leading-none">96</div>
+<div class="text-[9px] text-gray-400 uppercase font-bold mt-1">match score</div>
+</div>
+</div>
+<div class="grid grid-cols-1 gap-y-4 mb-8 max-w-2xl">
+<div class="flex items-center">
+<span class="w-20 text-xs font-semibold text-gray-600">Industry</span>
+<div class="flex-grow h-2 bg-gray-100 rounded-full mx-4 overflow-hidden">
+<div class="bg-[#6b38d4] h-full w-[100%]"></div>
+</div>
+<span class="text-xs font-bold text-gray-700 w-8 text-right">100</span>
+</div>
+<div class="flex items-center">
+<span class="w-20 text-xs font-semibold text-gray-600">Stage</span>
+<div class="flex-grow h-2 bg-gray-100 rounded-full mx-4 overflow-hidden">
+<div class="bg-[#6b38d4] h-full w-[100%]"></div>
+</div>
+<span class="text-xs font-bold text-gray-700 w-8 text-right">100</span>
+</div>
+<div class="flex items-center">
+<span class="w-20 text-xs font-semibold text-gray-600">Availability</span>
+<div class="flex-grow h-2 bg-gray-100 rounded-full mx-4 overflow-hidden">
+<div class="bg-[#6b38d4] h-full w-[85%]"></div>
+</div>
+<span class="text-xs font-bold text-gray-700 w-8 text-right">85</span>
+</div>
+<div class="flex items-center">
+<span class="w-20 text-xs font-semibold text-gray-600">Style</span>
+<div class="flex-grow h-2 bg-gray-100 rounded-full mx-4 overflow-hidden">
+<div class="bg-[#6b38d4] h-full w-[90%]"></div>
+</div>
+<span class="text-xs font-bold text-gray-700 w-8 text-right">90</span>
+</div>
+</div>
+<div class="bg-purple-50/50 rounded-xl p-5 border border-purple-100/50">
+<div class="flex items-center gap-2 mb-2.5">
+<span class="text-[#6b38d4] text-sm">✨</span>
+<span class="text-[11px] font-bold text-[#6b38d4] uppercase tracking-widest">AI Matching Insight</span>
+</div>
+<p class="text-sm text-gray-600 leading-relaxed font-medium">
+                    Perfect industry alignment in FoodTech and SaaS, with specific expertise in SME partnerships and market access which directly addresses the startup's primary needs.
+                  </p>
+</div>
+</div>
+<div class="p-6 pt-0">
+<button class="w-full bg-[#6b38d4] text-white text-sm font-bold py-3.5 rounded-lg hover:bg-[#5516be] transition-all shadow-md active:transform active:scale-[0.98]">
+                Select Badrul as Mentor
+              </button>
+</div>
+</div>
+<!-- Mentor Match Card 2 -->
+<div class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+<div class="p-8">
+<div class="flex justify-between items-start mb-8">
+<div class="flex gap-4">
+<div class="w-8 h-8 bg-purple-100 text-[#6b38d4] rounded-lg flex items-center justify-center text-sm font-bold shadow-sm">2</div>
+<div>
+<h4 class="font-bold text-lg text-gray-900 leading-none">Hafiz Osman</h4>
+<p class="text-xs font-medium text-gray-500 mt-2 uppercase tracking-wide">Operations Director · FreshRoute Malaysia</p>
+</div>
+</div>
+<div class="text-right bg-gray-50 px-4 py-2 rounded-lg border border-gray-100">
+<div class="text-3xl font-bold text-gray-800 leading-none">92</div>
+<div class="text-[9px] text-gray-400 uppercase font-bold mt-1">match score</div>
+</div>
+</div>
+<div class="grid grid-cols-1 gap-y-4 mb-8 max-w-2xl">
+<div class="flex items-center">
+<span class="w-20 text-xs font-semibold text-gray-600">Industry</span>
+<div class="flex-grow h-2 bg-gray-100 rounded-full mx-4 overflow-hidden">
+<div class="bg-purple-300 h-full w-[95%]"></div>
+</div>
+<span class="text-xs font-bold text-gray-700 w-8 text-right">95</span>
+</div>
+<div class="flex items-center">
+<span class="w-20 text-xs font-semibold text-gray-600">Stage</span>
+<div class="flex-grow h-2 bg-gray-100 rounded-full mx-4 overflow-hidden">
+<div class="bg-purple-300 h-full w-[100%]"></div>
+</div>
+<span class="text-xs font-bold text-gray-700 w-8 text-right">100</span>
+</div>
+<div class="flex items-center">
+<span class="w-20 text-xs font-semibold text-gray-600">Availability</span>
+<div class="flex-grow h-2 bg-gray-100 rounded-full mx-4 overflow-hidden">
+<div class="bg-purple-300 h-full w-[80%]"></div>
+</div>
+<span class="text-xs font-bold text-gray-700 w-8 text-right">80</span>
+</div>
+<div class="flex items-center">
+<span class="w-20 text-xs font-semibold text-gray-600">Style</span>
+<div class="flex-grow h-2 bg-gray-100 rounded-full mx-4 overflow-hidden">
+<div class="bg-purple-300 h-full w-[95%]"></div>
+</div>
+<span class="text-xs font-bold text-gray-700 w-8 text-right">95</span>
+</div>
+</div>
+<div class="bg-purple-50/50 rounded-xl p-5 border border-purple-100/50">
+<div class="flex items-center gap-2 mb-2.5">
+<span class="text-[#6b38d4] text-sm">✨</span>
+<span class="text-[11px] font-bold text-[#6b38d4] uppercase tracking-widest">AI Matching Insight</span>
+</div>
+<p class="text-sm text-gray-600 leading-relaxed font-medium">
+                    Strong FoodTech background and B2B partnership expertise provides a direct fit for a traceability startup managing supply chain certification workflows.
+                  </p>
+</div>
+</div>
+<div class="p-6 pt-0">
+<button class="w-full bg-[#6b38d4] text-white text-sm font-bold py-3.5 rounded-lg hover:bg-[#5516be] transition-all shadow-md active:transform active:scale-[0.98]">
+                Select Hafiz as Mentor
+              </button>
+</div>
+</div>
+<!-- Mentor Match Card 3 (Partial/Preview) -->
+<div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm opacity-60">
+<div class="p-6">
+<div class="flex justify-between items-start">
+<div class="flex gap-4">
+<div class="w-6 h-6 bg-purple-100 text-purple-600 rounded flex items-center justify-center text-xs font-bold">3</div>
+<div>
+<h4 class="font-bold text-sm text-gray-800 leading-none">Ahmad Razif</h4>
+<p class="text-[10px] text-gray-500 mt-1.5 uppercase">Serial Entrepreneur · ScaleCraft</p>
+</div>
+</div>
+<div class="text-right">
+<div class="text-2xl font-bold text-gray-800">89</div>
+<div class="text-[8px] text-gray-400 uppercase font-bold">match score</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- END: Matching Dashboard -->
+</div>
+</div>
+</main>
+<!-- END: Main Content -->
+</body></html>

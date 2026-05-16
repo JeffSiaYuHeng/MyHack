@@ -37,12 +37,13 @@ export function ProductShell({
         {/* Branding */}
         <div className="px-5 pt-6 pb-5" style={{ borderBottom: "1px solid #1e1e1e" }}>
           <div className="flex items-center gap-2.5 mb-1.5">
-            <span
-              className="w-5 h-5 rounded flex items-center justify-center shrink-0 text-[10px] font-black"
-              style={{ background: "#f36458", color: "#ffffff" }}
-            >
-              V
-            </span>
+            <div className="w-6 h-6 relative shrink-0 overflow-hidden rounded-md">
+              <img
+                src="/Verrier Logo.png"
+                alt="Verrier Logo"
+                className="w-full h-full object-cover"
+              />
+            </div>
             <span
               className="text-[15px] font-bold"
               style={{ color: "#ffffff", letterSpacing: "-0.03em", fontFamily: "var(--font-sans)" }}
