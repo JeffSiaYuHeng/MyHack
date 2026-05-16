@@ -3,11 +3,11 @@
 ## Strategic Anchor (MANDATORY)
 
 - **Phase**: `PHASE_5__Demo_Hardening_and_Deployment_Readiness.md`
-- **Block**: Block A — Firebase Persistence and Rules
+- **Block**: Block D — Final Pitch Walkthrough Polish
 
 ## Context
 
-Add Firebase configuration readiness helpers and safe collection write semantics in `lib/firebase.ts`. This prepares later Firestore persistence tasks to detect missing Firebase config, restrict writes to documented MVP collections, and return fallback-safe results instead of crashing demo flows.
+The judge's first touchpoint is the browser tab title and the login page. Currently `app/layout.tsx` uses scaffold-level metadata and `app/login/page.tsx` has no product copy. A judge arriving at the demo should immediately understand what Verrier is and who it is for. This task sets the app metadata, adds product framing to the login page, and confirms the product shell nav label is judge-ready — without adding decorative treatment or placeholder marketing copy.
 
 ---
 
@@ -15,8 +15,9 @@ Add Firebase configuration readiness helpers and safe collection write semantics
 
 The Coder agent is ONLY allowed to modify the following files:
 
-- `lib/firebase.ts`
-- `DB_Module/_DOCS/05_PROJECT_SNAPSHOT.md`
+- `app/layout.tsx`
+- `app/login/page.tsx`
+- `components/features/product-shell.tsx`
 - `DB_Module/_TASK/_Hand_OverLog.md`
 
 ---
@@ -25,72 +26,53 @@ The Coder agent is ONLY allowed to modify the following files:
 
 The Coder agent may read these files for context but MUST NOT modify them:
 
-- `DB_Module/_DOCS/01_DB_SCHEMA.md`
-- `DB_Module/_DOCS/04_TECH_STACK.md`
-
----
-
-## Dependency Note
-
-- `DB_Module/_DOCS/06_DEPENDENCY_GRAPH.md` is stale and does not list the current app surface.
-- Direct search found no app or component imports of `lib/firebase.ts`.
-- Preserve existing exports `db`, `auth`, and `saveResult` for compatibility.
-- This task does not involve Next.js route, page, metadata, caching, or server/client boundary changes, so no local Next.js doc read is required.
+- `DB_Module/_DOCS/00_SRS.md` (product thesis, core promise, primary persona, success criteria)
+- `DB_Module/_DOCS/02_STYLE_GUIDE.md` (Morandi Tech palette, typography tokens, copy rules)
 
 ---
 
 ## Steps (Execution Order)
 
-1. Read `lib/firebase.ts`.
-2. Read `DB_Module/_DOCS/01_DB_SCHEMA.md` for the MVP collection names.
-3. Read `DB_Module/_DOCS/04_TECH_STACK.md` for Firebase and environment expectations.
-4. Preserve Firebase app initialization, Firestore initialization, Auth initialization, and existing named exports.
-5. Add a constant list or readonly set of allowed MVP collection names: `programs`, `applications`, `cohorts`, `companies`, `mentors`, `relationships`, `meetings`, and `users`.
-6. Add an exported collection-name type derived from the allowed collection list.
-7. Add an exported Firebase config status helper that checks all required `NEXT_PUBLIC_FIREBASE_*` values without exposing secret values.
-8. Include missing config key names in the helper result.
-9. Add an exported safe collection write helper for documented MVP collections.
-10. Return a structured result object from the safe write helper with `ok`, `collectionName`, `fallbackUsed`, and either `id` or `error`.
-11. Make the safe write helper return a fallback-safe failure result when Firebase config is incomplete.
-12. Make the safe write helper return a fallback-safe failure result when Firestore throws.
-13. Keep `saveResult(collectionName, data)` backward compatible.
-14. Make `saveResult` delegate to the safe write helper only when doing so preserves its existing Promise behavior.
-15. Do not allow arbitrary collection names in the new safe helper.
-16. Do not add Firebase Admin SDK.
-17. Do not add dependencies.
-18. Do not log environment values.
-19. Update `DB_Module/_DOCS/05_PROJECT_SNAPSHOT.md` to note Firebase readiness helper status, safe write helper status, allowed MVP collections, and seed fallback behavior.
-20. Run `npm run lint`.
-21. Run `npm run build`.
-22. Append a Coder handover entry to `DB_Module/_TASK/_Hand_OverLog.md` with changed files, exported helper names, fallback behavior, verification result, and exact failure output when a command fails.
+1. Read `app/layout.tsx` to see current metadata title and description.
+2. Read `app/login/page.tsx` to see current copy and layout structure.
+3. Read `components/features/product-shell.tsx` to see current nav header content.
+4. Read `DB_Module/_DOCS/00_SRS.md` Product, Product Thesis, Primary Users, and Success Criteria sections.
+5. Read `DB_Module/_DOCS/02_STYLE_GUIDE.md` Product UX Principles and Implementation Rules sections.
+6. Update `app/layout.tsx` metadata: set `title` to `"Verrier | AI-Powered Programme Intelligence"` and `description` to a two-sentence elevator pitch derived from the SRS product thesis (what Verrier does, who it is for). Do not use placeholder text.
+7. Update `app/login/page.tsx`: above the existing sign-in UI, render the Verrier product name as a headline, the core promise from the SRS ("Verrier calculates who belongs together, and when relationships are drifting, before anyone notices.") as body copy, and a one-sentence role descriptor ("Built for programme coordinators managing mentor-startup cohorts."). Use Morandi on-surface text tokens — no decorative backgrounds, gradients, or orb effects.
+8. Read the current nav header in `components/features/product-shell.tsx`. If the product name displayed is generic or scaffold-level, update it to "Verrier". If it already shows "Verrier", make no change.
+9. Do not add Firebase Auth sign-in logic to `app/login/page.tsx`. It remains a demo placeholder.
+10. Do not add new npm packages.
+11. Run `npm run lint`.
+12. Run `npm run build`.
+13. Append a Coder handover entry to `DB_Module/_TASK/_Hand_OverLog.md` with changed files, the exact copy added to the login page, verification result, and exact failure output when a command fails.
 
 ---
 
 ## Constraints & Rules
 
 - Do not modify files outside Context Scope.
-- Do not modify API routes.
-- Do not modify UI components.
-- Do not modify runtime CSV data.
-- Do not modify `firestore.rules`.
-- Do not add Firestore reads.
-- Do not add Firebase Admin SDK.
-- Do not add dependencies.
-- Preserve strict TypeScript with no `any`.
-- Do not expose Firebase or Gemini secret values in code, logs, docs, or handover.
-- Keep seed fallback behavior explicit.
+- Do not use placeholder marketing copy — use language directly from `DB_Module/_DOCS/00_SRS.md`.
+- Do not add decorative gradients, orb backgrounds, or animation.
+- Do not add visible instructions that explain the UI itself (style guide rule).
+- Do not implement Firebase Auth sign-in — login page is a demo placeholder.
+- Do not add new npm dependencies.
+- Do not modify seed data, API routes, or Firestore rules.
+- Use Morandi Tech design tokens (on-surface, on-surface-variant) for text color.
+- Login page copy must fit within the existing page layout without restructuring the sign-in component.
 
 ---
 
 ## Out of Scope (Hard Stop)
 
-- API route persistence wiring.
-- Public application persistence.
-- Meeting submission persistence.
-- Match confirmation persistence.
-- Firestore rules.
-- Authentication enforcement.
-- Cloud Run deployment.
+- Dashboard copy polish (Task 2).
+- Applicant review and application page polish (Task 3).
+- Matching workbench and relationship detail polish (Task 4).
+- Firebase Auth implementation.
+- New routes or pages.
+- Seed data changes.
+- API route changes.
+- Firestore rule changes.
 
 ---
 
@@ -101,14 +83,12 @@ The Coder agent may read these files for context but MUST NOT modify them:
 - [ ] Reference Scope files are not in Context Scope.
 - [ ] No code snippets are included.
 - [ ] Out of Scope is explicit.
-- [ ] `db`, `auth`, and `saveResult` remain exported.
-- [ ] Firebase config readiness helper is exported.
-- [ ] Safe MVP collection write helper is exported.
-- [ ] New safe helper restricts collection names to documented MVP collections.
-- [ ] Missing config returns fallback-safe result.
-- [ ] Firestore write failure returns fallback-safe result.
-- [ ] No secret values are logged or documented.
-- [ ] `DB_Module/_DOCS/05_PROJECT_SNAPSHOT.md` documents helper and fallback status.
+- [ ] `app/layout.tsx` title is `"Verrier | AI-Powered Programme Intelligence"`.
+- [ ] `app/layout.tsx` description uses SRS product language, not placeholder text.
+- [ ] `app/login/page.tsx` includes product name, core promise, and role descriptor above the sign-in UI.
+- [ ] Login page copy uses no decorative backgrounds, gradients, or orb effects.
+- [ ] `components/features/product-shell.tsx` nav shows "Verrier" as the product name.
+- [ ] Firebase Auth sign-in logic was not added to the login page.
 - [ ] `npm run lint` succeeds or exact failure is logged.
 - [ ] `npm run build` succeeds or exact failure is logged.
 - [ ] Coder handover note is appended.

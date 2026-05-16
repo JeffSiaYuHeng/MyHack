@@ -75,6 +75,23 @@ interface RelationshipDetailProps {
   meetings: Meeting[];
 }
 
+interface AnalysisResult {
+  meetingId: string;
+  aiSummary: string;
+  actionItems: Array<{
+    task: string;
+    owner: "mentor" | "startup";
+    dueDate: string | null;
+    completed: boolean;
+    completedAt: string | null;
+  }>;
+  signal: Meeting["signal"];
+  signalReason: string;
+  healthScoreDelta: number;
+  newHealthScore: number;
+  watchPoints: string[];
+}
+
 export function RelationshipDetail({
   relationship,
   company,
@@ -85,11 +102,124 @@ export function RelationshipDetail({
 }: RelationshipDetailProps) {
   const [uploadOpen, setUploadOpen] = useState(false);
 
-  const band = getHealthBand(relationship.healthScore);
+  // Diagnosis state — seeded from static data, refreshable via AI
+  const [diagnosis, setDiagnosis] = useState<{
+    narrative: string;
+    watchPoints: string[];
+    recommendation: string;
+  }>({
+    narrative: relationship.aiDiagnosis ?? "",
+    watchPoints: relationship.watchPoints ?? [],
+    recommendation: "",
+  });
+  const [isDiagnosing, setIsDiagnosing] = useState(false);
+
+  async function handleRefreshDiagnosis() {
+    setIsDiagnosing(true);
+    try {
+      const res = await fetch("/api/ai/diagnose", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ relationshipId: relationship.id }),
+      });
+      const data = (await res.json()) as {
+        narrative: string;
+        watchPoints: string[];
+        recommendation: string;
+      };
+      setDiagnosis({
+        narrative: data.narrative ?? diagnosis.narrative,
+        watchPoints: data.watchPoints ?? diagnosis.watchPoints,
+        recommendation: data.recommendation ?? "",
+      });
+    } catch {
+      // Silent fail — keep existing data
+    } finally {
+      setIsDiagnosing(false);
+    }
+  }
+
+  // Log meeting form state
+  const [meetingDate, setMeetingDate] = useState("");
+  const [duration, setDuration] = useState("");
+  const [notes, setNotes] = useState("");
+  const [formError, setFormError] = useState<string | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [meetingResult, setMeetingResult] = useState<AnalysisResult | null>(null);
+  const [liveHealthScore, setLiveHealthScore] = useState(relationship.healthScore);
+
+  const band = getHealthBand(liveHealthScore);
   const healthColor = HEALTH_COLORS[band];
   const urgency = getRelationshipUrgency(relationship, meetings);
 
   const sortedMeetings = [...meetings].sort((a, b) => a.meetingNumber - b.meetingNumber);
+
+  async function handleLogMeeting() {
+    setFormError(null);
+
+    // Validate
+    if (!meetingDate) { setFormError("Date is required."); return; }
+    const durationNum = Number(duration);
+    if (!duration || !Number.isFinite(durationNum) || durationNum <= 0) {
+      setFormError("Duration must be a positive number.");
+      return;
+    }
+    if (notes.trim().length < 50) {
+      setFormError("Meeting notes must be at least 50 characters.");
+      return;
+    }
+
+    setIsAnalyzing(true);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    try {
+      const res = await fetch("/api/ai/analyze-meeting", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+        body: JSON.stringify({
+          relationshipId: relationship.id,
+          date: meetingDate,
+          durationMinutes: durationNum,
+          rawNotes: notes,
+          submittedBy: "admin",
+        }),
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!res.ok) {
+        const errBody = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+        const msg = typeof errBody.error === "string" ? errBody.error : "Analysis failed.";
+        setFormError(msg);
+        return;
+      }
+
+      const data = (await res.json()) as AnalysisResult;
+      setMeetingResult(data);
+      setLiveHealthScore((prev) => Math.min(100, Math.max(0, prev + data.healthScoreDelta)));
+    } catch (err: unknown) {
+      clearTimeout(timeoutId);
+      const isTimeout = err instanceof Error && err.name === "AbortError";
+      setFormError(
+        isTimeout
+          ? "Request timed out. Please try again."
+          : "Network error. Please try again."
+      );
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }
+
+  function resetForm() {
+    setMeetingDate("");
+    setDuration("");
+    setNotes("");
+    setFormError(null);
+    setMeetingResult(null);
+    setUploadOpen(false);
+  }
 
   return (
     <div className="px-6 md:px-10 py-8 space-y-6">
@@ -299,8 +429,123 @@ export function RelationshipDetail({
                     {relationship.matchBreakdown[key]}
                   </span>
                 </div>
-              ))}
+                <p
+                  className="text-[9px] mt-1 text-center leading-tight"
+                  style={{
+                    color: completed
+                      ? "var(--status-healthy)"
+                      : current
+                      ? "var(--primary)"
+                      : "var(--muted-foreground)",
+                  }}
+                >
+                  {label}
+                </p>
+                {completedAt && (
+                  <p className="text-[8px] text-muted-foreground mt-0.5 text-center">
+                    {formatDate(completedAt)}
+                  </p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Meeting timeline */}
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            Meeting timeline ({sortedMeetings.length})
+          </p>
+          <button
+            onClick={() => {
+              if (uploadOpen) resetForm();
+              else setUploadOpen(true);
+            }}
+            className="px-2.5 py-1 text-[10px] font-medium rounded border border-border text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
+          >
+            {uploadOpen ? "Cancel" : "Log Meeting"}
+          </button>
+        </div>
+
+        {/* Meeting log form */}
+        {uploadOpen && !meetingResult && (
+          <div className="border border-border rounded p-4 mb-3 space-y-3">
+            <p className="text-xs font-medium">Log a meeting</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[10px] text-muted-foreground block mb-1">
+                  Date
+                </label>
+                <input
+                  type="date"
+                  value={meetingDate}
+                  onChange={(e) => setMeetingDate(e.target.value)}
+                  disabled={isAnalyzing}
+                  className="w-full border border-border rounded px-2 py-1.5 text-xs bg-background text-foreground disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-muted-foreground block mb-1">
+                  Duration (minutes)
+                </label>
+                <input
+                  type="number"
+                  value={duration}
+                  onChange={(e) => setDuration(e.target.value)}
+                  disabled={isAnalyzing}
+                  placeholder="45"
+                  min={1}
+                  className="w-full border border-border rounded px-2 py-1.5 text-xs bg-background text-foreground disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed"
+                />
+              </div>
             </div>
+            <div>
+              <label className="text-[10px] text-muted-foreground block mb-1">
+                Meeting notes{" "}
+                <span
+                  className="ml-1"
+                  style={{
+                    color:
+                      notes.trim().length >= 50
+                        ? "var(--status-healthy)"
+                        : "var(--muted-foreground)",
+                  }}
+                >
+                  ({notes.trim().length}/50 min)
+                </span>
+              </label>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                disabled={isAnalyzing}
+                rows={4}
+                placeholder="Describe what was discussed, decisions made, and next steps..."
+                className="w-full border border-border rounded px-2 py-1.5 text-xs bg-background text-foreground disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed resize-none"
+              />
+            </div>
+            {formError && (
+              <p className="text-[10px]" style={{ color: "var(--status-critical)" }}>
+                {formError}
+              </p>
+            )}
+            <button
+              onClick={handleLogMeeting}
+              disabled={isAnalyzing}
+              className="px-3 py-1.5 text-xs font-medium rounded border border-border transition-colors disabled:cursor-not-allowed"
+              style={
+                isAnalyzing
+                  ? { color: "var(--muted-foreground)", borderColor: "var(--border)" }
+                  : { color: "var(--foreground)", borderColor: "var(--foreground)" }
+              }
+            >
+              {isAnalyzing ? (
+                <span className="animate-pulse">✦ Analyzing...</span>
+              ) : (
+                "✦ Submit & Analyze"
+              )}
+            </button>
           </div>
 
           {/* Mentor info */}

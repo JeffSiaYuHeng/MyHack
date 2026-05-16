@@ -668,6 +668,47 @@ interface Cohort {
 
 ---
 
+## Demo Backup Path (Resilience & Fallback)
+
+This section documents the deterministic local fallback behavior established during Phase 5 Block B to ensure the demo remains operational when live API routes, Gemini, or Firestore are slow or unavailable.
+
+### Fallback Implementation Pattern
+
+| Flow | Trigger | Fallback Pattern |
+|---|---|---|
+| **Public Application** | Timeout (>10s) or Network Fail | Local `FitResult` with `status: "pending"`; allows local submission. |
+| **Meeting Submission** | Timeout (>10s) or Network Fail | Local `AnalysisResult` with neutral signal and 0 delta; reaches confirmation. |
+| **Mentor Matching** | Timeout (>10s) or Route Error | Local deterministic scoring (Industry + Stage + Availability); shows top 3. |
+| **Cohort Summary** | Timeout (>10s) or Route Error | Local `CohortReport` generated from already-rendered metric state. |
+| **Match Confirmation** | Firebase Unavailable | `persistenceMode: "local-fallback"`; returns relationship ID and proceeds. |
+| **Route Guards** | Missing Seed Data | Branded empty-state shell via `ProductShell`; maintains navigation. |
+
+### Deterministic Demo Sequence
+
+1.  **Dashboard Command Center**:
+    - *Live*: Reads aggregated seed data.
+    - *Backup*: Missing seed guards render "Seed data unavailable" shell; navigation remains live.
+2.  **Public Startup Application**:
+    - *Live*: Calls `POST /api/ai/program-fit` for AI scoring.
+    - *Backup*: 10s timeout triggers "AI scoring encountered a network issue" notice; enables manual confirmation.
+3.  **Coordinator Matching**:
+    - *Live*: Calls `POST /api/ai/match` for AI pairing.
+    - *Backup*: Failure triggers "Fallback active" badge; ranks mentors using local industry/stage weights.
+4.  **Mentor Meeting Submission**:
+    - *Live*: Calls `POST /api/ai/analyze-meeting` for AI note extraction.
+    - *Backup*: Failure triggers "Analysis pending" state; shows character count and success confirmation.
+5.  **Cohort Narrative Report**:
+    - *Live*: Calls `POST /api/ai/cohort-summary` for management narrative.
+    - *Backup*: Failure triggers local report derived from visible metrics (average health, counts, distribution).
+
+### Persistence & Data Baseline
+
+- **Baseline**: `lib/verrier-seed.ts` is the stable operational baseline for all demo routes.
+- **Match Confirmation**: Attempts `safeWrite` to Firestore. If configuration is missing or rules deny access, the route returns `persisted: false` and the UI proceeds with local confirmation state.
+- **Report Export**: If `navigator.clipboard` is unavailable during report generation, the UI provides a textarea-based copy fallback.
+
+---
+
 ## Minimum Required Data Types by Layer
 
 ### Frontend form layer

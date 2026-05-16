@@ -4,7 +4,7 @@
 **Repository**: MyHack
 **Event**: Build With AI 2026 KL
 **Last Updated**: 2026-05-16
-**Status**: Phase 4 shipped; awaiting next planning instruction
+**Status**: Phase 5 Block B in progress; demo resilience and fallbacks established
 
 ## Current Architecture State
 
@@ -14,13 +14,15 @@
 - Core routes are live for dashboard, programme setup, public application intake, applicant review, matching, relationship list/detail, meeting submission, and cohort overview.
 - `components/features/product-shell.tsx` provides the coordinator shell and demo route boundary.
 - `components/features/cohort-overview.tsx` renders cohort stats, health heatmap, milestone distribution, AI-generated narrative, key risks, recommended actions, and copy fallback.
+- **Resilience**: Public flows (application, meeting submission) and coordinator tools (matching, cohort report) include a 10-second client-side timeout. Visible "Fallback active" indicators signal when deterministic local data is used due to network or AI unavailability.
+- **Guards**: Top-level routes (Dashboard, Matching, Relationships) implement missing-seed and empty-state guards, preventing crashes and maintaining navigation when data is absent.
 
 ### Backend and AI
 
 - API route contracts are route-handler based under `app/api/`.
 - Structured Gemini-backed routes exist for programme fit, mentor matching, meeting analysis, relationship diagnosis, and cohort summary.
 - Each AI workflow keeps deterministic fallback behavior when Gemini is unavailable or output is malformed.
-- `POST /api/relationships/confirm-match` creates demo relationship responses from seed-backed inputs.
+- `POST /api/relationships/confirm-match` creates demo relationship responses from seed-backed inputs and attempts Firestore persistence.
 
 ### Data and Auth
 
@@ -30,9 +32,9 @@
 - `lib/firebase.ts` exports `safeWrite(collectionName: MvpCollectionName, data)`: restricts writes to the eight documented MVP collections (`programs`, `applications`, `cohorts`, `companies`, `mentors`, `relationships`, `meetings`, `users`). Returns a structured `CollectionWriteResult` with `ok`, `collectionName`, `fallbackUsed`, and either `id` or `error`. Returns a fallback-safe failure result (not a throw) when config is incomplete or Firestore raises an exception. Seed fallback behavior is preserved: when `safeWrite` returns `ok: false`, callers may proceed with seeded or local state.
 - `MvpCollectionName` type is exported for callers that need to type-check collection names at compile time.
 - `saveResult(collectionName: string, data)` and named exports `db` and `auth` are preserved unchanged for backward compatibility.
-- Firestore persistence is not yet wired into demo-critical API routes; those flows still rely on seed/local state.
-- Auth UI is a demo boundary. Production Firebase ID-token enforcement is not implemented yet.
-- Firestore rules are still scaffold-level and require collection-aware tightening before final deployment.
+- `POST /api/relationships/confirm-match` attempts a Firestore write via `safeWrite`; other API routes still rely on seed/local state.
+- Auth UI is a demo boundary. Production Firebase ID-token enforcement is not implemented yet. Until Auth is enforced, `safeWrite` calls from unauthenticated API routes will receive permission-denied and return `local-fallback`.
+- Firestore rules are collection-aware as of 2026-05-17. Admin and viewer roles are resolved from `users/{uid}.role`. Public create rules are field-validated for `applications`, `companies`, and `meetings`. Unknown collections and unmatched paths are denied. See `firestore.rules` and `DB_Module/_DOCS/01_DB_SCHEMA.md` for the full rule strategy.
 
 ### Infrastructure
 
@@ -46,6 +48,7 @@
 - Phase 2: Programme Intake and Applicant Review. Completed on 2026-05-16. Programme setup, public intake, AI fit scoring, and applicant review were established.
 - Phase 3: Mentor Matching and Relationship Creation. Completed on 2026-05-16. Matching workbench, AI match route, confirmation flow, and relationship list were established.
 - Phase 4: Relationship Health and Cohort Intelligence. Completed on 2026-05-16. Relationship detail, meeting analysis, diagnosis, health decay, cohort overview, and cohort narrative reporting were established.
+- Phase 5 Block A: Firebase Persistence and Rules. Completed on 2026-05-17. Normalized runtime data, readiness helpers, safe write semantics, and collection-aware rules were established.
 
 ## Current Milestone Progress
 
@@ -53,14 +56,14 @@
 - Phase 2: 100%
 - Phase 3: 100%
 - Phase 4: 100%
-- Phase 5: 0%
+- Phase 5: 40%
 
 ## Known Debt / Residual Issues
 
-- Firestore persistence is not wired into demo-critical flows.
-- Firestore rules are not yet collection-aware.
-- Authentication remains a demo placeholder.
+- Firestore persistence is wired only into `POST /api/relationships/confirm-match`; other flows rely on seed/local state.
+- Authentication remains a demo placeholder; admin-only writes fall back to `local-fallback` until ID-token enforcement is added.
 - Seed fallback remains the operational baseline for the demo.
+- `npm run lint` identifies failures in `.claude/worktrees/` scripts (`@typescript-eslint/no-require-imports`). These are external to the MVP app source and do not block the demo.
 - `DB_Module/_DOCS/06_DEPENDENCY_GRAPH.md` is stale and should be regenerated before dependency-sensitive planning.
 
 ## Recommended Next Milestone

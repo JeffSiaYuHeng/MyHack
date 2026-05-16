@@ -10,58 +10,58 @@
 
 | Block | Name | Depends On | Status |
 |-------|------|------------|--------|
-| A | Firebase Persistence and Rules | — | IN_PROGRESS |
-| B | Demo Resilience and Fallbacks | Block A | NOT_STARTED |
-| C | Cloud Run Deployment Verification | Block B | NOT_STARTED |
-| D | Final Pitch Walkthrough Polish | Block C | NOT_STARTED |
+| A | Firebase Persistence and Rules | — | COMPLETED |
+| B | Demo Resilience and Fallbacks | Block A | COMPLETED |
+| C | Cloud Run Deployment Verification | Block B | COMPLETED |
+| D | Final Pitch Walkthrough Polish | Block C | IN_PROGRESS |
 
 ---
 
 ## Block A: Firebase Persistence and Rules
 
 ### Scope
-- [ ] Replace critical seeded mutations with Firestore reads/writes where demo value requires persistence.
-- [ ] Add or update Firestore rules for admin, viewer, public application, and tokenized meeting flows.
-- [ ] Confirm environment variables are documented and available.
-- [ ] Keep seed data available as a fallback path.
+- [x] Replace critical seeded mutations with Firestore reads/writes where demo value requires persistence.
+- [x] Add or update Firestore rules for admin, viewer, public application, and tokenized meeting flows.
+- [x] Confirm environment variables are documented and available.
+- [x] Keep seed data available as a fallback path.
 
 ### Acceptance Criteria
-- [ ] Firestore collections match `_DOCS/01_DB_SCHEMA.md`.
-- [ ] Rules are narrower than broad authenticated read/write for final demo.
-- [ ] Public submission paths validate required fields.
-- [ ] Seed fallback can still run when Firebase is unavailable.
+- [x] Firestore collections match `_DOCS/01_DB_SCHEMA.md`.
+- [x] Rules are narrower than broad authenticated read/write for final demo.
+- [x] Public submission paths validate required fields.
+- [x] Seed fallback can still run when Firebase is unavailable.
 
 ---
 
 ## Block B: Demo Resilience and Fallbacks
 
 ### Scope
-- [ ] Add loading, timeout, empty, and error states to demo-critical flows.
-- [ ] Add fallback mock AI responses for pitch-critical actions.
-- [ ] Ensure all public and admin routes can recover from slow Gemini or Firestore.
-- [ ] Update handover notes with the fallback demo path.
+- [x] Add loading, timeout, empty, and error states to demo-critical flows.
+- [x] Add fallback mock AI responses for pitch-critical actions.
+- [x] Ensure all public and admin routes can recover from slow Gemini or Firestore.
+- [x] Update handover notes with the fallback demo path.
 
 ### Acceptance Criteria
-- [ ] The demo can complete without a successful live Gemini response.
-- [ ] Failed Firestore writes are visible and understandable.
-- [ ] No route crashes on missing seed or API data.
-- [ ] Team can follow a documented backup path.
+- [x] The demo can complete without a successful live Gemini response.
+- [x] Failed Firestore writes are visible and understandable.
+- [x] No route crashes on missing seed or API data.
+- [x] Team can follow a documented backup path.
 
 ---
 
 ## Block C: Cloud Run Deployment Verification
 
 ### Scope
-- [ ] Verify production build locally or in CI.
-- [ ] Confirm GitHub Actions and Cloud Run environment configuration.
-- [ ] Confirm runtime secrets for Gemini and Firebase are available.
-- [ ] Smoke test deployed routes.
+- [x] Verify production build locally or in CI.
+- [x] Confirm GitHub Actions and Cloud Run environment configuration.
+- [x] Confirm runtime secrets for Gemini and Firebase are available.
+- [x] Smoke test deployed routes.
 
 ### Acceptance Criteria
-- [ ] `npm run build` succeeds or the exact blocker is documented.
-- [ ] Cloud Run service loads the app successfully.
-- [ ] Demo-critical routes respond after deployment.
-- [ ] Runtime env gaps are documented before judging.
+- [x] `npm run build` succeeds or the exact blocker is documented.
+- [x] Cloud Run service loads the app successfully.
+- [x] Demo-critical routes respond after deployment.
+- [x] Runtime env gaps are documented before judging.
 
 ---
 

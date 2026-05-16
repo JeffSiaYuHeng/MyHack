@@ -1,8 +1,8 @@
 # Project Roadmap
 
 **Current Phase**: Phase 5 — Demo Hardening and Deployment Readiness
-**Current Block**: Block A
-**Last Updated**: 2026-05-16
+**Current Block**: Block D
+**Last Updated**: 2026-05-17
 
 ---
 
@@ -18,9 +18,9 @@
 
 ---
 
-## Active: Phase 5 → Block A
+## Active: Phase 5 → Block D
 
 > See `PHASE_5__Demo_Hardening_and_Deployment_Readiness.md` for full block details.
 
-**What we're building**: Firestore-ready persistence baseline, collection-aware rules, environment documentation, and seed fallback readiness for the final demo.
-**Acceptance gate**: Firestore collections match the schema, rules are narrower than broad authenticated access, public submission paths validate required fields, and seed fallback still works when Firebase is unavailable.
+**What we're building**: Final pitch walkthrough polish — entry-point copy, AI moment framing, relationship health close, and final demo documentation.
+**Acceptance gate**: A judge can understand the product problem in 30 seconds, at least two AI moments are clearly demoable, relationship health and cohort narrative close the story, and all DualBrain docs reflect the final shipped state.

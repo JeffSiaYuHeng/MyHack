@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { Relationship } from "@/lib/types";
+import { safeWrite } from "@/lib/firebase";
 
 export async function POST(req: Request) {
   let body: unknown;
@@ -94,7 +95,7 @@ export async function POST(req: Request) {
   const clampedScore = Math.max(0, Math.min(100, Math.round(matchScore)));
   const now = new Date().toISOString();
 
-  // Build Relationship record
+  // Build Relationship record with deterministic local id
   const record: Relationship = {
     id: `rel-local-${Date.now()}`,
     programId: programId,
@@ -135,11 +136,19 @@ export async function POST(req: Request) {
     updatedAt: now,
   };
 
+  // Attempt Firestore write; fall back to local response if unavailable
+  const writeResult = await safeWrite(
+    "relationships",
+    record as unknown as Record<string, unknown>
+  );
+
   return NextResponse.json(
     {
       relationshipId: record.id,
       status: record.status,
       createdAt: record.createdAt,
+      persisted: writeResult.ok,
+      persistenceMode: writeResult.ok ? "firestore" : "local-fallback",
     },
     { status: 201 }
   );

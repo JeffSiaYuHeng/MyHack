@@ -1,3 +1,6 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import type { HealthBand } from "@/lib/verrier-analytics";
 import {
   getAttentionFeed,
@@ -136,6 +139,14 @@ function RecentMeetingsSkeleton() {
 }
 
 export function DashboardCommandCenter() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    // Simulate a brief loading state so skeletons are visible
+    const t = setTimeout(() => setMounted(true), 300);
+    return () => clearTimeout(t);
+  }, []);
+
   const summary = getDashboardSummary();
   const feed = getAttentionFeed();
   const meetings = getRecentMeetings(5);

@@ -30,11 +30,12 @@ interface MatchStore {
   selectedMentorId: string | null;
   confirmState: "idle" | "confirming" | "confirmed" | "error";
   confirmError: string | null;
+  isFallback: boolean;
 }
 
 type MatchAction =
   | { type: "START" }
-  | { type: "SUCCESS"; matches: MatchResult[] }
+  | { type: "SUCCESS"; matches: MatchResult[]; isFallback?: boolean }
   | { type: "ERROR"; message: string }
   | { type: "SELECT_MENTOR"; mentorId: string | null }
   | { type: "CONFIRM_START" }
@@ -46,7 +47,12 @@ function matchReducer(state: MatchStore, action: MatchAction): MatchStore {
     case "START":
       return { ...state, matchState: "loading", matches: [], errorMessage: null, selectedMentorId: null, confirmState: "idle", confirmError: null };
     case "SUCCESS":
-      return { ...state, matchState: "done", matches: action.matches };
+      return {
+        ...state,
+        matchState: "done",
+        matches: action.matches,
+        isFallback: !!action.isFallback,
+      };
     case "ERROR":
       return { ...state, matchState: "error", errorMessage: action.message };
     case "SELECT_MENTOR":
@@ -67,6 +73,7 @@ const INITIAL_STORE: MatchStore = {
   selectedMentorId: null,
   confirmState: "idle",
   confirmError: null,
+  isFallback: false,
 };
 
 interface MatchingWorkbenchProps {
@@ -107,18 +114,26 @@ export function MatchingWorkbench({
     let cancelled = false;
     dispatch({ type: "START" });
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, 10000);
+
     fetch("/api/ai/match", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ startupId: selectedStartupId, programId, cohortId }),
     })
       .then(async (res) => {
+        clearTimeout(timeoutId);
         if (cancelled) return;
+
         if (!res.ok) {
           const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
           dispatch({ type: "ERROR", message: typeof data.error === "string" ? data.error : "Match request failed." });
           return;
         }
+
         const data = (await res.json()) as { matches: MatchResult[] };
         if (!cancelled) dispatch({ type: "SUCCESS", matches: data.matches ?? [] });
       })

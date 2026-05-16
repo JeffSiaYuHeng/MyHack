@@ -240,12 +240,17 @@ Validate all returned mentor IDs against the input candidate list.
 
 Creates a first-class `relationships` document.
 
+Source: `app/api/relationships/confirm-match/route.ts`
+
+Last modified: 2026-05-17
+
 Request:
 
 ```ts
 {
   startupId: string;
   mentorId: string;
+  programId: string;
   cohortId: string;
   matchScore: number;
   matchReason: string;
@@ -260,10 +265,20 @@ Response:
   relationshipId: string;
   status: "active";
   createdAt: string;
+  persisted: boolean;
+  persistenceMode: "firestore" | "local-fallback";
 }
 ```
 
 Initial `healthScore` is `60`, `healthTrend` is `stable`, and `meetingCount` is `0`.
+
+`persisted: true` and `persistenceMode: "firestore"` indicate the record was written to Firestore. `persisted: false` and `persistenceMode: "local-fallback"` indicate Firebase was unavailable or misconfigured; the route still returns `201` and the caller should treat the local response as the source of truth.
+
+Side Effects:
+
+- Attempts a Firestore write to the `relationships` collection via `safeWrite`.
+- Falls back to a local deterministic response when Firebase is unavailable, misconfigured, or throws.
+- Raw Firebase error text is never included in the public response.
 
 ### `GET /api/relationships`
 
