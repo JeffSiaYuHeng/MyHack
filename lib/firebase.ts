@@ -17,23 +17,31 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
+type FirebaseGlobal = typeof globalThis & {
+  __verrierFirestoreDb?: ReturnType<typeof getFirestore>;
+  __verrierFirebaseAuth?: ReturnType<typeof getAuth>;
+};
+
+const firebaseGlobal = globalThis as FirebaseGlobal;
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
-// Use initializeFirestore with experimentalForceLongPolling enabled.
-// This is more robust in Node.js environments (like Next.js API routes) 
-// and avoids GRPC stream errors (Code: undefined) common in serverless or restricted network contexts.
-// Cache the db instance in development to prevent memory leaks from HMR
-let db: ReturnType<typeof getFirestore>;
+// Next dev/HMR can re-evaluate this module. Keep Firebase singletons on
+// globalThis so Firestore/Auth transports are reused instead of recreated.
+const db =
+  firebaseGlobal.__verrierFirestoreDb ??
+  (() => {
+    try {
+      return initializeFirestore(app, {
+        experimentalForceLongPolling: true,
+      });
+    } catch {
+      return getFirestore(app);
+    }
+  })();
+firebaseGlobal.__verrierFirestoreDb = db;
 
-if (getApps().length > 0) {
-  db = getFirestore(app);
-} else {
-  db = initializeFirestore(app, {
-    experimentalForceLongPolling: true,
-  });
-}
-
-const auth = getAuth(app);
+const auth = firebaseGlobal.__verrierFirebaseAuth ?? getAuth(app);
+firebaseGlobal.__verrierFirebaseAuth = auth;
 
 // ─── MVP Collection Registry ──────────────────────────────────────────────────
 

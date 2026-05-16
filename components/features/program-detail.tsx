@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
@@ -66,10 +66,26 @@ export function ProgramDetail({ program: initialProgram }: ProgramDetailProps) {
   const [draft, setDraft] = useState<Program>(initialProgram);
   const [showDelete, setShowDelete] = useState(false);
   const [deleted, setDeleted] = useState(false);
+  const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const applications = seedApplications.filter((a) => a.programId === program.id);
-  const approvedCount = applications.filter((a) => a.status === "approved").length;
-  const mentors = seedMentors.filter((m) => program.mentorIds.includes(m.id));
+  useEffect(() => {
+    return () => {
+      if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
+    };
+  }, []);
+
+  const applications = useMemo(
+    () => seedApplications.filter((a) => a.programId === program.id),
+    [program.id]
+  );
+  const approvedCount = useMemo(
+    () => applications.filter((a) => a.status === "approved").length,
+    [applications]
+  );
+  const mentors = useMemo(
+    () => seedMentors.filter((m) => program.mentorIds.includes(m.id)),
+    [program.mentorIds]
+  );
 
   const weightTotal =
     draft.selectionCriteria.stageWeight +
@@ -98,7 +114,7 @@ export function ProgramDetail({ program: initialProgram }: ProgramDetailProps) {
   function handleDelete() {
     setDeleted(true);
     toast.success("Programme deleted locally.");
-    setTimeout(() => router.push("/programs"), 1200);
+    redirectTimerRef.current = setTimeout(() => router.push("/programs"), 1200);
   }
 
   const inputCls =

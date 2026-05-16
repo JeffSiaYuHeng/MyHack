@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
@@ -46,9 +46,19 @@ export function MentorDetail({ mentor: init }: MentorDetailProps) {
   const [editing, setEditing] = useState(false);
   const [showDel, setShowDel] = useState(false);
   const [deleted, setDeleted] = useState(false);
+  const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const companyMap = new Map(seedCompanies.map((c) => [c.id, c]));
-  const rels = seedRelationships.filter((r) => r.mentorId === mentor.id);
+  useEffect(() => {
+    return () => {
+      if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
+    };
+  }, []);
+
+  const companyMap = useMemo(() => new Map(seedCompanies.map((c) => [c.id, c])), []);
+  const rels = useMemo(
+    () => seedRelationships.filter((r) => r.mentorId === mentor.id),
+    [mentor.id]
+  );
   const sc = STYLE_COLORS[mentor.mentorshipStyle];
 
   function save() {
@@ -65,7 +75,7 @@ export function MentorDetail({ mentor: init }: MentorDetailProps) {
   function handleDelete() {
     setDeleted(true);
     toast.success("Mentor removed locally.");
-    setTimeout(() => router.push("/mentors"), 1100);
+    redirectTimerRef.current = setTimeout(() => router.push("/mentors"), 1100);
   }
 
   const slotStatusColor: Record<string, string> = {
