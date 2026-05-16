@@ -1,5 +1,7 @@
 # System Data Flow and Stage Data Types
 
+**Last Updated:** 2026-05-17 (interaction polish session)
+
 ## Purpose
 
 This document translates the Verrier PRD into a concrete data flow so the team can see:
@@ -16,6 +18,21 @@ Primary references:
 - `DB_Module/_DOCS/01_DB_SCHEMA.md`
 - `DB_Module/_DOCS/03_SERVER_ACTIONS.md`
 - `lib/types.ts`
+
+---
+
+## UI Trigger Map (Current Implementation)
+
+This table maps every AI feature to its exact UI trigger as implemented.
+
+| AI Feature | Route | Trigger | Handler |
+|---|---|---|---|
+| Programme fit scoring | `/apply/[programId]` | "Get fit score & submit" button (first click) | `handleSubmit()` in `public-application-form.tsx` |
+| Mentor matching | `/matching` | "Generate AI matches" button after startup selection | `handleGenerateMatches()` in `matching-workbench.tsx` |
+| Meeting analysis (public) | `/submit-meeting` | "Submit meeting notes" button | `handleSubmit()` in `meeting-submission-form.tsx` |
+| Meeting analysis (inline) | `/relationships/[id]` | "✦ Submit & Analyze" button in Log Meeting form | `handleLogMeeting()` in `relationship-detail.tsx` |
+| Relationship diagnosis | `/relationships/[id]` | "Refresh Diagnosis" button | `handleRefreshDiagnosis()` in `relationship-detail.tsx` |
+| Cohort summary | `/program/[cohortId]` | "Generate Report" button | `handleGenerate()` in `cohort-overview.tsx` |
 
 ---
 
@@ -328,6 +345,8 @@ interface Cohort {
 **UI/API:** `/matching` -> `POST /api/ai/match`  
 **Reads:** `companies`, `programs`, `cohorts`, `mentors`  
 **Writes:** no permanent write required for ranking response itself
+
+Startup selection is a context change only. It resets previous AI output and enables the explicit `Generate AI matches` action. During the request, the workbench shows toast feedback plus an animated matching state with spinner, scan lines, and staged progress labels.
 
 ### Input data
 
@@ -670,42 +689,37 @@ interface Cohort {
 
 ## Demo Backup Path (Resilience & Fallback)
 
-This section documents the deterministic local fallback behavior established during Phase 5 Block B to ensure the demo remains operational when live API routes, Gemini, or Firestore are slow or unavailable.
+This section documents the deterministic local fallback behavior established during Phase 5 Block B and confirmed during the polish session.
 
 ### Fallback Implementation Pattern
 
 | Flow | Trigger | Fallback Pattern |
 |---|---|---|
 | **Public Application** | Timeout (>10s) or Network Fail | Local `FitResult` with `status: "pending"`; allows local submission. |
-| **Meeting Submission** | Timeout (>10s) or Network Fail | Local `AnalysisResult` with neutral signal and 0 delta; reaches confirmation. |
-| **Mentor Matching** | Timeout (>10s) or Route Error | Local deterministic scoring (Industry + Stage + Availability); shows top 3. |
+| **Meeting Submission (public)** | Timeout (>10s) or Network Fail | Local `AnalysisResult` with neutral signal and 0 delta; reaches confirmation. |
+| **Meeting Analysis (inline)** | Timeout (>10s) or Network Fail | `formError` shown inline; form remains open for retry. |
+| **Relationship Diagnosis** | Any error | Existing seed diagnosis data preserved in state; toast feedback explains the refresh failure. |
+| **Mentor Matching** | Timeout (>10s) or Route Error | Local deterministic scoring (Industry + Stage + Availability + Style); shows top 3. |
 | **Cohort Summary** | Timeout (>10s) or Route Error | Local `CohortReport` generated from already-rendered metric state. |
 | **Match Confirmation** | Firebase Unavailable | `persistenceMode: "local-fallback"`; returns relationship ID and proceeds. |
 | **Route Guards** | Missing Seed Data | Branded empty-state shell via `ProductShell`; maintains navigation. |
 
 ### Deterministic Demo Sequence
 
-1.  **Dashboard Command Center**:
-    - *Live*: Reads aggregated seed data.
-    - *Backup*: Missing seed guards render "Seed data unavailable" shell; navigation remains live.
-2.  **Public Startup Application**:
-    - *Live*: Calls `POST /api/ai/program-fit` for AI scoring.
-    - *Backup*: 10s timeout triggers "AI scoring encountered a network issue" notice; enables manual confirmation.
-3.  **Coordinator Matching**:
-    - *Live*: Calls `POST /api/ai/match` for AI pairing.
-    - *Backup*: Failure triggers "Fallback active" badge; ranks mentors using local industry/stage weights.
-4.  **Mentor Meeting Submission**:
-    - *Live*: Calls `POST /api/ai/analyze-meeting` for AI note extraction.
-    - *Backup*: Failure triggers "Analysis pending" state; shows character count and success confirmation.
-5.  **Cohort Narrative Report**:
-    - *Live*: Calls `POST /api/ai/cohort-summary` for management narrative.
-    - *Backup*: Failure triggers local report derived from visible metrics (average health, counts, distribution).
+1. **Dashboard Command Center**: Reads aggregated seed data. Loading skeletons shown for 300ms on mount.
+2. **Public Startup Application**: Calls `POST /api/ai/program-fit`. Timeout triggers pending state; enables manual confirmation.
+3. **Coordinator Matching**: The `Generate AI matches` button calls `POST /api/ai/match`. Failure triggers "Fallback active" badge and toast feedback; ranks mentors using local weights.
+4. **Mentor Meeting Submission (public)**: Calls `POST /api/ai/analyze-meeting`. Failure triggers "Analysis pending" state.
+5. **Inline Log Meeting (relationship detail)**: Calls `POST /api/ai/analyze-meeting`. Failure shows inline error; form stays open.
+6. **Refresh Diagnosis**: Calls `POST /api/ai/diagnose`. Failure shows toast feedback; existing diagnosis data is preserved.
+7. **Cohort Narrative Report**: Calls `POST /api/ai/cohort-summary`. Failure triggers local report from visible metrics and surfaces fallback status through the UI.
 
 ### Persistence & Data Baseline
 
 - **Baseline**: `lib/verrier-seed.ts` is the stable operational baseline for all demo routes.
-- **Match Confirmation**: Attempts `safeWrite` to Firestore. If configuration is missing or rules deny access, the route returns `persisted: false` and the UI proceeds with local confirmation state.
-- **Report Export**: If `navigator.clipboard` is unavailable during report generation, the UI provides a textarea-based copy fallback.
+- **Match Confirmation**: Attempts `safeWrite` to Firestore. If unavailable, returns `persisted: false`; UI proceeds with local state.
+- **Programme CRUD**: Local state only. Changes do not persist across page navigation. Firestore wiring is post-demo work.
+- **Report Export**: If `navigator.clipboard` is unavailable, UI provides a textarea-based copy fallback.
 
 ---
 

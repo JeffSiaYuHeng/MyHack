@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useReducer } from "react";
+import { useState, useReducer } from "react";
+import toast from "react-hot-toast";
 import type {
   ApprovedStartupQueueItem,
   MentorPoolItem,
@@ -34,6 +35,7 @@ interface MatchStore {
 }
 
 type MatchAction =
+  | { type: "RESET" }
   | { type: "START" }
   | { type: "SUCCESS"; matches: MatchResult[]; isFallback?: boolean }
   | { type: "ERROR"; message: string }
@@ -44,6 +46,8 @@ type MatchAction =
 
 function matchReducer(state: MatchStore, action: MatchAction): MatchStore {
   switch (action.type) {
+    case "RESET":
+      return INITIAL_STORE;
     case "START":
       return { ...state, matchState: "loading", matches: [], errorMessage: null, selectedMentorId: null, confirmState: "idle", confirmError: null };
     case "SUCCESS":
@@ -90,6 +94,13 @@ const BREAKDOWN_LABELS: [keyof MatchBreakdown, string][] = [
   ["styleCompatibility", "Style"],
 ];
 
+const MATCH_LOADING_STEPS = [
+  "Reading startup needs",
+  "Scanning mentor expertise",
+  "Checking load and availability",
+  "Ranking compatibility",
+];
+
 export function MatchingWorkbench({
   initialQueue,
   initialMentorPool,
@@ -109,46 +120,51 @@ export function MatchingWorkbench({
     initialMentorPool.map((p) => [p.mentor.id, p])
   );
 
-  useEffect(() => {
+  async function handleGenerateMatches() {
     if (!selectedStartupId) return;
-    let cancelled = false;
     dispatch({ type: "START" });
+    const toastId = toast.loading("Generating mentor matches...");
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => {
       controller.abort();
     }, 10000);
 
-    fetch("/api/ai/match", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ startupId: selectedStartupId, programId, cohortId }),
-    })
-      .then(async (res) => {
-        clearTimeout(timeoutId);
-        if (cancelled) return;
-
-        if (!res.ok) {
-          const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
-          dispatch({ type: "ERROR", message: typeof data.error === "string" ? data.error : "Match request failed." });
-          return;
-        }
-
-        const data = (await res.json()) as { matches: MatchResult[] };
-        if (!cancelled) dispatch({ type: "SUCCESS", matches: data.matches ?? [] });
-      })
-      .catch(() => {
-        if (!cancelled) dispatch({ type: "ERROR", message: "Network error. Manual selection is available below." });
+    try {
+      const res = await fetch("/api/ai/match", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+        body: JSON.stringify({ startupId: selectedStartupId, programId, cohortId }),
       });
 
-    return () => { cancelled = true; };
-  }, [selectedStartupId, programId, cohortId]);
+      clearTimeout(timeoutId);
+
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+        const message = typeof data.error === "string" ? data.error : "Match request failed.";
+        dispatch({ type: "ERROR", message });
+        toast.error(message, { id: toastId });
+        return;
+      }
+
+      const data = (await res.json()) as { matches: MatchResult[] };
+      dispatch({ type: "SUCCESS", matches: data.matches ?? [] });
+      toast.success(`Generated ${data.matches?.length ?? 0} mentor matches.`, { id: toastId });
+    } catch {
+      clearTimeout(timeoutId);
+      const message = "Network error. Manual selection is available below.";
+      dispatch({ type: "ERROR", message });
+      toast.error(message, { id: toastId });
+    }
+  }
 
   async function handleConfirm() {
     if (!selectedStartupId || !store.selectedMentorId || store.confirmState === "confirming") return;
     const match = store.matches.find((m) => m.mentorId === store.selectedMentorId);
     if (!match) return;
     dispatch({ type: "CONFIRM_START" });
+    const toastId = toast.loading("Confirming mentor match...");
 
     try {
       const res = await fetch("/api/relationships/confirm-match", {
@@ -166,21 +182,28 @@ export function MatchingWorkbench({
       });
       if (!res.ok) {
         const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
-        dispatch({ type: "CONFIRM_ERROR", message: typeof data.error === "string" ? data.error : "Confirmation failed." });
+        const message = typeof data.error === "string" ? data.error : "Confirmation failed.";
+        dispatch({ type: "CONFIRM_ERROR", message });
+        toast.error(message, { id: toastId });
         return;
       }
       dispatch({ type: "CONFIRM_SUCCESS" });
+      toast.success("Mentor match confirmed.", { id: toastId });
       const nextQueue = displayQueue.filter((item) => item.company.id !== selectedStartupId);
       setConfirmedStartupIds((prev) => new Set([...prev, selectedStartupId]));
       setSelectedStartupId(nextQueue[0]?.company.id ?? null);
+      dispatch({ type: "RESET" });
     } catch {
-      dispatch({ type: "CONFIRM_ERROR", message: "Network error during confirmation." });
+      const message = "Network error during confirmation.";
+      dispatch({ type: "CONFIRM_ERROR", message });
+      toast.error(message, { id: toastId });
     }
   }
 
   function selectStartup(id: string) {
     if (id === selectedStartupId) return;
     setSelectedStartupId(id);
+    dispatch({ type: "RESET" });
   }
 
   const { matchState, matches, errorMessage, selectedMentorId, confirmState, confirmError } = store;
@@ -286,25 +309,68 @@ export function MatchingWorkbench({
               <p className="text-xs text-muted-foreground mt-3 leading-relaxed line-clamp-2">
                 {selectedStartup.supportNeeds.join(" · ")} — {selectedStartup.founderSummary}
               </p>
+              <div className="mt-4">
+                <button
+                  onClick={() => { void handleGenerateMatches(); }}
+                  disabled={matchState === "loading"}
+                  className="px-4 py-2 text-xs font-semibold rounded-lg border border-foreground/30 text-foreground hover:border-foreground transition-colors disabled:cursor-not-allowed disabled:text-muted-foreground disabled:border-border"
+                >
+                  {matchState === "loading" ? "Generating AI matches..." : "Generate AI matches"}
+                </button>
+              </div>
             </div>
           )}
 
           {/* Match states */}
           {matchState === "idle" && (
             <div className="bg-card border border-border rounded-xl p-8 text-sm text-muted-foreground text-center">
-              Select a startup to view mentor matches.
+              Select a startup, then click Generate AI matches.
             </div>
           )}
 
           {matchState === "loading" && (
-            <div className="bg-card border border-border rounded-xl p-8 text-center">
-              <div
-                className="text-sm font-medium"
-                style={{ color: "var(--status-ai)" }}
-              >
-                ✦ Finding best mentor matches…
+            <div className="bg-card border border-border rounded-xl p-6 overflow-hidden">
+              <div className="flex items-center gap-3">
+                <div
+                  className="relative size-10 rounded-full border border-border"
+                  style={{ background: "color-mix(in srgb, var(--status-ai) 8%, transparent)" }}
+                >
+                  <span
+                    className="absolute inset-1 rounded-full border-2 border-transparent border-t-[var(--status-ai)] animate-spin"
+                  />
+                  <span
+                    className="absolute inset-3 rounded-full"
+                    style={{ background: "var(--status-ai)" }}
+                  />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold" style={{ color: "var(--status-ai)" }}>
+                    Finding best mentor matches
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    AI is comparing the startup against {initialMentorPool.length} mentor profiles.
+                  </p>
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground mt-1">AI is analyzing compatibility</p>
+              <div className="mt-5 grid gap-2">
+                {MATCH_LOADING_STEPS.map((step, index) => (
+                  <div key={step} className="flex items-center gap-3">
+                    <span
+                      className="size-5 rounded-full border border-border flex items-center justify-center text-[10px] font-semibold"
+                      style={{ color: "var(--status-ai)" }}
+                    >
+                      {index + 1}
+                    </span>
+                    <div className="flex-1">
+                      <div className="flex justify-between text-[11px] text-muted-foreground mb-1">
+                        <span>{step}</span>
+                        <span>{25 * (index + 1)}%</span>
+                      </div>
+                      <div className="h-1.5 rounded-full overflow-hidden ai-loading-scan" />
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 

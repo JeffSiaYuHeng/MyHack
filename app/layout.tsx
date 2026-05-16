@@ -30,7 +30,43 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         {children}
-        <Toaster position="bottom-right" />
+        <Toaster
+          position="top-right"
+          gutter={10}
+          toastOptions={{
+            duration: 4200,
+            style: {
+              background: "var(--card)",
+              color: "var(--foreground)",
+              border: "1px solid var(--border)",
+              borderRadius: "12px",
+              boxShadow: "0 18px 45px color-mix(in srgb, var(--foreground) 14%, transparent)",
+              fontSize: "13px",
+              lineHeight: "1.4",
+              maxWidth: "380px",
+              padding: "12px 14px",
+            },
+            success: {
+              iconTheme: {
+                primary: "var(--status-healthy)",
+                secondary: "var(--status-healthy-bg)",
+              },
+            },
+            error: {
+              iconTheme: {
+                primary: "var(--status-critical)",
+                secondary: "var(--status-critical-bg)",
+              },
+              duration: 5200,
+            },
+            loading: {
+              iconTheme: {
+                primary: "var(--status-ai)",
+                secondary: "var(--muted)",
+              },
+            },
+          }}
+        />
       </body>
     </html>
   );

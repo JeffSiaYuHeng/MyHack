@@ -1,121 +1,46 @@
 # Server Actions and API Contracts
 
+**Last Updated:** 2026-05-17 (interaction polish session)
+
+---
+
 ## Route Boundary Reference
 
 ### Public routes (no auth required)
 
 | Route | Status |
 |---|---|
-| `/` | Live — redirects to dashboard in current build |
+| `/` | Live — redirects to `/dashboard` |
 | `/login` | Live — demo placeholder; no real Firebase Auth |
-| `/apply/[programId]` | Planned — public application intake |
-| `/submit-meeting` | Planned — public meeting submission (token-gated) |
+| `/apply/[programId]` | Live — public application intake with AI fit scoring |
+| `/submit-meeting` | Live — public meeting submission (token-gated) |
 
-### Coordinator routes (auth-gated in production)
+### Coordinator routes (auth-gated in production, open for demo)
 
 | Route | Status |
 |---|---|
-| `/dashboard` | Live — seed data only, no auth guard |
-| `/programmes` | Planned |
-| `/matching` | Planned |
-| `/relationships` | Planned |
+| `/dashboard` | Live — redesigned AI ops dashboard |
+| `/programs` | **Live** — programme list with CRUD |
+| `/programs/[programId]` | **Live** — programme detail with inline edit and delete |
+| `/programs/new` | Live — programme setup wizard with Save button |
+| `/programs/[programId]/applicants` | Live — applicant review pool |
+| `/matching` | Live — AI mentor matching workbench |
+| `/relationships` | Live — relationship list |
+| `/relationships/[id]` | Live — relationship detail with wired Log Meeting and Refresh Diagnosis |
+| `/program/[cohortId]` | Live — cohort overview with AI report generation |
 
-> **Note on `/login`:** This route is currently a demo placeholder. It does not
-> perform real Firebase Auth, validate credentials, or create a session. Auth
-> enforcement will be added before the final demo using Firebase ID tokens.
+---
 
-## Current Backend Surface
+## Implemented AI API Routes
 
-Implemented today:
-
-- `POST /api/ai`
-- `lib/gemini.ts`
-- `lib/firebase.ts`
-
-Target Verrier backend surface is route-handler based under `app/api/`. Server actions may be added later for authenticated form mutations, but the initial plan should favor API routes because the PRD defines public routes for applications and meeting submission.
-
-## Existing Contract: `POST /api/ai`
-
-Source: `app/api/ai/route.ts`
-
-Request:
-
-```ts
-{ prompt: string }
-```
-
-Success:
-
-```ts
-{ text: string }
-```
-
-This route is scaffold-level and should not be the final Verrier AI surface.
-
-## Gemini Helper Target
-
-All structured Verrier calls should converge on a helper shaped like:
-
-```ts
-async function callGeminiJson<T>(options: {
-  systemPrompt: string;
-  userContent: unknown;
-  schemaName: string;
-  temperature?: number;
-  maxOutputTokens?: number;
-}): Promise<T>
-```
-
-Rules:
-
-- Read `GEMINI_API_KEY` only on the server.
-- Use JSON response mode.
-- Validate and sanitize AI output before writing to Firestore.
-- Retry malformed JSON once.
-- Preserve a fallback state when Gemini fails.
-
-Current model in code is `gemini-3-flash-preview`. The PRD references `gemini-1.5-flash`. Keep implementation aligned with the installed SDK and actual working model, and update this doc if the model changes.
-
-## Target API Routes
-
-### `POST /api/programs`
-
-Creates a programme and returns the public application URL.
-
-Request:
-
-```ts
-{
-  name: string;
-  type: Program["type"];
-  description: string;
-  targetStages: string[];
-  targetIndustries: string[];
-  targetMarkets: string[];
-  selectionCriteria: Program["selectionCriteria"];
-  requiredDocuments: string[];
-  applicationOpenAt: string;
-  applicationCloseAt: string;
-  startDate: string;
-  endDate: string;
-}
-```
-
-Response:
-
-```ts
-{
-  programId: string;
-  applicationUrl: string;
-}
-```
+All five AI routes are fully implemented and wired to UI triggers.
 
 ### `POST /api/ai/program-fit`
 
-Scores a startup application against programme criteria.
+**Trigger:** "Get fit score & submit" button on `/apply/[programId]`  
+**Model:** `gemini-3-flash-preview`
 
 Request:
-
 ```ts
 {
   programId: string;
@@ -127,7 +52,6 @@ Request:
 ```
 
 Response:
-
 ```ts
 {
   fitScore: number;
@@ -146,67 +70,16 @@ Response:
 }
 ```
 
-`status: "pending"` is returned when Gemini is unavailable or returns malformed output. All score fields are zeroed, `fitLabel` defaults to `"Potential fit"`, `aiRecommendation` defaults to `"review"`, and `eligibilityFlags` contains `"scoring-pending"`. The public form treats a `pending` response as recoverable and allows submission.
+Fallback: `status: "pending"` with zeroed scores when Gemini is unavailable. Public form allows submission in pending state.
 
-### `POST /api/applications`
-
-Submits a startup application into the applicant pool.
-
-Request:
-
-```ts
-{
-  programId: string;
-  companyProfile: Partial<Company>;
-  founderContactEmail: string;
-  founderSummary: string;
-  supportNeeds: string[];
-  documentUrls: Record<string, string>;
-}
-```
-
-Response:
-
-```ts
-{
-  applicationId: string;
-  status: "submitted";
-  fitScore: number;
-  fitLabel: string;
-}
-```
-
-### `PATCH /api/applications/[applicationId]/decision`
-
-Coordinator decision route.
-
-Request:
-
-```ts
-{
-  status: "shortlisted" | "approved" | "declined" | "waitlisted";
-  decisionReason?: string;
-}
-```
-
-Response:
-
-```ts
-{
-  applicationId: string;
-  status: string;
-  companyId: string;
-}
-```
-
-Approving should create or update a `companies` document and add the company to the selected list.
+---
 
 ### `POST /api/ai/match`
 
-Generates top mentor matches.
+**Trigger:** "Generate AI matches" button on `/matching` after a startup is selected  
+**Model:** `gemini-3-flash-preview`
 
 Request:
-
 ```ts
 {
   startupId: string;
@@ -216,7 +89,6 @@ Request:
 ```
 
 Response:
-
 ```ts
 {
   matches: Array<{
@@ -234,18 +106,112 @@ Response:
 }
 ```
 
-Validate all returned mentor IDs against the input candidate list.
+Fallback: deterministic scoring (industry overlap × 0.35 + stage fit × 0.30 + availability × 0.20 + style × 0.15).
+
+UI behavior: selecting a startup resets previous AI output but does not call the API. `handleGenerateMatches()` starts the request, shows a toast loading state, renders the animated matching visualization, then replaces the right panel with ranked cards. Success and error outcomes are surfaced through the global toast system.
+
+---
+
+### `POST /api/ai/analyze-meeting`
+
+**Triggers:**
+1. "Submit meeting notes" button on `/submit-meeting` (public mentor form)
+2. "✦ Submit & Analyze" button in the inline Log Meeting form on `/relationships/[id]`
+
+**Model:** `gemini-2.0-flash`
+
+Request:
+```ts
+{
+  relationshipId: string;
+  date: string;           // ISO date string
+  durationMinutes: number;
+  rawNotes: string;       // minimum 50 characters
+  submittedBy: "admin" | "mentor";
+}
+```
+
+Response:
+```ts
+{
+  meetingId: string;
+  aiSummary: string;
+  actionItems: Array<{
+    task: string;
+    owner: "mentor" | "startup";
+    dueDate: string | null;
+    completed: boolean;
+    completedAt: string | null;
+  }>;
+  signal: "Positive" | "Neutral" | "Friction detected";
+  signalReason: string;
+  healthScoreDelta: number;   // clamped -15 to +15
+  newHealthScore: number;     // clamped 0 to 100
+  watchPoints: string[];
+}
+```
+
+Fallback: neutral signal, 0 delta, empty action items. Both callers handle timeout and network errors gracefully.
+
+---
+
+### `POST /api/ai/diagnose`
+
+**Trigger:** "Refresh Diagnosis" button on `/relationships/[id]`  
+**Model:** `gemini-3-flash-preview`
+
+Request:
+```ts
+{ relationshipId: string }
+```
+
+Response:
+```ts
+{
+  narrative: string;
+  watchPoints: string[];
+  recommendation: string;
+  updatedAt: string;
+}
+```
+
+Fallback: deterministic narrative based on health score, trend, staleness, and friction signals. On error, the UI keeps existing seed data and shows toast feedback.
+
+UI behavior: diagnosis state is seeded from `relationship.aiDiagnosis` and `relationship.watchPoints` on mount. Refreshing replaces with live Gemini output. `recommendation` is blank on initial load (not in seed data) and populated after first refresh.
+
+---
+
+### `POST /api/ai/cohort-summary`
+
+**Trigger:** "Generate Report" button on `/program/[cohortId]`  
+**Model:** `gemini-3-flash-preview`
+
+Request:
+```ts
+{ cohortId: string }
+```
+
+Response:
+```ts
+{
+  narrative: string;
+  keyRisks: string[];
+  recommendedActions: string[];
+  generatedAt: string;
+}
+```
+
+Fallback: deterministic local report computed from cohort metrics already rendered on screen. The UI shows toast feedback and a fallback indicator when the local report is used. "Copy report" button available after generation.
+
+---
+
+## Other API Routes
 
 ### `POST /api/relationships/confirm-match`
 
-Creates a first-class `relationships` document.
-
-Source: `app/api/relationships/confirm-match/route.ts`
-
-Last modified: 2026-05-17
+Creates a Relationship entity and attempts Firestore persistence.
 
 Request:
-
 ```ts
 {
   startupId: string;
@@ -259,7 +225,6 @@ Request:
 ```
 
 Response:
-
 ```ts
 {
   relationshipId: string;
@@ -270,178 +235,48 @@ Response:
 }
 ```
 
-Initial `healthScore` is `60`, `healthTrend` is `stable`, and `meetingCount` is `0`.
+Initial values: `healthScore: 60`, `healthTrend: "stable"`, `meetingCount: 0`.
 
-`persisted: true` and `persistenceMode: "firestore"` indicate the record was written to Firestore. `persisted: false` and `persistenceMode: "local-fallback"` indicate Firebase was unavailable or misconfigured; the route still returns `201` and the caller should treat the local response as the source of truth.
+---
 
-Side Effects:
+## Planned but Not Yet Implemented
 
-- Attempts a Firestore write to the `relationships` collection via `safeWrite`.
-- Falls back to a local deterministic response when Firebase is unavailable, misconfigured, or throws.
-- Raw Firebase error text is never included in the public response.
+These routes are documented in the PRD and data flow but have no route handler yet:
 
-### `GET /api/relationships`
+| Route | Purpose |
+|---|---|
+| `POST /api/programs` | Persist programme creation from wizard |
+| `PATCH /api/programs/[id]` | Persist programme edits from detail page |
+| `DELETE /api/programs/[id]` | Persist programme deletion |
+| `POST /api/applications` | Persist submitted application to Firestore |
+| `PATCH /api/applications/[id]/decision` | Persist coordinator decision to Firestore |
+| `GET /api/relationships` | List relationships with summary counts |
 
-Lists relationship records with summary counts.
+All of the above currently operate on local state only. Firestore persistence requires wiring `safeWrite` into each route.
 
-Query:
+---
 
-- `cohortId` required.
-- `status` optional.
-- `healthBand` optional: `healthy`, `at-risk`, `critical`.
+## Dead Code
 
-Response:
+- `app/api/ai/route.ts` — scaffold-level `POST /api/ai` accepting `{ prompt: string }`. Not called by any UI component. Safe to remove.
+- `lib/gemini.ts` — exports `analyzeWithGemini()` and `generateContent()`. Never imported by any route. All AI routes instantiate `GoogleGenerativeAI` directly inline. Safe to remove or repurpose.
 
-```ts
-{
-  relationships: Relationship[];
-  summary: {
-    total: number;
-    healthy: number;
-    atRisk: number;
-    critical: number;
-    avgHealthScore: number;
-  };
-}
-```
+---
 
-### `POST /api/ai/analyze-meeting`
+## Gemini Model Reference
 
-Processes meeting notes and updates relationship health.
+| Route | Model |
+|---|---|
+| `analyze-meeting` | `gemini-2.0-flash` |
+| `program-fit` | `gemini-3-flash-preview` |
+| `match` | `gemini-3-flash-preview` |
+| `diagnose` | `gemini-3-flash-preview` |
+| `cohort-summary` | `gemini-3-flash-preview` |
 
-Request:
+All calls use `responseMimeType: "application/json"` in `generationConfig`. All routes validate and sanitize AI output before returning. All routes have deterministic fallbacks.
 
-```ts
-{
-  relationshipId: string;
-  date: string;
-  durationMinutes: number;
-  rawNotes: string;
-  submittedBy: "admin" | "mentor";
-}
-```
+---
 
-Response:
+## Malaysia Context Guardrail
 
-```ts
-{
-  meetingId: string;
-  aiSummary: string;
-  actionItems: ActionItem[];
-  signal: "Positive" | "Neutral" | "Friction detected";
-  signalReason: string;
-  healthScoreDelta: number;
-  newHealthScore: number;
-  watchPoints: string[];
-}
-```
-
-Validation:
-
-- `rawNotes` minimum 50 characters.
-- Relationship must exist.
-- Duplicate same-date relationship submissions should warn or return a recoverable state.
-
-### `POST /api/ai/diagnose`
-
-Generates or refreshes relationship diagnosis.
-
-Request:
-
-```ts
-{ relationshipId: string }
-```
-
-Response:
-
-```ts
-{
-  narrative: string;
-  watchPoints: string[];
-  recommendation: string;
-  updatedAt: string;
-}
-```
-
-### `POST /api/ai/cohort-summary`
-
-Generates a management-ready cohort narrative.
-
-Source: `app/api/ai/cohort-summary/route.ts`
-
-Last modified: 2026-05-17
-
-Request:
-
-```ts
-{ cohortId: string }
-```
-
-Response:
-
-```ts
-{
-  narrative: string;
-  keyRisks: string[];
-  recommendedActions: string[];
-  generatedAt: string;
-}
-```
-
-Side Effects:
-
-- None. This route reads seeded cohort and relationship context and returns a generated or deterministic fallback summary.
-- It does not write to Firestore, mutate seed data, create files, or change relationship health.
-
-Fallback behavior:
-
-- Missing or unavailable Gemini output returns a deterministic narrative, key risks, and recommended actions from cohort metrics.
-- Invalid `cohortId` returns a route error response rather than an empty success payload.
-
-### Public Meeting Submission
-
-The PRD names `POST /submit-meeting`, but in Next.js App Router this should be implemented as a page at `/submit-meeting` plus an API route such as:
-
-- `POST /api/meetings/submit`
-
-Request:
-
-```ts
-{
-  token: string;
-  date: string;
-  durationMinutes: number;
-  rawNotes: string;
-}
-```
-
-Response:
-
-```ts
-{
-  success: boolean;
-  aiSummary: string;
-  actionItems: ActionItem[];
-}
-```
-
-## Prompt Inventory
-
-Prompt templates must be stored in a reusable server-only module during implementation:
-
-- Programme fit scoring.
-- Mentor matching.
-- Meeting analysis.
-- Relationship diagnosis.
-- Cohort narrative.
-
-Malaysia context guardrail: prompts must avoid Race, Religion, and Royalty categories and judge professional/business fit only.
-
-## Auth Expectations
-
-Early demo blocks may operate against seed data and lightweight local helpers. Before final demo:
-
-- Admin API routes validate Firebase ID token.
-- Public application route validates programme status and application window.
-- Public meeting route validates mentor token.
-- Firestore rules match documented collection behavior.
+All prompts include the instruction: *"Evaluate only on professional and business criteria — do not assess on race, religion, or royalty."* This applies to programme fit, mentor matching, meeting analysis, diagnosis, and cohort summary.

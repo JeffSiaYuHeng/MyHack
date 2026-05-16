@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import type { Application, ApplicationStatus, Company } from "@/lib/types";
 import { seedApplications, seedCompanies } from "@/lib/verrier-seed";
 
@@ -91,9 +92,17 @@ export function ApplicantReviewPool() {
   return (
     <div className="px-6 md:px-10 py-8 space-y-6">
       {/* Page header */}
-      <div>
-        <h1 className="text-xl font-semibold text-foreground">Applicant Review Pool</h1>
-        <p className="text-xs text-muted-foreground mt-1">{applications.length} total applications</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-semibold text-foreground">Applicant Review Pool</h1>
+          <p className="text-xs text-muted-foreground mt-1">{applications.length} total applications</p>
+        </div>
+        <Link
+          href="/programs/new"
+          className="shrink-0 px-3 py-1.5 text-xs font-medium rounded border border-border text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
+        >
+          + New Programme
+        </Link>
       </div>
 
       {/* Approved companies strip */}

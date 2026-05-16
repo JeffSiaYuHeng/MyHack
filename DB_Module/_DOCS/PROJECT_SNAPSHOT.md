@@ -1,14 +1,14 @@
 # Verrier Snapshot
 
-**Version**: 0.2.0 product-initialized  
-**Last Updated**: 2026-05-16  
-**Status**: Verrier PRD and design initialized in DualBrain; implementation ready to begin  
+**Version**: 0.5.1 interaction-polish
+**Last Updated**: 2026-05-17
+**Status**: Interaction polish complete; AI calls are explicit button/form actions; lint and build passing
 
 ## Summary
 
 Verrier is an AI-powered ecosystem relationship management platform for programme administrators. It helps teams create programmes, score startup fit, review applicants, match mentors, monitor mentor-startup relationship health, and generate cohort intelligence.
 
-The repository remains a Next.js 16, React 19, Firebase, and Gemini app scaffold, but the DualBrain Module now points toward Verrier MVP implementation.
+The application is now a feature-complete MVP with robust client-side resilience, server-side Gemini integration, established Firestore persistence boundaries, button-driven AI actions, a refined toast system, and visible matching-generation loading states.
 
 ## Quick Links
 
@@ -20,12 +20,13 @@ The repository remains a Next.js 16, React 19, Firebase, and Gemini app scaffold
 - [Tech Stack](./04_TECH_STACK.md)
 - [Detailed Snapshot](./05_PROJECT_SNAPSHOT.md)
 - [Dependency Graph](./06_DEPENDENCY_GRAPH.md)
+- [Data Flow & Backup Path](./07_DATA_FLOW.md)
+- [User Flow UI Interaction Report](./08_USER_FLOW_UI_INTERACTION_REPORT.md)
 - [Roadmap](../_PHASES/00_ROADMAP.md)
 
 ## Active Work
 
-1. Begin `_PHASES` Phase 1, Block A.
-2. Add Verrier domain types and deterministic seed data.
-3. Replace the scaffold page with the first usable command-center surface.
-4. Add dedicated server-side Gemini JSON routes as phases require.
-5. Harden Firebase Auth and Firestore rules before demo deployment.
+1. Final smoke test of the interaction-polished demo flow.
+2. Decide whether to resolve the Next.js workspace-root warning caused by multiple lockfiles.
+3. Wire Firestore persistence into programme create/edit/delete routes.
+4. Finalize Block D: Pitch Walkthrough Polish and judge-ready documentation.

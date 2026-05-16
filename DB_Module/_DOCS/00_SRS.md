@@ -1,5 +1,9 @@
 # Software Requirements Specification
 
+**Last Updated:** 2026-05-17 (post-hackathon polish session)
+
+---
+
 ## Product
 
 **Verrier** is an AI-powered ecosystem relationship management platform for innovation programme administrators. It helps programme teams define programmes, review startup applications, match mentors to selected startups, monitor relationship health, and generate management-ready cohort intelligence.
@@ -49,29 +53,32 @@ Primary persona for the MVP is Sarah, a programme manager handling 2-4 cohorts, 
 8. Gemini ranks top mentor matches for selected startups.
 9. Coordinator confirms or overrides a match.
 10. Verrier creates a tracked Relationship entity with baseline health.
-11. Mentors submit meeting notes through a tokenized public form.
+11. Mentors submit meeting notes through a tokenized public form, or coordinator logs inline from the relationship detail page.
 12. Gemini summarizes notes, extracts action items, detects relationship signal, and updates HealthScore.
 13. Dashboard Attention Feed surfaces critical and at-risk relationships.
-14. Coordinator generates a cohort narrative for management.
+14. Coordinator refreshes AI diagnosis on any relationship for a current narrative and recommendation.
+15. Coordinator generates a cohort narrative for management.
 
 ## MVP Feature Set
 
-### Must Demo
+### Implemented and Demo-Ready
 
-- Programme creation wizard.
-- Public startup application page.
-- AI programme-fit scoring.
+- Programme list view with CRUD (create, read, edit, delete).
+- Programme creation wizard with Save button.
+- Public startup application page with AI programme-fit scoring.
 - Applicant pool with approve, decline, and waitlist decisions.
-- Dashboard with stat cards and AI Attention Feed.
-- AI mentor matching with top 3 candidates.
+- Dashboard redesigned as AI operations platform with stat groups, health bars, AI badges, and skeletons.
+- AI mentor matching with top 3 candidates and deterministic fallback.
 - Match confirmation that creates a Relationship.
-- Public meeting submission form.
-- AI meeting analysis and HealthScore update.
-- Relationship detail page with timeline, diagnosis, and milestones.
-- Cohort overview with generated management narrative.
+- Public meeting submission form with AI analysis.
+- Inline Log Meeting form on relationship detail page, wired to AI.
+- Relationship detail page with timeline, milestones, live health score, and AI diagnosis.
+- Refresh Diagnosis button on relationship detail, wired to `POST /api/ai/diagnose`.
+- Cohort overview with generated management narrative, key risks, and recommended actions.
 
 ### Post-MVP
 
+- Firestore persistence for programme CRUD (currently local state).
 - Startup authenticated portal.
 - Mentor dashboard.
 - Full calendar integration.
@@ -80,22 +87,27 @@ Primary persona for the MVP is Sarah, a programme manager handling 2-4 cohorts, 
 - Multi-cohort switching.
 - Investor and service-provider views.
 - Cross-cohort analytics.
+- Firebase ID-token enforcement on coordinator API routes.
 
 ## AI Requirements
 
-All private Gemini calls must run server-side. The MVP uses structured JSON responses for:
+All Gemini calls run server-side. The MVP uses structured JSON responses for:
 
-- Programme fit scoring.
-- Mentor matching.
-- Meeting analysis.
-- Relationship diagnosis.
-- Cohort narrative.
+- Programme fit scoring (`POST /api/ai/program-fit`).
+- Mentor matching (`POST /api/ai/match`).
+- Meeting analysis (`POST /api/ai/analyze-meeting`).
+- Relationship diagnosis (`POST /api/ai/diagnose`).
+- Cohort narrative (`POST /api/ai/cohort-summary`).
 
-Every AI recommendation must include plain-language reasoning. Verrier suggests actions; the human coordinator decides.
+Every AI recommendation includes plain-language reasoning. Verrier suggests actions; the human coordinator decides.
+
+All prompts include the Malaysia context guardrail: evaluate only on professional and business criteria — do not assess on race, religion, or royalty.
+
+Every AI route has a deterministic fallback that activates when Gemini is unavailable or returns malformed output.
 
 ## Data Requirements
 
-The MVP uses Firestore as the primary database. Core collections are:
+The MVP uses Firestore as the primary database. Core collections:
 
 - `programs`
 - `applications`
@@ -106,7 +118,7 @@ The MVP uses Firestore as the primary database. Core collections are:
 - `meetings`
 - `users`
 
-Seed data is required for a reliable demo:
+Seed data in `lib/verrier-seed.ts`:
 
 | Data | Quantity |
 |------|----------|
@@ -118,35 +130,35 @@ Seed data is required for a reliable demo:
 | Meetings | 12 varied meeting records |
 | Cohorts | 1 active cohort, week 8 of 24 |
 
-Demo data must include at least 1 critical pair, 2 at-risk pairs, and 1 unmatched startup.
+Demo data includes 1 critical pair, 2 at-risk pairs, and 1 unmatched startup.
 
 ## Frontend Route Requirements
 
-| Route | Purpose | Auth |
-|-------|---------|------|
-| `/` | Redirect or dashboard shell | Required eventually |
-| `/login` | Google sign-in | Public |
-| `/dashboard` | Command center | Required |
-| `/programs/new` | Programme setup wizard | Required |
-| `/programs/[programId]/applicants` | Applicant pool | Required |
-| `/apply/[programId]` | Startup application | Public |
-| `/matching` | Mentor matching engine | Required |
-| `/relationships` | Relationship list | Required |
-| `/relationships/[id]` | Relationship detail | Required |
-| `/program/[cohortId]` | Cohort overview | Required |
-| `/submit-meeting` | Mentor meeting form | Public token |
+| Route | Purpose | Auth | Status |
+|-------|---------|------|--------|
+| `/` | Redirect to dashboard | — | Live |
+| `/login` | Google sign-in | Public | Demo placeholder |
+| `/dashboard` | AI ops command center | Required | Live |
+| `/programs` | Programme list with CRUD | Required | **Live** |
+| `/programs/[programId]` | Programme detail with edit/delete | Required | **Live** |
+| `/programs/new` | Programme setup wizard | Required | Live |
+| `/programs/[programId]/applicants` | Applicant pool | Required | Live |
+| `/apply/[programId]` | Startup application | Public | Live |
+| `/matching` | Mentor matching engine | Required | Live |
+| `/relationships` | Relationship list | Required | Live |
+| `/relationships/[id]` | Relationship detail | Required | Live |
+| `/program/[cohortId]` | Cohort overview | Required | Live |
+| `/submit-meeting` | Mentor meeting form | Public token | Live |
 
 ## Technical Constraints
 
-- Next.js 16 App Router and React 19 are already installed.
-- Read relevant `node_modules/next/dist/docs/` guidance before using Next.js APIs that may have changed.
+- Next.js App Router and React 19 are installed.
+- Read relevant `node_modules/next/dist/docs/` guidance before using Next.js APIs.
 - Tailwind CSS v4 and shadcn conventions are active.
 - Firebase client SDK is installed and initialized.
-- Gemini SDK is installed.
+- Gemini SDK (`@google/generative-ai`) is installed.
 - Keep private keys server-side.
-- Use Firestore for persistence.
-- Do not add heavy infrastructure during the hackathon unless required for a demo-critical capability.
-- Keep work scoped by DualBrain phases and blocks.
+- Do not add heavy infrastructure unless required for a demo-critical capability.
 
 ## Design Constraints
 
@@ -157,6 +169,7 @@ Use the Morandi Tech design direction from `DB_Module/Resource/Design.md`:
 - 8px spacing unit.
 - Neutral surfaces, muted blue primary, muted green secondary, muted red tertiary.
 - Avoid decorative hero/marketing treatment; first screen should be a usable product surface.
+- AI markers use `var(--status-ai)` color (`#637789`) with subtle background tint.
 
 ## Security Requirements
 
@@ -164,12 +177,8 @@ Use the Morandi Tech design direction from `DB_Module/Resource/Design.md`:
 - Admin accounts manually provisioned for MVP.
 - Public startup applications only accepted for open programmes inside the application window.
 - Public meeting submission uses a unique mentor token.
-- Firestore rules must become collection-aware before final demo.
+- Firestore rules are collection-aware (implemented Phase 5 Block A).
 - All `/api/*` admin routes must validate Firebase ID token before production deployment.
-
-## Malaysia Context Guardrails
-
-The product is business-focused and politically neutral. Prompts and UI must avoid content touching Race, Religion, or Royalty. Founder and mentor evaluation must use professional attributes only.
 
 ## Success Criteria
 
@@ -178,9 +187,3 @@ The demo succeeds if a judge can answer yes to:
 1. I understand the problem in 30 seconds.
 2. I can see AI doing something a spreadsheet cannot.
 3. I believe this could work at scale.
-
-## Initialization Acceptance
-
-- `_DOCS` reflects Verrier instead of the generic scaffold.
-- `_PHASES` provides product-specific build blocks scoped for DualBrain execution.
-- The next Planner can create `_TASK/_INSTRUCTION.md` for the first Verrier implementation block without rereading the full PRD.

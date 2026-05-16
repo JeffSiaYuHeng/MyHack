@@ -87,6 +87,7 @@ function toggle<T>(arr: T[], item: T): T[] {
 
 export function ProgramSetupWizard() {
   const [state, setState] = useState<WizardState>(DEFAULT_STATE);
+  const [saved, setSaved] = useState(false);
 
   const weightTotal =
     state.selectionCriteria.stageWeight +
@@ -494,11 +495,38 @@ export function ProgramSetupWizard() {
                 ))}
               </div>
             )}
-            {isReady && (
+            {isReady && !saved && (
               <div className="border-t border-border pt-3">
+                <button
+                  onClick={() => setSaved(true)}
+                  className="w-full px-3 py-2 text-xs font-semibold rounded border transition-colors"
+                  style={{
+                    color: "var(--status-healthy)",
+                    borderColor: "var(--status-healthy)",
+                    background: "var(--status-healthy-bg)",
+                  }}
+                >
+                  Save Programme
+                </button>
+              </div>
+            )}
+            {saved && (
+              <div className="border-t border-border pt-3 space-y-2">
                 <p className="text-xs font-medium text-[var(--status-healthy)]">
-                  Ready to save
+                  ✓ Programme saved
                 </p>
+                <p className="text-[10px] text-muted-foreground">
+                  Application link is live at:
+                </p>
+                <p className="text-xs font-mono text-foreground break-all">
+                  /apply/{previewProgram.id}
+                </p>
+                <button
+                  onClick={() => { setState(DEFAULT_STATE); setSaved(false); }}
+                  className="w-full mt-1 px-3 py-1.5 text-xs font-medium rounded border border-border text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
+                >
+                  Create another
+                </button>
               </div>
             )}
           </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import toast from "react-hot-toast";
 import type {
   Cohort,
   Company,
@@ -69,6 +70,7 @@ export function CohortOverview({
   const [report, setReport] = useState<CohortReport | null>(null);
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "fallback">("idle");
   const [copyText, setCopyText] = useState("");
+  const [isFallback, setIsFallback] = useState(false);
 
   const companyMap = new Map(companies.map((c) => [c.id, c]));
 
@@ -116,6 +118,7 @@ export function CohortOverview({
     setApiError(null);
     setCopyStatus("idle");
     setIsFallback(false);
+    const toastId = toast.loading("Generating cohort report...");
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => {
@@ -145,6 +148,7 @@ export function CohortOverview({
       const data = (await res.json()) as CohortReport;
       setReport(data);
       setReportStatus("done");
+      toast.success("Cohort report generated.", { id: toastId });
     } catch (err: unknown) {
       clearTimeout(timeoutId);
       
@@ -194,8 +198,7 @@ export function CohortOverview({
       setReport(fallbackReport);
       setReportStatus("done");
       setIsFallback(true);
-      // Optional: show a transient error or just let the "fallback active" UI handle it
-      console.warn(msg);
+      toast.error(msg, { id: toastId });
     }
   }
 
@@ -220,9 +223,11 @@ export function CohortOverview({
     try {
       await navigator.clipboard.writeText(text);
       setCopyStatus("copied");
+      toast.success("Report copied to clipboard.");
     } catch {
       setCopyText(text);
       setCopyStatus("fallback");
+      toast.error("Clipboard unavailable. Manual copy field is ready.");
     }
   }
 

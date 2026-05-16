@@ -84,6 +84,10 @@ Do not scale font size with viewport width. Keep letter spacing at `0` unless im
 - Prefer reusable primitives under `components/ui/`.
 - Use existing `Button` and `cn()` patterns.
 - Use lucide-react icons for icon buttons when available.
+- AI API calls must be attached to explicit user actions such as buttons or form submits. Do not trigger Gemini requests from route load, selection change, or passive `useEffect`.
+- Buttons and action links share the global hover/active system in `app/globals.css`: short ease-out transitions, subtle hover lift/shadow, pressed active state, and neutral disabled behavior.
+- Network and AI actions should use the app-level `react-hot-toast` system from `app/layout.tsx` for loading, success, and error feedback.
+- Long-running AI actions should show a local visual loading state in the working panel, not only a disabled button or toast.
 - Use tabs for applicant and matching filters.
 - Use segmented controls for dashboard/view modes.
 - Use sliders for programme criteria weights.
@@ -113,6 +117,8 @@ Keep the form calm and confidence-building. Show programme fit explanation only 
 ### Matching Engine
 
 Use a two-panel workbench: startup queue on the left, ranked mentor cards on the right. Mentor cards should be comparable at a glance.
+
+Selecting a startup only changes context and resets previous AI output. The coordinator starts ranking with the `Generate AI matches` button. During ranking, show the animated matching state with spinner, staged progress labels, and scan-line motion so the user can see the system is actively evaluating fit.
 
 ### Relationship Detail
 

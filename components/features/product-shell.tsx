@@ -3,7 +3,7 @@ import { LayoutDashboard, Layers, GitBranch, Users, LogIn } from "lucide-react";
 
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Programmes", href: "/programs/program-cradle-accelerator-2026/applicants", icon: Layers },
+  { label: "Programmes", href: "/programs", icon: Layers },
   { label: "Matching", href: "/matching", icon: GitBranch },
   { label: "Relationships", href: "/relationships", icon: Users },
   { label: "Login", href: "/login", icon: LogIn },

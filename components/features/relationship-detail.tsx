@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import toast from "react-hot-toast";
 import type {
-  Relationship,
-  Company,
-  Mentor,
-  Meeting,
   Cohort,
+  Company,
+  Meeting,
+  Mentor,
   Program,
+  Relationship,
   TimestampLike,
 } from "@/lib/types";
 import type { RelationshipUrgencyLevel } from "@/lib/verrier-analytics";
@@ -44,25 +45,20 @@ const SIGNAL_COLOR: Record<Meeting["signal"], string> = {
   "Friction detected": "var(--status-critical)",
 };
 
-const SIGNAL_BG: Record<Meeting["signal"], string> = {
-  Positive: "var(--status-healthy-bg)",
-  Neutral: "var(--muted)",
-  "Friction detected": "var(--status-critical-bg)",
-};
-
 function urgencyLevelColor(level: RelationshipUrgencyLevel): string {
   if (level === "critical") return "var(--status-critical)";
   if (level === "stale" || level === "watch") return "var(--status-risk)";
   if (level === "healthy") return "var(--status-healthy)";
-  return "";
+  return "var(--muted-foreground)";
 }
 
 function formatDate(ts: TimestampLike): string {
   if (typeof ts === "string") return ts.slice(0, 10);
   if (ts instanceof Date) return ts.toISOString().slice(0, 10);
   if (typeof ts === "number") return new Date(ts).toISOString().slice(0, 10);
-  if (typeof ts === "object" && "seconds" in ts)
-    return new Date((ts as { seconds: number }).seconds * 1000).toISOString().slice(0, 10);
+  if (typeof ts === "object" && "seconds" in ts) {
+    return new Date(ts.seconds * 1000).toISOString().slice(0, 10);
+  }
   return String(ts);
 }
 
@@ -73,6 +69,12 @@ interface RelationshipDetailProps {
   cohort: Cohort;
   program: Program;
   meetings: Meeting[];
+}
+
+interface DiagnosisResult {
+  narrative: string;
+  watchPoints: string[];
+  recommendation: string;
 }
 
 interface AnalysisResult {
@@ -100,46 +102,13 @@ export function RelationshipDetail({
   program,
   meetings,
 }: RelationshipDetailProps) {
-  const [uploadOpen, setUploadOpen] = useState(false);
-
-  // Diagnosis state — seeded from static data, refreshable via AI
-  const [diagnosis, setDiagnosis] = useState<{
-    narrative: string;
-    watchPoints: string[];
-    recommendation: string;
-  }>({
-    narrative: relationship.aiDiagnosis ?? "",
-    watchPoints: relationship.watchPoints ?? [],
+  const [diagnosis, setDiagnosis] = useState<DiagnosisResult>({
+    narrative: relationship.aiDiagnosis,
+    watchPoints: relationship.watchPoints,
     recommendation: "",
   });
-  const [isDiagnosing, setIsDiagnosing] = useState(false);
-
-  async function handleRefreshDiagnosis() {
-    setIsDiagnosing(true);
-    try {
-      const res = await fetch("/api/ai/diagnose", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ relationshipId: relationship.id }),
-      });
-      const data = (await res.json()) as {
-        narrative: string;
-        watchPoints: string[];
-        recommendation: string;
-      };
-      setDiagnosis({
-        narrative: data.narrative ?? diagnosis.narrative,
-        watchPoints: data.watchPoints ?? diagnosis.watchPoints,
-        recommendation: data.recommendation ?? "",
-      });
-    } catch {
-      // Silent fail — keep existing data
-    } finally {
-      setIsDiagnosing(false);
-    }
-  }
-
-  // Log meeting form state
+  const [diagnosisState, setDiagnosisState] = useState<"idle" | "loading" | "error">("idle");
+  const [uploadOpen, setUploadOpen] = useState(false);
   const [meetingDate, setMeetingDate] = useState("");
   const [duration, setDuration] = useState("");
   const [notes, setNotes] = useState("");
@@ -151,25 +120,59 @@ export function RelationshipDetail({
   const band = getHealthBand(liveHealthScore);
   const healthColor = HEALTH_COLORS[band];
   const urgency = getRelationshipUrgency(relationship, meetings);
+  const sortedMeetings = [...meetings].sort((a, b) => b.meetingNumber - a.meetingNumber);
 
-  const sortedMeetings = [...meetings].sort((a, b) => a.meetingNumber - b.meetingNumber);
+  async function handleRefreshDiagnosis() {
+    setDiagnosisState("loading");
+    const toastId = toast.loading("Refreshing diagnosis...");
+    try {
+      const res = await fetch("/api/ai/diagnose", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ relationshipId: relationship.id }),
+      });
+
+      if (!res.ok) {
+        setDiagnosisState("error");
+        toast.error("Diagnosis request failed.", { id: toastId });
+        return;
+      }
+
+      const data = (await res.json()) as DiagnosisResult;
+      setDiagnosis({
+        narrative: data.narrative || diagnosis.narrative,
+        watchPoints: data.watchPoints || diagnosis.watchPoints,
+        recommendation: data.recommendation || "",
+      });
+      setDiagnosisState("idle");
+      toast.success("Diagnosis refreshed.", { id: toastId });
+    } catch {
+      setDiagnosisState("error");
+      toast.error("Diagnosis request failed.", { id: toastId });
+    }
+  }
 
   async function handleLogMeeting() {
     setFormError(null);
 
-    // Validate
-    if (!meetingDate) { setFormError("Date is required."); return; }
+    if (!meetingDate) {
+      setFormError("Date is required.");
+      return;
+    }
+
     const durationNum = Number(duration);
     if (!duration || !Number.isFinite(durationNum) || durationNum <= 0) {
       setFormError("Duration must be a positive number.");
       return;
     }
+
     if (notes.trim().length < 50) {
       setFormError("Meeting notes must be at least 50 characters.");
       return;
     }
 
     setIsAnalyzing(true);
+    const toastId = toast.loading("Analyzing meeting notes...");
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
 
@@ -191,22 +194,22 @@ export function RelationshipDetail({
 
       if (!res.ok) {
         const errBody = (await res.json().catch(() => ({}))) as Record<string, unknown>;
-        const msg = typeof errBody.error === "string" ? errBody.error : "Analysis failed.";
-        setFormError(msg);
+        const message = typeof errBody.error === "string" ? errBody.error : "Analysis failed.";
+        setFormError(message);
+        toast.error(message, { id: toastId });
         return;
       }
 
       const data = (await res.json()) as AnalysisResult;
       setMeetingResult(data);
-      setLiveHealthScore((prev) => Math.min(100, Math.max(0, prev + data.healthScoreDelta)));
+      setLiveHealthScore(data.newHealthScore);
+      toast.success("Meeting analysis complete.", { id: toastId });
     } catch (err: unknown) {
       clearTimeout(timeoutId);
       const isTimeout = err instanceof Error && err.name === "AbortError";
-      setFormError(
-        isTimeout
-          ? "Request timed out. Please try again."
-          : "Network error. Please try again."
-      );
+      const message = isTimeout ? "Request timed out. Please try again." : "Network error. Please try again.";
+      setFormError(message);
+      toast.error(message, { id: toastId });
     } finally {
       setIsAnalyzing(false);
     }
@@ -223,7 +226,6 @@ export function RelationshipDetail({
 
   return (
     <div className="px-6 md:px-10 py-8 space-y-6">
-      {/* Back link */}
       <Link
         href="/relationships"
         className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
@@ -231,12 +233,8 @@ export function RelationshipDetail({
         ← Relationships
       </Link>
 
-      {/* Pair header */}
-      <div className="bg-card border border-border rounded-xl overflow-hidden">
-        <div
-          className="h-1 w-full"
-          style={{ background: healthColor }}
-        />
+      <section className="bg-card border border-border rounded-xl overflow-hidden">
+        <div className="h-1 w-full" style={{ background: healthColor }} />
         <div className="px-6 py-5">
           <div className="flex items-start justify-between gap-6 flex-wrap">
             <div className="min-w-0">
@@ -248,7 +246,10 @@ export function RelationshipDetail({
               <div className="flex items-center gap-2 flex-wrap mt-2">
                 <span
                   className="text-[10px] font-medium px-2 py-0.5 rounded-full"
-                  style={{ color: healthColor, background: `color-mix(in srgb, ${healthColor} 12%, transparent)` }}
+                  style={{
+                    color: healthColor,
+                    background: `color-mix(in srgb, ${healthColor} 12%, transparent)`,
+                  }}
                 >
                   {getHealthBandLabel(band)}
                 </span>
@@ -263,9 +264,6 @@ export function RelationshipDetail({
                     {urgency.label}
                   </span>
                 )}
-                <span className="text-[10px] border border-border rounded-full px-2 py-0.5 text-muted-foreground capitalize">
-                  {relationship.status}
-                </span>
                 <span className="text-[10px] border border-border rounded-full px-2 py-0.5 text-muted-foreground">
                   {cohort.name}
                 </span>
@@ -276,7 +274,7 @@ export function RelationshipDetail({
             <div className="shrink-0 text-right">
               <div className="flex items-baseline gap-1.5 justify-end">
                 <span className="text-4xl font-bold leading-none" style={{ color: healthColor }}>
-                  {relationship.healthScore}
+                  {liveHealthScore}
                 </span>
                 <span className="text-lg font-semibold" style={{ color: TREND_COLOR[relationship.healthTrend] }}>
                   {TREND_SYMBOL[relationship.healthTrend]}
@@ -286,7 +284,6 @@ export function RelationshipDetail({
             </div>
           </div>
 
-          {/* Stat row */}
           <div className="mt-4 pt-4 border-t border-border grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
             {[
               { label: "Meetings", value: relationship.meetingCount },
@@ -300,108 +297,45 @@ export function RelationshipDetail({
               </div>
             ))}
           </div>
-
-          {/* AI diagnosis */}
-          {relationship.aiDiagnosis && (
-            <div className="mt-4 pt-4 border-t border-border flex items-start gap-2">
-              <span
-                className="shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded mt-0.5"
-                style={{
-                  background: "color-mix(in srgb, var(--status-ai) 10%, transparent)",
-                  color: "var(--status-ai)",
-                }}
-              >
-                ✦ AI
-              </span>
-              <p className="text-xs text-muted-foreground leading-relaxed">{relationship.aiDiagnosis}</p>
-            </div>
-          )}
-
-          {/* Watch points */}
-          {relationship.watchPoints.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {relationship.watchPoints.map((w, i) => (
-                <span
-                  key={i}
-                  className="text-[10px] border rounded-full px-2.5 py-0.5"
-                  style={{ color: "var(--status-risk)", borderColor: "var(--status-risk)" }}
-                >
-                  {w}
-                </span>
-              ))}
-            </div>
-          )}
         </div>
-      </div>
+      </section>
 
-      {/* Two-column: milestones + match breakdown | meetings */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left column */}
         <div className="space-y-6">
-          {/* Milestones */}
-          <div className="bg-card border border-border rounded-xl p-5">
+          <section className="bg-card border border-border rounded-xl p-5">
             <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground mb-4">
               Milestones
             </p>
-            <div className="flex items-start gap-0">
+            <div className="space-y-2">
               {MILESTONE_LABELS.map((label, index) => {
                 const num = index + 1;
                 const completed = relationship.milestonesCompleted.includes(num);
                 const current = !completed && num === relationship.currentMilestone;
-                const completedAt = relationship.milestoneCompletedAt[num];
-
                 return (
-                  <div key={num} className="flex-1 flex flex-col items-center">
-                    <div className="w-full flex items-center">
-                      {index > 0 && (
-                        <div
-                          className="flex-1 h-0.5"
-                          style={{ backgroundColor: completed ? "var(--status-healthy)" : "var(--border)" }}
-                        />
-                      )}
-                      <div
-                        className="w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 text-[10px] font-bold"
-                        style={{
-                          borderColor: completed ? "var(--status-healthy)" : current ? "var(--primary)" : "var(--border)",
-                          backgroundColor: completed ? "var(--status-healthy)" : current ? "var(--primary)" : "transparent",
-                          color: completed || current ? "#fff" : "var(--muted-foreground)",
-                        }}
-                      >
-                        {completed ? "✓" : num}
-                      </div>
-                      {index < MILESTONE_LABELS.length - 1 && (
-                        <div
-                          className="flex-1 h-0.5"
-                          style={{
-                            backgroundColor:
-                              completed && relationship.milestonesCompleted.includes(num + 1)
-                                ? "var(--status-healthy)"
-                                : "var(--border)",
-                          }}
-                        />
-                      )}
-                    </div>
-                    <p
-                      className="text-[9px] mt-1.5 text-center leading-tight font-medium"
+                  <div key={num} className="flex items-center gap-3">
+                    <span
+                      className="w-6 h-6 rounded-full border flex items-center justify-center text-[10px] font-bold"
                       style={{
-                        color: completed ? "var(--status-healthy)" : current ? "var(--primary)" : "var(--muted-foreground)",
+                        borderColor: completed ? "var(--status-healthy)" : current ? "var(--primary)" : "var(--border)",
+                        backgroundColor: completed ? "var(--status-healthy)" : current ? "var(--primary)" : "transparent",
+                        color: completed || current ? "#fff" : "var(--muted-foreground)",
                       }}
                     >
-                      {label}
-                    </p>
-                    {completedAt && (
-                      <p className="text-[8px] text-muted-foreground mt-0.5 text-center">
-                        {formatDate(completedAt)}
-                      </p>
+                      {completed ? "✓" : num}
+                    </span>
+                    <span className="text-xs text-foreground">{label}</span>
+                    {relationship.milestoneCompletedAt[num] && (
+                      <span className="ml-auto text-[10px] text-muted-foreground">
+                        {formatDate(relationship.milestoneCompletedAt[num])}
+                      </span>
                     )}
                   </div>
                 );
               })}
             </div>
-          </div>
+          </section>
 
-          {/* Match breakdown */}
-          <div className="bg-card border border-border rounded-xl p-5">
+          <section className="bg-card border border-border rounded-xl p-5">
             <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground mb-3">
               Match Breakdown
             </p>
@@ -425,316 +359,195 @@ export function RelationshipDetail({
                       style={{ width: `${relationship.matchBreakdown[key]}%`, backgroundColor: "var(--primary)" }}
                     />
                   </div>
-                  <span className="text-[10px] text-muted-foreground w-5 text-right shrink-0">
+                  <span className="text-[10px] text-muted-foreground w-6 text-right shrink-0">
                     {relationship.matchBreakdown[key]}
                   </span>
                 </div>
-                <p
-                  className="text-[9px] mt-1 text-center leading-tight"
-                  style={{
-                    color: completed
-                      ? "var(--status-healthy)"
-                      : current
-                      ? "var(--primary)"
-                      : "var(--muted-foreground)",
-                  }}
-                >
-                  {label}
-                </p>
-                {completedAt && (
-                  <p className="text-[8px] text-muted-foreground mt-0.5 text-center">
-                    {formatDate(completedAt)}
-                  </p>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Meeting timeline */}
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-            Meeting timeline ({sortedMeetings.length})
-          </p>
-          <button
-            onClick={() => {
-              if (uploadOpen) resetForm();
-              else setUploadOpen(true);
-            }}
-            className="px-2.5 py-1 text-[10px] font-medium rounded border border-border text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
-          >
-            {uploadOpen ? "Cancel" : "Log Meeting"}
-          </button>
-        </div>
-
-        {/* Meeting log form */}
-        {uploadOpen && !meetingResult && (
-          <div className="border border-border rounded p-4 mb-3 space-y-3">
-            <p className="text-xs font-medium">Log a meeting</p>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-[10px] text-muted-foreground block mb-1">
-                  Date
-                </label>
-                <input
-                  type="date"
-                  value={meetingDate}
-                  onChange={(e) => setMeetingDate(e.target.value)}
-                  disabled={isAnalyzing}
-                  className="w-full border border-border rounded px-2 py-1.5 text-xs bg-background text-foreground disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] text-muted-foreground block mb-1">
-                  Duration (minutes)
-                </label>
-                <input
-                  type="number"
-                  value={duration}
-                  onChange={(e) => setDuration(e.target.value)}
-                  disabled={isAnalyzing}
-                  placeholder="45"
-                  min={1}
-                  className="w-full border border-border rounded px-2 py-1.5 text-xs bg-background text-foreground disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="text-[10px] text-muted-foreground block mb-1">
-                Meeting notes{" "}
-                <span
-                  className="ml-1"
-                  style={{
-                    color:
-                      notes.trim().length >= 50
-                        ? "var(--status-healthy)"
-                        : "var(--muted-foreground)",
-                  }}
-                >
-                  ({notes.trim().length}/50 min)
-                </span>
-              </label>
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                disabled={isAnalyzing}
-                rows={4}
-                placeholder="Describe what was discussed, decisions made, and next steps..."
-                className="w-full border border-border rounded px-2 py-1.5 text-xs bg-background text-foreground disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed resize-none"
-              />
-            </div>
-            {formError && (
-              <p className="text-[10px]" style={{ color: "var(--status-critical)" }}>
-                {formError}
-              </p>
-            )}
-            <button
-              onClick={handleLogMeeting}
-              disabled={isAnalyzing}
-              className="px-3 py-1.5 text-xs font-medium rounded border border-border transition-colors disabled:cursor-not-allowed"
-              style={
-                isAnalyzing
-                  ? { color: "var(--muted-foreground)", borderColor: "var(--border)" }
-                  : { color: "var(--foreground)", borderColor: "var(--foreground)" }
-              }
-            >
-              {isAnalyzing ? (
-                <span className="animate-pulse">✦ Analyzing...</span>
-              ) : (
-                "✦ Submit & Analyze"
-              )}
-            </button>
-          </div>
-
-          {/* Mentor info */}
-          <div className="bg-card border border-border rounded-xl p-5">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground mb-3">
-              Mentor
-            </p>
-            <p className="text-sm font-semibold text-foreground">{mentor.name}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {mentor.currentRole} at {mentor.company}
-            </p>
-            <p className="text-xs text-muted-foreground mt-0.5 capitalize">
-              {mentor.mentorshipStyle} · {mentor.availabilityHoursPerMonth}h/month
-            </p>
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {mentor.expertise.slice(0, 4).map((e) => (
-                <span key={e} className="text-[10px] bg-muted border border-border rounded-full px-2 py-0.5">
-                  {e}
-                </span>
               ))}
             </div>
-          </div>
-        </div>
+          </section>
 
-        {/* Right column: meeting timeline */}
-        <div className="lg:col-span-2">
-          <div className="bg-card border border-border rounded-xl overflow-hidden">
-            <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+          <section className="bg-card border border-border rounded-xl p-5">
+            <div className="flex items-center justify-between gap-3 mb-3">
               <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-                Meeting Timeline
-                <span className="ml-2 normal-case font-normal">({sortedMeetings.length})</span>
+                AI Diagnosis
               </p>
               <button
-                onClick={() => setUploadOpen((prev) => !prev)}
-                className="px-3 py-1.5 text-xs font-medium rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-foreground/50 transition-colors"
+                onClick={() => { void handleRefreshDiagnosis(); }}
+                disabled={diagnosisState === "loading"}
+                className="px-3 py-1.5 text-xs font-medium rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-foreground/50 transition-colors disabled:cursor-not-allowed"
               >
-                {uploadOpen ? "Cancel" : "Log Meeting"}
+                {diagnosisState === "loading" ? "Diagnosing..." : "Refresh"}
               </button>
             </div>
-
-            {uploadOpen && (
-              <div className="border-b border-border px-5 py-4 space-y-3 bg-muted/30">
-                <p className="text-xs font-medium text-foreground">Log a meeting</p>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[10px] text-muted-foreground block mb-1">Date</label>
-                    <input
-                      type="date"
-                      disabled
-                      className="w-full border border-border rounded-lg px-3 py-2 text-xs bg-muted text-muted-foreground cursor-not-allowed"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] text-muted-foreground block mb-1">Duration (min)</label>
-                    <input
-                      type="number"
-                      disabled
-                      placeholder="45"
-                      className="w-full border border-border rounded-lg px-3 py-2 text-xs bg-muted text-muted-foreground cursor-not-allowed"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="text-[10px] text-muted-foreground block mb-1">Meeting notes</label>
-                  <textarea
-                    disabled
-                    rows={3}
-                    placeholder="Describe what was discussed, decisions made, and next steps..."
-                    className="w-full border border-border rounded-lg px-3 py-2 text-xs bg-muted text-muted-foreground cursor-not-allowed resize-none"
-                  />
-                </div>
-                <button
-                  disabled
-                  className="px-4 py-2 text-xs font-medium rounded-lg border border-border text-muted-foreground cursor-not-allowed"
-                >
-                  Submit & Analyze — AI analysis coming in Block B
-                </button>
-              </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">{diagnosis.narrative}</p>
+            {diagnosis.recommendation && (
+              <p className="text-xs text-foreground mt-3 leading-relaxed">{diagnosis.recommendation}</p>
             )}
-
-            {sortedMeetings.length === 0 ? (
-              <div className="p-8 text-sm text-muted-foreground text-center">
-                No meetings recorded yet.
-              </div>
-            ) : (
-              <div className="divide-y divide-border">
-                {sortedMeetings.map((meeting) => (
-                  <div key={meeting.id} className="px-5 py-4 space-y-2.5">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-start gap-3">
-                        <span className="text-[10px] font-bold text-muted-foreground w-6 shrink-0 mt-0.5">
-                          #{meeting.meetingNumber}
-                        </span>
-                        <div>
-                          <p className="text-xs font-semibold text-foreground">
-                            {formatDate(meeting.date)}
-                          </p>
-                          <p className="text-[10px] text-muted-foreground mt-0.5">
-                            {meeting.durationMinutes} min · {meeting.submittedBy}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span
-                          className="text-[10px] font-medium px-2 py-0.5 rounded-full"
-                          style={{
-                            color: SIGNAL_COLOR[meeting.signal],
-                            background: SIGNAL_BG[meeting.signal],
-                          }}
-                        >
-                          {meeting.signal}
-                        </span>
-                        <span
-                          className="text-xs font-bold"
-                          style={{
-                            color: meeting.healthScoreDelta >= 0 ? "var(--status-healthy)" : "var(--status-critical)",
-                          }}
-                        >
-                          {meeting.healthScoreDelta >= 0 ? "+" : ""}
-                          {meeting.healthScoreDelta}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="ml-9 flex items-start gap-2">
-                      <span
-                        className="shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded mt-0.5"
-                        style={{
-                          background: "color-mix(in srgb, var(--status-ai) 10%, transparent)",
-                          color: "var(--status-ai)",
-                        }}
-                      >
-                        ✦ AI
-                      </span>
-                      <p className="text-xs text-muted-foreground leading-relaxed">{meeting.aiSummary}</p>
-                    </div>
-
-                    {meeting.signalReason && (
-                      <p className="ml-9 text-[10px] text-muted-foreground italic">{meeting.signalReason}</p>
-                    )}
-
-                    {meeting.actionItems.length > 0 && (
-                      <div className="ml-9 space-y-1.5">
-                        {meeting.actionItems.map((item, i) => (
-                          <div key={i} className="flex items-start gap-2">
-                            <span
-                              className="text-[10px] shrink-0 mt-0.5 font-bold"
-                              style={{ color: item.completed ? "var(--status-healthy)" : "var(--muted-foreground)" }}
-                            >
-                              {item.completed ? "✓" : "○"}
-                            </span>
-                            <div className="min-w-0">
-                              <p
-                                className="text-[10px] leading-snug"
-                                style={{
-                                  color: item.completed ? "var(--muted-foreground)" : "var(--foreground)",
-                                  textDecoration: item.completed ? "line-through" : "none",
-                                }}
-                              >
-                                {item.task}
-                              </p>
-                              <p className="text-[9px] text-muted-foreground mt-0.5">
-                                {item.owner}{item.dueDate && ` · due ${item.dueDate}`}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {meeting.watchPoints.length > 0 && (
-                      <div className="ml-9 flex flex-wrap gap-1.5">
-                        {meeting.watchPoints.map((w, i) => (
-                          <span
-                            key={i}
-                            className="text-[9px] border rounded-full px-2 py-0.5"
-                            style={{ color: "var(--status-risk)", borderColor: "var(--status-risk)" }}
-                          >
-                            {w}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+            {diagnosisState === "error" && (
+              <p className="text-[10px] mt-3" style={{ color: "var(--status-critical)" }}>
+                Diagnosis request failed. Existing seeded diagnosis remains visible.
+              </p>
+            )}
+            {diagnosis.watchPoints.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {diagnosis.watchPoints.map((watchPoint) => (
+                  <span
+                    key={watchPoint}
+                    className="text-[10px] border rounded-full px-2 py-0.5"
+                    style={{ color: "var(--status-risk)", borderColor: "var(--status-risk)" }}
+                  >
+                    {watchPoint}
+                  </span>
                 ))}
               </div>
             )}
-          </div>
+          </section>
         </div>
+
+        <section className="lg:col-span-2 bg-card border border-border rounded-xl overflow-hidden">
+          <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+              Meeting Timeline <span className="ml-2 normal-case font-normal">({sortedMeetings.length})</span>
+            </p>
+            <button
+              onClick={() => {
+                if (uploadOpen) resetForm();
+                else setUploadOpen(true);
+              }}
+              className="px-3 py-1.5 text-xs font-medium rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-foreground/50 transition-colors"
+            >
+              {uploadOpen ? "Cancel" : "Log Meeting"}
+            </button>
+          </div>
+
+          {uploadOpen && !meetingResult && (
+            <div className="border-b border-border px-5 py-4 space-y-3 bg-muted/30">
+              <p className="text-xs font-medium text-foreground">Log a meeting</p>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="block">
+                  <span className="text-[10px] text-muted-foreground block mb-1">Date</span>
+                  <input
+                    type="date"
+                    value={meetingDate}
+                    onChange={(e) => setMeetingDate(e.target.value)}
+                    disabled={isAnalyzing}
+                    className="w-full border border-border rounded-lg px-3 py-2 text-xs bg-background text-foreground disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-[10px] text-muted-foreground block mb-1">Duration (min)</span>
+                  <input
+                    type="number"
+                    value={duration}
+                    onChange={(e) => setDuration(e.target.value)}
+                    disabled={isAnalyzing}
+                    placeholder="45"
+                    min={1}
+                    className="w-full border border-border rounded-lg px-3 py-2 text-xs bg-background text-foreground disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed"
+                  />
+                </label>
+              </div>
+              <label className="block">
+                <span className="text-[10px] text-muted-foreground block mb-1">
+                  Meeting notes ({notes.trim().length}/50 min)
+                </span>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  disabled={isAnalyzing}
+                  rows={4}
+                  placeholder="Describe what was discussed, decisions made, and next steps..."
+                  className="w-full border border-border rounded-lg px-3 py-2 text-xs bg-background text-foreground disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed resize-none"
+                />
+              </label>
+              {formError && (
+                <p className="text-[10px]" style={{ color: "var(--status-critical)" }}>
+                  {formError}
+                </p>
+              )}
+              <button
+                onClick={() => { void handleLogMeeting(); }}
+                disabled={isAnalyzing}
+                className="px-4 py-2 text-xs font-medium rounded-lg border border-foreground/30 text-foreground hover:border-foreground transition-colors disabled:cursor-not-allowed disabled:text-muted-foreground disabled:border-border"
+              >
+                {isAnalyzing ? "Analyzing..." : "Submit & Analyze"}
+              </button>
+            </div>
+          )}
+
+          {meetingResult && (
+            <div className="border-b border-border px-5 py-4 bg-muted/30">
+              <p className="text-xs font-semibold text-foreground">Analysis saved locally</p>
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{meetingResult.aiSummary}</p>
+              <button
+                onClick={resetForm}
+                className="mt-3 px-3 py-1.5 text-xs font-medium rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-foreground/50 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          )}
+
+          {sortedMeetings.length === 0 ? (
+            <div className="p-8 text-sm text-muted-foreground text-center">No meetings recorded yet.</div>
+          ) : (
+            <div className="divide-y divide-border">
+              {sortedMeetings.map((meeting) => (
+                <article key={meeting.id} className="px-5 py-4 space-y-2.5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold text-foreground">
+                        #{meeting.meetingNumber} · {formatDate(meeting.date)}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        {meeting.durationMinutes} min · {meeting.submittedBy}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span
+                        className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted"
+                        style={{ color: SIGNAL_COLOR[meeting.signal] }}
+                      >
+                        {meeting.signal}
+                      </span>
+                      <span
+                        className="text-xs font-bold"
+                        style={{
+                          color: meeting.healthScoreDelta >= 0
+                            ? "var(--status-healthy)"
+                            : "var(--status-critical)",
+                        }}
+                      >
+                        {meeting.healthScoreDelta >= 0 ? "+" : ""}
+                        {meeting.healthScoreDelta}
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{meeting.aiSummary}</p>
+                  {meeting.actionItems.length > 0 && (
+                    <div className="space-y-1.5">
+                      {meeting.actionItems.map((item) => (
+                        <div key={`${meeting.id}-${item.task}`} className="flex items-start gap-2">
+                          <span
+                            className="text-[10px] shrink-0 mt-0.5 font-bold"
+                            style={{ color: item.completed ? "var(--status-healthy)" : "var(--muted-foreground)" }}
+                          >
+                            {item.completed ? "✓" : "○"}
+                          </span>
+                          <p className="text-[10px] text-muted-foreground leading-snug">
+                            {item.task}
+                            {item.dueDate ? ` · due ${item.dueDate}` : ""}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
       </div>
     </div>
   );

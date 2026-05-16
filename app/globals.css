@@ -148,3 +148,43 @@
     @apply font-sans;
   }
 }
+
+@layer components {
+  button:not(:disabled),
+  a[href] {
+    @apply transition-all duration-200 ease-out;
+  }
+
+  button:not(:disabled):hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px color-mix(in srgb, var(--foreground) 8%, transparent);
+  }
+
+  button:not(:disabled):active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--foreground) 8%, transparent);
+  }
+
+  button:disabled {
+    @apply cursor-not-allowed;
+    box-shadow: none;
+    transform: none;
+  }
+
+  .ai-loading-scan {
+    background:
+      linear-gradient(90deg, transparent, color-mix(in srgb, var(--status-ai) 18%, transparent), transparent),
+      var(--muted);
+    background-size: 220% 100%;
+    animation: ai-loading-scan 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes ai-loading-scan {
+  0% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -120% 0;
+  }
+}

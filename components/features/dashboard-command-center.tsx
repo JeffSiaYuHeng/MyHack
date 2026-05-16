@@ -244,8 +244,12 @@ export function DashboardCommandCenter() {
             </span>
           </div>
 
-          {feed.length === 0 ? (
+          {!mounted ? (
             <AttentionFeedSkeleton />
+          ) : feed.length === 0 ? (
+            <div className="bg-card border border-border rounded-xl p-6 text-sm text-muted-foreground text-center">
+              No relationships need review.
+            </div>
           ) : (
             feed.map(({ relationship, company, mentor, band, urgency }) => {
               const status = bandToStatus(band);
@@ -320,8 +324,12 @@ export function DashboardCommandCenter() {
             </span>
           </div>
 
-          {meetings.length === 0 ? (
+          {!mounted ? (
             <RecentMeetingsSkeleton />
+          ) : meetings.length === 0 ? (
+            <div className="bg-card border border-border rounded-xl p-6 text-sm text-muted-foreground text-center">
+              No recent meetings recorded.
+            </div>
           ) : (
             meetings.map(({ meeting, company, mentor }) => (
               <div
