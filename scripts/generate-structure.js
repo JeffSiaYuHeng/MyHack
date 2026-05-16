@@ -26,8 +26,10 @@ const SCAN_DIRS = [
 
 // Important root files to include
 const ROOT_FILES = [
-    'package.json', 'tsconfig.json', 'next.config.ts',
-    'postcss.config.mjs', 'eslint.config.mjs', 'tailwind.config.ts'
+    'package.json', 'package-lock.json', 'tsconfig.json', 'next.config.ts',
+    'postcss.config.mjs', 'eslint.config.mjs', 'tailwind.config.ts',
+    'Dockerfile', 'docker-compose.yml', '.dockerignore', '.env.example',
+    'README.md', 'overview.md', 'SetupReport.md'
 ];
 
 function shouldIgnore(name) {

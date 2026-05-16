@@ -46,8 +46,8 @@
 
 ## Infrastructure
 
-- Dockerfile with builder and runner stages
-- Docker Compose for local development
+- Dockerfile with dependency, development, builder, and standalone runner stages
+- Docker Compose for local development with source mounts and optional `APP_PORT` override
 - GitHub Actions deployment to Google Cloud Run
 - Cloud Run region: `asia-southeast1`
 

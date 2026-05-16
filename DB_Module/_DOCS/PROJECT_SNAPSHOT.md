@@ -1,12 +1,12 @@
 # MyHack Snapshot
 
 **Version**: 0.1.0 scaffold  
-**Last Updated**: 2026-05-15  
-**Status**: Hackathon scaffold with DualBrain module initialized  
+**Last Updated**: 2026-05-16  
+**Status**: Hackathon scaffold with verified local Docker environment  
 
 ## Summary
 
-MyHack is a Next.js 16, React 19, Firebase, and Gemini scaffold for Build With AI 2026 KL. The application currently shows a Team MyHack landing/status page and includes server-side Gemini access, Firebase helpers, Zustand state, Docker support, and Cloud Run deployment automation.
+MyHack is a Next.js 16, React 19, Firebase, and Gemini scaffold for Build With AI 2026 KL. The application currently shows a Team MyHack landing/status page and includes server-side Gemini access, Firebase helpers, Zustand state, verified Docker support, and Cloud Run deployment automation.
 
 The repository now also includes the DualBrain Module: a Markdown-based agent workflow and memory system that separates long-term docs, strategic phases, working task instructions, and local agent role skills.
 
@@ -23,6 +23,6 @@ The repository now also includes the DualBrain Module: a Markdown-based agent wo
 
 ## Active Work
 
-1. Populate environment variables.
-2. Bootstrap DualBrain phases from `DB_Module/_PHASES/00_INIT.md`.
+1. Replace placeholder environment variables with real Gemini and Firebase values.
+2. Continue from `DB_Module/_PHASES/00_ROADMAP.md` Phase 2, Block A.
 3. Replace the scaffold landing/status page with the selected product workflow after topic drop.

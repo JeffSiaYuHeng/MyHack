@@ -2,8 +2,8 @@
 
 **Project**: MyHack  
 **Event**: Build With AI 2026 KL  
-**Last Updated**: 2026-05-15  
-**Status**: Scaffold ready, product feature pending topic drop  
+**Last Updated**: 2026-05-16  
+**Status**: Scaffold and Docker environment verified, product feature pending topic drop  
 
 ## Current Architecture State
 
@@ -35,8 +35,8 @@
 
 ### Infrastructure
 
-- Dockerfile supports standalone Next.js production output.
-- Docker Compose runs local development with `.env.local`.
+- Dockerfile supports separate dependency, development, builder, and standalone production runner targets.
+- Docker Compose runs local development with `.env.local`, source mounts, hot reload, and optional `APP_PORT` override.
 - GitHub Actions deploys to Cloud Run on pushes to `main`.
 
 ### DualBrain
@@ -44,26 +44,27 @@
 - `DB_Module/` has been added as the project memory and execution protocol layer.
 - `.agent/skills/` defines Planner, Coder, Evaluator, and Archivist roles.
 - `_DOCS` is initialized to describe the actual MyHack scaffold.
-- `_PHASES/00_INIT.md` exists as the roadmap bootstrap controller.
+- `_PHASES/00_INIT.md` has been bootstrapped.
+- `_PHASES/00_ROADMAP.md` now points to Phase 2, Block A.
+- Phase 1: Scaffold Operational is complete.
 - `_TASK` contains sample and active task handover files.
 
 ## Current Gaps
 
 - Final hackathon product idea is not selected.
-- `.env.local` must be populated with real Firebase and Gemini values.
-- DualBrain `_PHASES` has not been bootstrapped into `00_ROADMAP.md` and `PHASE_N__*.md` files.
-- `_TASK/_INSTRUCTION.md` currently contains an unrelated R2 sample and should be replaced by the Planner once a real task starts.
+- `.env.local` exists with placeholder values and must be populated with real Firebase and Gemini values.
+- Port `3000` may be occupied by another local Docker project; use `APP_PORT=3001 docker compose up -d` until it is free.
 - Firestore schema and rules are still broad and scaffold-level.
 - `README.md` remains the default Next.js README.
 
 ## Recommended Next Milestone
 
-Initialize DualBrain planning for this actual project:
+Lock the hackathon topic and define the first product slice:
 
-1. Read `DB_Module/_DOCS/00_SRS.md`.
-2. Use `DB_Module/_PHASES/00_INIT.md` to generate the roadmap and phase files.
-3. Replace stale sample task instructions with a real first task.
-4. Run `npm run gen:structure` and `npm run gen:graph` before planning implementation work.
+1. Update `DB_Module/_DOCS/00_SRS.md` with the selected topic and target users.
+2. Update `DB_Module/_DOCS/01_DB_SCHEMA.md` with initial Firestore collections.
+3. Create the first product workflow instruction from Phase 2, Block A.
+4. Replace placeholder env values with real Gemini and Firebase credentials.
 
 ## Known Working Commands
 
@@ -74,4 +75,7 @@ npm run start
 npm run lint
 npm run gen:structure
 npm run gen:graph
+docker compose config
+docker compose build
+APP_PORT=3001 docker compose up -d
 ```

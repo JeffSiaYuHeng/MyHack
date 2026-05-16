@@ -5,7 +5,7 @@
 
 ---
 
-## CURRENT_STATUS: `INIT`
+## CURRENT_STATUS: `BOOTSTRAPPED`
 
 <!-- Valid values: INIT | BOOTSTRAPPED | REPLAN -->
 

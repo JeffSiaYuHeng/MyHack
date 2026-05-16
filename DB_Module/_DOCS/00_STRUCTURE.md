@@ -2,7 +2,7 @@
 
 **AUTO-GENERATED** by `scripts/generate-structure.js`  
 **DO NOT EDIT MANUALLY** - This file is regenerated before each planning session.  
-**Last Updated:** 05/15/2026, 23:56
+**Last Updated:** 05/16/2026, 10:45
 
 ---
 
@@ -15,13 +15,22 @@ It is automatically generated from the actual directory structure.
 ```
 MyHack/
 ├── package.json
+├── package-lock.json
 ├── tsconfig.json
 ├── next.config.ts
 ├── postcss.config.mjs
 ├── eslint.config.mjs
+├── Dockerfile
+├── docker-compose.yml
+├── .dockerignore
+├── .env.example
+├── README.md
+├── overview.md
+├── SetupReport.md
 ├── DB_Module/
 │   ├── _DOCS/
 │   │   ├── LOGS/
+│   │   │   ├── 2026-05-16_Docker_Environment.md
 │   │   │   └── LOG(format).md
 │   │   ├── 00_SRS.md
 │   │   ├── 00_STRUCTURE.md
@@ -34,7 +43,11 @@ MyHack/
 │   │   ├── PROJECT_SNAPSHOT.md
 │   │   └── 建议Ryo.md
 │   ├── _PHASES/
-│   │   └── 00_INIT.md
+│   │   ├── 00_INIT.md
+│   │   ├── 00_ROADMAP.md
+│   │   ├── PHASE_1__Scaffold_Operational.md
+│   │   ├── PHASE_2__Topic_Product_Slice.md
+│   │   └── PHASE_3__Demo_and_Deployment_Readiness.md
 │   ├── _TASK/
 │   │   ├── _Hand_OverLog.md
 │   │   ├── _INSTRUCTION.md
@@ -61,7 +74,6 @@ MyHack/
 │   ├── layout.tsx
 │   └── page.tsx
 ├── components/
-│   ├── features/
 │   └── ui/
 │       └── button.tsx
 ├── lib/

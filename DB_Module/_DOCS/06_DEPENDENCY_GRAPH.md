@@ -2,7 +2,7 @@
 
 **AUTO-GENERATED** by `scripts/generate-dependency-graph.js`
 **DO NOT EDIT MANUALLY** - Regenerate with: `npm run gen:graph`
-**Last Updated:** 05/15/2026, 23:56
+**Last Updated:** 05/16/2026, 10:45
 
 ---
 

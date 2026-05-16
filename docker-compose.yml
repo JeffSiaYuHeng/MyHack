@@ -1,12 +1,17 @@
-version: '3.8'
 services:
   web:
-    build: .
+    build:
+      context: .
+      target: dev
     ports:
-      - "3000:3000"
+      - "${APP_PORT:-3000}:3000"
     env_file:
       - .env.local
+    environment:
+      NEXT_TELEMETRY_DISABLED: "1"
+      WATCHPACK_POLLING: "true"
     volumes:
       - .:/app
       - /app/node_modules
-    command: npm run dev
+      - /app/.next
+    command: npm run dev -- --hostname 0.0.0.0
