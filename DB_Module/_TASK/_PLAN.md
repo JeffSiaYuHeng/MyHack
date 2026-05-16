@@ -2,38 +2,40 @@
 
 ## Current Focus
 
-Phase 1, Block B: replace scaffold presentation with Verrier metadata, Morandi Tech design tokens, and a reusable coordinator product shell while preserving existing shared UI primitives.
+Phase 3, Block B: build the server-side AI mentor matching route for approved startups using the Phase 3 Block A queue and mentor-pool helpers.
 
 ## Current Target
 
-Update global metadata and root route copy from the MyHack scaffold to the Verrier product foundation.
+Add the mentor matching prompt template and structured Gemini response parsing to the existing `POST /api/ai/match` route.
 
 ## Strategic Source
 
 - Roadmap: `DB_Module/_PHASES/00_ROADMAP.md`
-- Phase file: `DB_Module/_PHASES/PHASE_1__Verrier_Product_Foundation.md`
-- Active block: `Block B: App Shell and Design Tokens`
+- Phase file: `DB_Module/_PHASES/PHASE_3__Mentor_Matching_and_Relationship_Creation.md`
+- Active block: `Block B: AI Mentor Matching Route`
 
 ## Atomic Sub-Tasks
 
-- [ ] Update global metadata and root route copy from MyHack scaffold to Verrier.
-- [ ] Align global design tokens in `app/globals.css` with the Morandi Tech palette from `DB_Module/_DOCS/02_STYLE_GUIDE.md`.
-- [ ] Create a reusable coordinator product shell for authenticated product pages.
-- [ ] Verify mobile and desktop layout behavior for the shell and root route.
-- [ ] Run lint/build verification and append Coder handover details to `DB_Module/_TASK/_Hand_OverLog.md`.
+- [x] Add `POST /api/ai/match` route boundary with request validation and seeded candidate loading.
+- [ ] Add mentor matching prompt template and structured response parsing.
+- [ ] Return top 3 matches with scores, reasons, and breakdowns.
+- [ ] Validate returned mentor IDs against the candidate list and replace invalid output with a safe fallback.
+- [x] Handle fewer than 3 mentors and route failures gracefully, run lint/build verification, and append Coder handover details to `DB_Module/_TASK/_Hand_OverLog.md`.
 
 ## Dependency Notes
 
-- `app/layout.tsx` owns global metadata and imports `app/globals.css`.
-- `app/page.tsx` currently imports `components/ui/button.tsx`; keep `components/ui/button.tsx` read-only during the first Block B instruction.
-- `components/ui/button.tsx` is listed as high-impact in `DB_Module/_DOCS/06_DEPENDENCY_GRAPH.md` with 1 importer: `app/page.tsx`.
-- `app/globals.css` is the global token surface for Block B design-token work.
-- `lib/verrier-analytics.ts` and `lib/verrier-seed.ts` are available read-only data sources for realistic Verrier root copy if needed.
+- `app/api/ai/program-fit/route.ts` is the closest implemented structured AI route pattern.
+- `lib/gemini.ts` provides a shared Gemini helper, but `program-fit` currently calls the SDK directly.
+- `lib/verrier-analytics.ts` now exports `getApprovedStartupQueue` and `getMentorPool` for matching route inputs.
+- `lib/types.ts` defines `Company`, `Mentor`, and `MatchBreakdown`; keep it read-only unless a later task proves a type gap.
+- `DB_Module/_DOCS/03_SERVER_ACTIONS.md` already documents the target `POST /api/ai/match` request and response contract.
+- `DB_Module/_DOCS/06_DEPENDENCY_GRAPH.md` is stale and should be treated as a baseline only.
 
 ## Out of Scope For This Block
 
-- Dashboard route implementation beyond root-route scaffold replacement.
-- Programme intake forms, applicant review, matching workflows, relationship detail pages, and meeting forms.
-- API routes and Gemini prompts.
-- Firestore reads, writes, or security rules.
-- Auth behavior beyond shell-ready visual structure.
+- `/matching` UI.
+- Match confirmation.
+- Relationship creation.
+- Firestore writes.
+- Relationship list pages.
+- Meeting analysis or relationship health work.

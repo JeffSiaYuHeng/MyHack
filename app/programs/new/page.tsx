@@ -1,8 +1,8 @@
-import { DashboardCommandCenter } from "@/components/features/dashboard-command-center";
 import { ProductShell } from "@/components/features/product-shell";
+import { ProgramSetupWizard } from "@/components/features/program-setup-wizard";
 import { seedCohorts, seedPrograms } from "@/lib/verrier-seed";
 
-export default function Home() {
+export default function ProgramsNewPage() {
   const program = seedPrograms[0];
   const cohort = seedCohorts[0];
 
@@ -12,9 +12,9 @@ export default function Home() {
       cohortName={cohort.name}
       cohortWeeks={cohort.totalWeeks}
       cohortStatus={cohort.status}
-      activeNav="Dashboard"
+      activeNav="Programmes"
     >
-      <DashboardCommandCenter />
+      <ProgramSetupWizard />
     </ProductShell>
   );
 }

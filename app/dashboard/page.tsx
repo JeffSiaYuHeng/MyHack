@@ -2,7 +2,7 @@ import { DashboardCommandCenter } from "@/components/features/dashboard-command-
 import { ProductShell } from "@/components/features/product-shell";
 import { seedCohorts, seedPrograms } from "@/lib/verrier-seed";
 
-export default function Home() {
+export default function DashboardPage() {
   const program = seedPrograms[0];
   const cohort = seedCohorts[0];
 

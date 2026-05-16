@@ -1,5 +1,29 @@
 # Server Actions and API Contracts
 
+## Route Boundary Reference
+
+### Public routes (no auth required)
+
+| Route | Status |
+|---|---|
+| `/` | Live — redirects to dashboard in current build |
+| `/login` | Live — demo placeholder; no real Firebase Auth |
+| `/apply/[programId]` | Planned — public application intake |
+| `/submit-meeting` | Planned — public meeting submission (token-gated) |
+
+### Coordinator routes (auth-gated in production)
+
+| Route | Status |
+|---|---|
+| `/dashboard` | Live — seed data only, no auth guard |
+| `/programmes` | Planned |
+| `/matching` | Planned |
+| `/relationships` | Planned |
+
+> **Note on `/login`:** This route is currently a demo placeholder. It does not
+> perform real Firebase Auth, validate credentials, or create a session. Auth
+> enforcement will be added before the final demo using Firebase ID tokens.
+
 ## Current Backend Surface
 
 Implemented today:
@@ -118,8 +142,11 @@ Response:
     needsFit: number;
   };
   eligibilityFlags: string[];
+  status: "scored" | "pending";
 }
 ```
+
+`status: "pending"` is returned when Gemini is unavailable or returns malformed output. All score fields are zeroed, `fitLabel` defaults to `"Potential fit"`, `aiRecommendation` defaults to `"review"`, and `eligibilityFlags` contains `"scoring-pending"`. The public form treats a `pending` response as recoverable and allows submission.
 
 ### `POST /api/applications`
 

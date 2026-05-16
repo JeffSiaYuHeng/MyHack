@@ -1,4 +1,12 @@
-import type { Company, Meeting, Mentor, Relationship } from "./types";
+import type {
+  Application,
+  Cohort,
+  Company,
+  Meeting,
+  Mentor,
+  Program,
+  Relationship,
+} from "./types";
 
 import {
   seedApplications,
@@ -235,4 +243,186 @@ export function findRelationshipById(
   relationshipId: string
 ): Relationship | undefined {
   return seedRelationships.find((r) => r.id === relationshipId);
+}
+
+// ─── Matching: Startup Queue ──────────────────────────────────────────────────
+
+export interface ApprovedStartupQueueItem {
+  application: Application;
+  company: Company;
+  program: Program;
+  cohort: Cohort | null;
+  fitScore: number;
+  supportNeeds: string[];
+  founderSummary: string;
+}
+
+/**
+ * Returns approved unmatched startups for a programme and optional cohort.
+ * Startups are unmatched when they have no active or pending relationship.
+ * Sorted by fit score descending, company name ascending, company id ascending.
+ */
+export function getApprovedStartupQueue(
+  programId: string,
+  cohortId?: string
+): ApprovedStartupQueueItem[] {
+  const program = seedPrograms.find((p) => p.id === programId);
+  if (!program) return [];
+
+  const cohort = cohortId
+    ? (seedCohorts.find((c) => c.id === cohortId) ?? null)
+    : null;
+
+  const matchedCompanyIds = new Set(
+    seedRelationships
+      .filter((r) => r.status === "active" || r.status === "pending")
+      .map((r) => r.companyId)
+  );
+
+  const approvedCompanyIds = new Set(
+    seedApplications
+      .filter((a) => a.programId === programId && a.status === "approved")
+      .map((a) => a.companyId)
+  );
+
+  const selectedCompanyIds = new Set(program.selectedCompanyIds);
+  const qualifiedCompanyIds = new Set([
+    ...approvedCompanyIds,
+    ...selectedCompanyIds,
+  ]);
+
+  const cohortCompanyIds = cohort ? new Set(cohort.companyIds) : null;
+
+  const companyMap = new Map(seedCompanies.map((c) => [c.id, c]));
+
+  const approvedApplications = seedApplications.filter(
+    (a) => a.programId === programId && a.status === "approved"
+  );
+
+  const bestApplicationByCompany = new Map<string, Application>();
+  for (const app of approvedApplications) {
+    const existing = bestApplicationByCompany.get(app.companyId);
+    if (!existing || app.fitScore > existing.fitScore) {
+      bestApplicationByCompany.set(app.companyId, app);
+    }
+  }
+
+  const queue: ApprovedStartupQueueItem[] = [];
+
+  for (const companyId of qualifiedCompanyIds) {
+    if (matchedCompanyIds.has(companyId)) continue;
+    if (cohortCompanyIds && !cohortCompanyIds.has(companyId)) continue;
+
+    const company = companyMap.get(companyId);
+    if (!company) continue;
+
+    const application = bestApplicationByCompany.get(companyId);
+    if (!application) continue;
+
+    queue.push({
+      application,
+      company,
+      program,
+      cohort,
+      fitScore: application.fitScore,
+      supportNeeds: application.supportNeeds,
+      founderSummary: application.founderSummary,
+    });
+  }
+
+  return queue.sort((a, b) => {
+    if (b.fitScore !== a.fitScore) return b.fitScore - a.fitScore;
+    if (a.company.name < b.company.name) return -1;
+    if (a.company.name > b.company.name) return 1;
+    if (a.company.id < b.company.id) return -1;
+    if (a.company.id > b.company.id) return 1;
+    return 0;
+  });
+}
+
+// ─── Matching: Mentor Pool ────────────────────────────────────────────────────
+
+const HIGH_LOAD_RELATIONSHIP_THRESHOLD = 2;
+const MIN_AVAILABLE_SLOTS = 1;
+
+export type MentorPoolWarningCode = "high-load" | "insufficient-availability";
+
+export interface MentorPoolWarning {
+  code: MentorPoolWarningCode;
+  message: string;
+}
+
+export interface MentorPoolItem {
+  mentor: Mentor;
+  programId: string;
+  cohortId: string | null;
+  availableSlotCount: number;
+  totalSlotCount: number;
+  activeRelationshipCount: number;
+  warnings: MentorPoolWarning[];
+}
+
+/**
+ * Returns mentors connected to the programme or cohort, with load and
+ * availability metadata and warning flags.
+ */
+export function getMentorPool(
+  programId: string,
+  cohortId?: string
+): MentorPoolItem[] {
+  const program = seedPrograms.find((p) => p.id === programId);
+  if (!program) return [];
+
+  const cohort = cohortId
+    ? (seedCohorts.find((c) => c.id === cohortId) ?? null)
+    : null;
+
+  const programMentorIds = new Set(program.mentorIds);
+  const cohortMentorIds = cohort ? new Set(cohort.mentorIds) : null;
+
+  const eligibleMentors = seedMentors.filter((m) => {
+    if (cohortMentorIds) {
+      return programMentorIds.has(m.id) || cohortMentorIds.has(m.id);
+    }
+    return programMentorIds.has(m.id);
+  });
+
+  return eligibleMentors.map((mentor) => {
+    const availableSlotCount = mentor.availabilitySlots.filter(
+      (s) => s.status === "available"
+    ).length;
+    const totalSlotCount = mentor.availabilitySlots.length;
+
+    const activeRelationshipCount = seedRelationships.filter(
+      (r) =>
+        r.mentorId === mentor.id &&
+        (r.status === "active" || r.status === "pending")
+    ).length;
+
+    const warnings: MentorPoolWarning[] = [];
+
+    if (activeRelationshipCount > HIGH_LOAD_RELATIONSHIP_THRESHOLD) {
+      warnings.push({
+        code: "high-load",
+        message: `Mentor has ${activeRelationshipCount} active or pending relationships.`,
+      });
+    }
+
+    if (availableSlotCount < MIN_AVAILABLE_SLOTS) {
+      warnings.push({
+        code: "insufficient-availability",
+        message: "Mentor has no available slots.",
+      });
+    }
+
+    return {
+      mentor,
+      programId,
+      cohortId: cohortId ?? null,
+      availableSlotCount,
+      totalSlotCount,
+      activeRelationshipCount,
+      warnings,
+    };
+  });
 }

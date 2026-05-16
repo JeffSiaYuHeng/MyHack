@@ -1,12 +1,12 @@
 # Task Instruction
 
 ## Strategic Anchor (MANDATORY)
-- **Phase**: `PHASE_1__Verrier_Product_Foundation.md`
-- **Block**: Block B — App Shell and Design Tokens
+- **Phase**: `PHASE_3__Mentor_Matching_and_Relationship_Creation.md`
+- **Block**: Block B — AI Mentor Matching Route
 
 ## Context
 
-Replace the remaining MyHack scaffold presentation with Verrier product metadata and root-route copy. This is the first Block B task and must keep the work inside global metadata and root route presentation.
+Implement the next task from `_PLAN.md`: add the mentor matching prompt template and structured response parsing to the existing `POST /api/ai/match` route. Preserve the deterministic fallback path already implemented by the prior task.
 
 ---
 
@@ -14,8 +14,7 @@ Replace the remaining MyHack scaffold presentation with Verrier product metadata
 
 The Coder agent is ONLY allowed to modify the following files:
 
-- `app/layout.tsx`
-- `app/page.tsx`
+- `app/api/ai/match/route.ts`
 - `DB_Module/_TASK/_Hand_OverLog.md`
 
 ---
@@ -24,94 +23,82 @@ The Coder agent is ONLY allowed to modify the following files:
 
 The Coder agent may read these files for context but MUST NOT modify them:
 
-- `components/ui/button.tsx`
+- `app/api/ai/program-fit/route.ts`
 - `lib/verrier-analytics.ts`
 - `lib/verrier-seed.ts`
-- `DB_Module/_DOCS/00_STRUCTURE.md`
-- `DB_Module/_DOCS/02_STYLE_GUIDE.md`
+- `lib/types.ts`
+- `lib/gemini.ts`
+- `DB_Module/_DOCS/01_DB_SCHEMA.md`
+- `DB_Module/_DOCS/03_SERVER_ACTIONS.md`
 - `DB_Module/_DOCS/06_DEPENDENCY_GRAPH.md`
-- `DB_Module/_TASK/_PLAN.md`
-- `DB_Module/_PHASES/PHASE_1__Verrier_Product_Foundation.md`
+- `DB_Module/_PHASES/PHASE_3__Mentor_Matching_and_Relationship_Creation.md`
 
 ---
 
 ## Dependency Note
 
-- `app/page.tsx` imports `components/ui/button.tsx`.
-- `components/ui/button.tsx` is high-impact with 1 importer: `app/page.tsx`.
-- Do not modify `components/ui/button.tsx`.
-- `app/layout.tsx` imports `app/globals.css`; do not modify `app/globals.css` in this instruction.
+- `app/api/ai/match/route.ts` now owns the matching route boundary and deterministic fallback scoring.
+- `app/api/ai/program-fit/route.ts` shows the current local pattern for Gemini JSON response mode, malformed JSON handling, and recoverable fallback.
+- `lib/verrier-analytics.ts` provides approved startup queue and mentor pool data; keep it read-only.
+- `lib/types.ts` is high-impact in the dependency graph; keep it read-only.
 
 ---
 
 ## Steps (Execution Order)
 
-1. Modify `app/layout.tsx` metadata:
-   - Set title to `Verrier`
-   - Set description to `AI-powered relationship management for innovation programmes`
-2. Modify `app/page.tsx` to remove MyHack scaffold language:
-   - Remove team-member cards.
-   - Remove hackathon scaffold status.
-   - Remove topic-drop waiting state.
-   - Remove decorative gradient headline treatment.
-3. Render a Verrier root experience using existing local data where useful:
-   - Use product name `Verrier`.
-   - Present active cohort context.
-   - Present compact operational metrics from seed or analytics helpers.
-   - Present relationship health or attention-feed preview.
-4. Keep the root route operational and product-focused:
-   - Use dense readable layout.
-   - Use real Verrier seed data.
-   - Avoid marketing hero layout.
-   - Avoid decorative gradients or orb backgrounds.
-5. Preserve existing shared UI primitives:
-   - Keep `Button` usage only if the root route needs clear actions.
-   - Do not change `components/ui/button.tsx`.
-6. Run `npm run lint`.
-7. Append a Coder handover entry to `DB_Module/_TASK/_Hand_OverLog.md` with:
-   - files changed
-   - summary of root metadata/copy changes
-   - lint result
-   - any exact failure output if lint fails
+1. Read `app/api/ai/match/route.ts` and identify the existing deterministic fallback match generation.
+2. Import `GoogleGenerativeAI` from `@google/generative-ai` in `app/api/ai/match/route.ts`.
+3. Initialize Gemini server-side using `process.env.GEMINI_API_KEY || ""`, following the pattern in `app/api/ai/program-fit/route.ts`.
+4. Add a mentor matching prompt builder inside `app/api/ai/match/route.ts`.
+5. Include startup company profile, support needs, founder summary, and mentor candidates in the prompt.
+6. Require Gemini to return a JSON object with a `matches` array.
+7. Require each returned match to contain `mentorId`, `overallScore`, `reason`, and `breakdown`.
+8. Add structured parsing helpers that accept unknown Gemini output and normalize score fields to `0` through `100`.
+9. Preserve the current deterministic fallback matches as the recovery path for Gemini failure, malformed JSON, empty matches, or invalid shape.
+10. Do not trust Gemini mentor names; resolve `mentorName` from the validated local mentor pool.
+11. Do not yet discard invalid mentor IDs in a final validation pass unless the current task needs it to preserve fallback safety.
+12. Keep the route response shape as `{ matches: [...] }`.
+13. Keep all Gemini calls inside `POST`; do not expose API keys to client code.
+14. Run `npm run lint`.
+15. Run `npm run build`.
+16. Append a Coder handover entry to `DB_Module/_TASK/_Hand_OverLog.md` with files changed, prompt/parsing behavior, fallback behavior, verification result, and any exact failure output.
 
 ---
 
 ## Constraints & Rules
 
 - Do not modify any file outside Context Scope.
-- Do not modify `app/globals.css` in this instruction.
-- Do not create a reusable shell component in this instruction.
-- Do not add routes.
-- Do not add dependencies.
+- Do not modify `lib/verrier-analytics.ts`.
+- Do not modify `lib/types.ts`.
+- Do not modify `lib/verrier-seed.ts`.
 - Do not add Firestore reads or writes.
-- Do not call Gemini.
-- Keep all displayed data deterministic.
+- Do not add dependencies.
+- Preserve strict TypeScript with no `any`.
+- Preserve the existing deterministic fallback output.
+- Keep the response contract aligned with `POST /api/ai/match` in `DB_Module/_DOCS/03_SERVER_ACTIONS.md`.
 
 ---
 
 ## Out of Scope (Hard Stop)
 
-- `app/globals.css`
-- `components/ui/button.tsx`
-- New component files.
-- Dashboard route implementation.
-- Programme intake forms.
-- Applicant review.
-- Matching workflows.
-- Relationship detail pages.
-- API routes.
-- Firebase reads, writes, or rules.
-- Gemini prompt or helper changes.
-- Phase 1 Block C or Block D work.
+- Final invalid mentor ID replacement policy beyond fallback safety.
+- `/matching` UI.
+- Match confirmation.
+- Relationship creation.
+- Firestore writes.
+- Edits to analytics helpers or seed data.
 
 ---
 
 ## Quality Checklist
 
-- [ ] Metadata says Verrier.
-- [ ] Root page no longer presents as MyHack or topic-drop scaffold.
-- [ ] Root page uses real Verrier seed or analytics data.
-- [ ] Root page follows operational Morandi Tech guidance from the style guide.
-- [ ] No out-of-scope files are modified.
+- [ ] `app/api/ai/match/route.ts` contains a mentor matching prompt builder.
+- [ ] Gemini call stays server-side.
+- [ ] Gemini response parsing accepts unknown input safely.
+- [ ] Score fields are clamped to `0` through `100`.
+- [ ] Malformed Gemini output falls back to deterministic matches.
+- [ ] Route response remains `{ matches: [...] }`.
+- [ ] Existing validation behavior remains intact.
 - [ ] `npm run lint` succeeds or exact failure is logged.
+- [ ] `npm run build` succeeds or exact failure is logged.
 - [ ] Coder handover note is appended.

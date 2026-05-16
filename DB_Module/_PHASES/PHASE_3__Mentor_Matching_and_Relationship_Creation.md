@@ -1,6 +1,6 @@
 # Phase 3: Mentor Matching and Relationship Creation
 
-**Status**: NOT_STARTED
+**Status**: IN_PROGRESS
 **Prerequisite**: Phase 2 must be COMPLETE
 **Required _DOCS**: `00_SRS.md`, `01_DB_SCHEMA.md`, `02_STYLE_GUIDE.md`, `03_SERVER_ACTIONS.md`, `04_TECH_STACK.md`, `05_PROJECT_SNAPSHOT.md`, `06_DEPENDENCY_GRAPH.md`
 
@@ -10,8 +10,8 @@
 
 | Block | Name | Depends On | Status |
 |-------|------|------------|--------|
-| A | Mentor Pool and Startup Queue | — | NOT_STARTED |
-| B | AI Mentor Matching Route | Block A | NOT_STARTED |
+| A | Mentor Pool and Startup Queue | — | COMPLETED |
+| B | AI Mentor Matching Route | Block A | IN_PROGRESS |
 | C | Matching Workbench UI | Block B | NOT_STARTED |
 | D | Match Confirmation and Relationship List | Block C | NOT_STARTED |
 
@@ -20,16 +20,16 @@
 ## Block A: Mentor Pool and Startup Queue
 
 ### Scope
-- [ ] Normalize seeded mentor and approved-startup data for matching.
-- [ ] Add helper functions for available mentors, mentor load, and unmatched startups.
-- [ ] Flag mentors with high load or insufficient availability.
-- [ ] Keep helpers reusable for route handlers and client UI.
+- [x] Normalize seeded mentor and approved-startup data for matching.
+- [x] Add helper functions for available mentors, mentor load, and unmatched startups.
+- [x] Flag mentors with high load or insufficient availability.
+- [x] Keep helpers reusable for route handlers and client UI.
 
 ### Acceptance Criteria
-- [ ] Approved unmatched startups can be queried deterministically.
-- [ ] Mentor candidates can be filtered by cohort/programme.
-- [ ] Mentor load warnings are computed from relationship data.
-- [ ] TypeScript remains strict and clear.
+- [x] Approved unmatched startups can be queried deterministically.
+- [x] Mentor candidates can be filtered by cohort/programme.
+- [x] Mentor load warnings are computed from relationship data.
+- [x] TypeScript remains strict and clear.
 
 ---
 
