@@ -1,6 +1,6 @@
 # Phase 4: Relationship Health and Cohort Intelligence
 
-**Status**: NOT_STARTED
+**Status**: IN_PROGRESS
 **Prerequisite**: Phase 3 must be COMPLETE
 **Required _DOCS**: `00_SRS.md`, `01_DB_SCHEMA.md`, `02_STYLE_GUIDE.md`, `03_SERVER_ACTIONS.md`, `04_TECH_STACK.md`, `05_PROJECT_SNAPSHOT.md`, `06_DEPENDENCY_GRAPH.md`
 
@@ -10,8 +10,8 @@
 
 | Block | Name | Depends On | Status |
 |-------|------|------------|--------|
-| A | Relationship Detail Timeline | — | NOT_STARTED |
-| B | Meeting Submission and AI Analysis | Block A | NOT_STARTED |
+| A | Relationship Detail Timeline | — | COMPLETED |
+| B | Meeting Submission and AI Analysis | Block A | IN_PROGRESS |
 | C | Relationship Diagnosis and Health Decay | Block B | NOT_STARTED |
 | D | Cohort Overview and Narrative | Block C | NOT_STARTED |
 
@@ -20,32 +20,32 @@
 ## Block A: Relationship Detail Timeline
 
 ### Scope
-- [ ] Implement `/relationships/[id]`.
-- [ ] Show pair header, health badge, matched date, cohort tag, stat row, and meeting timeline.
-- [ ] Add milestone tracker based on `currentMilestone` and `milestonesCompleted`.
-- [ ] Add a meeting upload modal or inline form shell for Block B.
+- [x] Implement `/relationships/[id]`.
+- [x] Show pair header, health badge, matched date, cohort tag, stat row, and meeting timeline.
+- [x] Add milestone tracker based on `currentMilestone` and `milestonesCompleted`.
+- [x] Add a meeting upload modal or inline form shell for Block B.
 
 ### Acceptance Criteria
-- [ ] Relationship detail page renders from seeded relationship data.
-- [ ] Timeline shows meeting number, date, duration, summary, signal, and action items.
-- [ ] Milestone tracker can display all 5 stages.
-- [ ] Missing relationship IDs produce a clear not-found state.
+- [x] Relationship detail page renders from seeded relationship data.
+- [x] Timeline shows meeting number, date, duration, summary, signal, and action items.
+- [x] Milestone tracker can display all 5 stages.
+- [x] Missing relationship IDs produce a clear not-found state.
 
 ---
 
 ## Block B: Meeting Submission and AI Analysis
 
 ### Scope
-- [ ] Implement `/submit-meeting` public form with token, date, duration, and notes.
-- [ ] Add `POST /api/ai/analyze-meeting` or `/api/meetings/submit` route.
-- [ ] Add meeting analysis prompt template and structured response parsing.
+- [x] Implement `/submit-meeting` public form with token, date, duration, and notes.
+- [x] Add `POST /api/ai/analyze-meeting` or `/api/meetings/submit` route.
+- [x] Add meeting analysis prompt template and structured response parsing.
 - [ ] Update relationship health and meeting timeline state after analysis.
 
 ### Acceptance Criteria
-- [ ] Notes shorter than 50 characters are rejected.
-- [ ] Successful submission returns AI summary and action items.
-- [ ] HealthScore updates are clamped between 0 and 100.
-- [ ] Mentor sees a clear confirmation state.
+- [x] Notes shorter than 50 characters are rejected.
+- [x] Successful submission returns AI summary and action items.
+- [x] HealthScore updates are clamped between 0 and 100.
+- [x] Mentor sees a clear confirmation state.
 
 ---
 

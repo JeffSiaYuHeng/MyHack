@@ -2,7 +2,7 @@
 
 **AUTO-GENERATED** by `scripts/generate-structure.js`  
 **DO NOT EDIT MANUALLY** - This file is regenerated before each planning session.  
-**Last Updated:** 05/16/2026, 15:20
+**Last Updated:** 05/16/2026, 17:13
 
 ---
 
@@ -37,12 +37,21 @@ MyHack/
 │   │   │   ├── 2026-05-16_Design_Token_Alignment.md
 │   │   │   ├── 2026-05-16_Docker_Environment.md
 │   │   │   ├── 2026-05-16_Domain_Types.md
+│   │   │   ├── 2026-05-16_Match_Confirmation.md
 │   │   │   ├── 2026-05-16_Matching_Data_Normalization.md
+│   │   │   ├── 2026-05-16_Matching_Gemini_Integration_FAIL.md
+│   │   │   ├── 2026-05-16_Matching_Gemini_Integration.md
 │   │   │   ├── 2026-05-16_Matching_Route_Boundary.md
+│   │   │   ├── 2026-05-16_Matching_Workbench.md
+│   │   │   ├── 2026-05-16_Meeting_Analysis_Route_FAIL.md
+│   │   │   ├── 2026-05-16_Meeting_Submission_Form.md
 │   │   │   ├── 2026-05-16_Metadata_and_Root_Copy.md
 │   │   │   ├── 2026-05-16_Product_Shell.md
 │   │   │   ├── 2026-05-16_Programme_Setup_Wizard.md
 │   │   │   ├── 2026-05-16_Public_Application.md
+│   │   │   ├── 2026-05-16_Relationship_Detail.md
+│   │   │   ├── 2026-05-16_Relationship_List.md
+│   │   │   ├── 2026-05-17_Meeting_Analysis_Route.md
 │   │   │   └── LOG(format).md
 │   │   ├── 00_SRS.md
 │   │   ├── 00_STRUCTURE.md
@@ -75,12 +84,17 @@ MyHack/
 │   └── prd.md
 ├── app/
 │   ├── api/
-│   │   └── ai/
-│   │       ├── match/
-│   │       │   └── route.ts
-│   │       ├── program-fit/
-│   │       │   └── route.ts
-│   │       └── route.ts
+│   │   ├── ai/
+│   │   │   ├── analyze-meeting/
+│   │   │   │   └── route.ts
+│   │   │   ├── match/
+│   │   │   │   └── route.ts
+│   │   │   ├── program-fit/
+│   │   │   │   └── route.ts
+│   │   │   └── route.ts
+│   │   └── relationships/
+│   │       └── confirm-match/
+│   │           └── route.ts
 │   ├── apply/
 │   │   └── [programId]/
 │   │       └── page.tsx
@@ -88,12 +102,20 @@ MyHack/
 │   │   └── page.tsx
 │   ├── login/
 │   │   └── page.tsx
+│   ├── matching/
+│   │   └── page.tsx
 │   ├── programs/
 │   │   ├── [programId]/
 │   │   │   └── applicants/
 │   │   │       └── page.tsx
 │   │   └── new/
 │   │       └── page.tsx
+│   ├── relationships/
+│   │   ├── [id]/
+│   │   │   └── page.tsx
+│   │   └── page.tsx
+│   ├── submit-meeting/
+│   │   └── page.tsx
 │   ├── favicon.ico
 │   ├── globals.css
 │   ├── layout.tsx
@@ -102,9 +124,13 @@ MyHack/
 │   ├── features/
 │   │   ├── applicant-review-pool.tsx
 │   │   ├── dashboard-command-center.tsx
+│   │   ├── matching-workbench.tsx
+│   │   ├── meeting-submission-form.tsx
 │   │   ├── product-shell.tsx
 │   │   ├── program-setup-wizard.tsx
-│   │   └── public-application-form.tsx
+│   │   ├── public-application-form.tsx
+│   │   ├── relationship-detail.tsx
+│   │   └── relationship-list.tsx
 │   └── ui/
 │       └── button.tsx
 ├── lib/

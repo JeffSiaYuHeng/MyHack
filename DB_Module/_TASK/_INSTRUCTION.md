@@ -1,12 +1,15 @@
 # Task Instruction
 
 ## Strategic Anchor (MANDATORY)
-- **Phase**: `PHASE_3__Mentor_Matching_and_Relationship_Creation.md`
-- **Block**: Block B — AI Mentor Matching Route
+
+- **Phase**: `PHASE_4__Relationship_Health_and_Cohort_Intelligence.md`
+- **Block**: Block B — Meeting Submission and AI Analysis
 
 ## Context
 
-Implement the next task from `_PLAN.md`: add the mentor matching prompt template and structured response parsing to the existing `POST /api/ai/match` route. Preserve the deterministic fallback path already implemented by the prior task.
+Implement the next Phase 4 Block B task from `_PLAN.md`: update relationship health and meeting timeline state after analysis. For this task, wire the public mentor meeting form to the existing analysis route and show the returned analysis in local UI state.
+
+Latest Evaluator status: PASSED for `app/api/ai/analyze-meeting/route.ts`. The route already validates notes, returns AI summary and action items, clamps health score output, and falls back deterministically on Gemini failure.
 
 ---
 
@@ -14,7 +17,7 @@ Implement the next task from `_PLAN.md`: add the mentor matching prompt template
 
 The Coder agent is ONLY allowed to modify the following files:
 
-- `app/api/ai/match/route.ts`
+- `components/features/meeting-submission-form.tsx`
 - `DB_Module/_TASK/_Hand_OverLog.md`
 
 ---
@@ -23,82 +26,81 @@ The Coder agent is ONLY allowed to modify the following files:
 
 The Coder agent may read these files for context but MUST NOT modify them:
 
-- `app/api/ai/program-fit/route.ts`
-- `lib/verrier-analytics.ts`
+- `app/api/ai/analyze-meeting/route.ts`
 - `lib/verrier-seed.ts`
-- `lib/types.ts`
-- `lib/gemini.ts`
-- `DB_Module/_DOCS/01_DB_SCHEMA.md`
-- `DB_Module/_DOCS/03_SERVER_ACTIONS.md`
-- `DB_Module/_DOCS/06_DEPENDENCY_GRAPH.md`
-- `DB_Module/_PHASES/PHASE_3__Mentor_Matching_and_Relationship_Creation.md`
 
 ---
 
 ## Dependency Note
 
-- `app/api/ai/match/route.ts` now owns the matching route boundary and deterministic fallback scoring.
-- `app/api/ai/program-fit/route.ts` shows the current local pattern for Gemini JSON response mode, malformed JSON handling, and recoverable fallback.
-- `lib/verrier-analytics.ts` provides approved startup queue and mentor pool data; keep it read-only.
-- `lib/types.ts` is high-impact in the dependency graph; keep it read-only.
+- `DB_Module/_DOCS/06_DEPENDENCY_GRAPH.md` is stale and does not list `components/features/meeting-submission-form.tsx`.
+- Treat `components/features/meeting-submission-form.tsx` as the only source file for this task.
+- Keep `lib/verrier-seed.ts` read-only; use existing token and relationship context already resolved by the form.
+- Keep `app/api/ai/analyze-meeting/route.ts` read-only; consume its existing response contract.
 
 ---
 
 ## Steps (Execution Order)
 
-1. Read `app/api/ai/match/route.ts` and identify the existing deterministic fallback match generation.
-2. Import `GoogleGenerativeAI` from `@google/generative-ai` in `app/api/ai/match/route.ts`.
-3. Initialize Gemini server-side using `process.env.GEMINI_API_KEY || ""`, following the pattern in `app/api/ai/program-fit/route.ts`.
-4. Add a mentor matching prompt builder inside `app/api/ai/match/route.ts`.
-5. Include startup company profile, support needs, founder summary, and mentor candidates in the prompt.
-6. Require Gemini to return a JSON object with a `matches` array.
-7. Require each returned match to contain `mentorId`, `overallScore`, `reason`, and `breakdown`.
-8. Add structured parsing helpers that accept unknown Gemini output and normalize score fields to `0` through `100`.
-9. Preserve the current deterministic fallback matches as the recovery path for Gemini failure, malformed JSON, empty matches, or invalid shape.
-10. Do not trust Gemini mentor names; resolve `mentorName` from the validated local mentor pool.
-11. Do not yet discard invalid mentor IDs in a final validation pass unless the current task needs it to preserve fallback safety.
-12. Keep the route response shape as `{ matches: [...] }`.
-13. Keep all Gemini calls inside `POST`; do not expose API keys to client code.
-14. Run `npm run lint`.
-15. Run `npm run build`.
-16. Append a Coder handover entry to `DB_Module/_TASK/_Hand_OverLog.md` with files changed, prompt/parsing behavior, fallback behavior, verification result, and any exact failure output.
+1. Read `components/features/meeting-submission-form.tsx`.
+2. Read `app/api/ai/analyze-meeting/route.ts` to confirm the request and response fields.
+3. Extend the form state to track submission progress, API errors, and the analysis result.
+4. Keep the existing client validation for token, date, duration, and notes.
+5. On valid submit, call `POST /api/ai/analyze-meeting` with JSON body fields `relationshipId`, `date`, `durationMinutes`, `rawNotes`, and `submittedBy`.
+6. Send `submittedBy` as `"mentor"`.
+7. Convert the duration input to a number before sending the request.
+8. On a non-OK response, show a clear inline error and keep the form available.
+9. On success, store `meetingId`, `aiSummary`, `actionItems`, `signal`, `signalReason`, `healthScoreDelta`, `newHealthScore`, and `watchPoints` in local state.
+10. Replace the current queued confirmation copy with the returned analysis summary.
+11. Render action items with owner, task, and due date when present.
+12. Render signal, signal reason, health score delta, new health score, and watch points.
+13. Keep the confirmation state clear for mentors after success.
+14. Do not mutate seed data, Firestore, or global relationship state.
+15. Do not edit the API route in this task.
+16. Run `npm run lint`.
+17. Run `npm run build`.
+18. Append a Coder handover entry to `DB_Module/_TASK/_Hand_OverLog.md` with files changed, UI behavior, API integration behavior, verification result, and exact failure output when a command fails.
 
 ---
 
 ## Constraints & Rules
 
 - Do not modify any file outside Context Scope.
-- Do not modify `lib/verrier-analytics.ts`.
-- Do not modify `lib/types.ts`.
+- Do not modify `app/api/ai/analyze-meeting/route.ts`.
 - Do not modify `lib/verrier-seed.ts`.
 - Do not add Firestore reads or writes.
+- Do not mutate seeded meetings or relationships.
 - Do not add dependencies.
 - Preserve strict TypeScript with no `any`.
-- Preserve the existing deterministic fallback output.
-- Keep the response contract aligned with `POST /api/ai/match` in `DB_Module/_DOCS/03_SERVER_ACTIONS.md`.
+- Preserve the existing token-gated public form behavior.
+- Keep all relationship health and timeline updates local to the form UI for this task.
 
 ---
 
 ## Out of Scope (Hard Stop)
 
-- Final invalid mentor ID replacement policy beyond fallback safety.
-- `/matching` UI.
-- Match confirmation.
-- Relationship creation.
-- Firestore writes.
-- Edits to analytics helpers or seed data.
+- API route changes.
+- Firestore persistence.
+- Seed data mutation.
+- Relationship detail timeline mutation.
+- Dashboard Attention Feed changes.
+- Relationship diagnosis route.
+- Cohort narrative work.
 
 ---
 
 ## Quality Checklist
 
-- [ ] `app/api/ai/match/route.ts` contains a mentor matching prompt builder.
-- [ ] Gemini call stays server-side.
-- [ ] Gemini response parsing accepts unknown input safely.
-- [ ] Score fields are clamped to `0` through `100`.
-- [ ] Malformed Gemini output falls back to deterministic matches.
-- [ ] Route response remains `{ matches: [...] }`.
-- [ ] Existing validation behavior remains intact.
+- [ ] Context Scope contains no more than 4 files.
+- [ ] Reference Scope contains no more than 2 files.
+- [ ] Reference Scope files are not in Context Scope.
+- [ ] No code snippets are included.
+- [ ] Out of Scope is explicit.
+- [ ] Form calls `POST /api/ai/analyze-meeting` after client validation.
+- [ ] Non-OK API responses show an inline error.
+- [ ] Success state shows AI summary and action items.
+- [ ] Success state shows signal, health score delta, new health score, and watch points.
+- [ ] No Firestore or seed mutation is added.
 - [ ] `npm run lint` succeeds or exact failure is logged.
 - [ ] `npm run build` succeeds or exact failure is logged.
 - [ ] Coder handover note is appended.
