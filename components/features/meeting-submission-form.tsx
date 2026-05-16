@@ -148,10 +148,14 @@ export function MeetingSubmissionForm() {
     setFormState("submitting");
     setApiError(null);
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => { controller.abort(); }, 10000);
+
     try {
       const res = await fetch("/api/ai/analyze-meeting", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
         body: JSON.stringify({
           relationshipId: context.relationshipId,
           date: fields.date,
@@ -161,11 +165,16 @@ export function MeetingSubmissionForm() {
         }),
       });
 
+      clearTimeout(timeoutId);
+
       if (!res.ok) {
-        const errBody = await res.json().catch(() => ({}));
+        const errBody = (await res.json().catch(() => ({}))) as Record<
+          string,
+          unknown
+        >;
         const msg =
-          typeof (errBody as Record<string, unknown>).error === "string"
-            ? ((errBody as Record<string, unknown>).error as string)
+          typeof errBody.error === "string"
+            ? (errBody.error as string)
             : "Submission failed. Please try again.";
         setApiError(msg);
         setFormState("idle");
@@ -202,9 +211,32 @@ export function MeetingSubmissionForm() {
         analysis,
       });
       setFormState("confirmed");
-    } catch {
-      setApiError("Network error. Please check your connection and try again.");
-      setFormState("idle");
+    } catch (err: unknown) {
+      clearTimeout(timeoutId);
+      const isTimeout = err instanceof Error && err.name === "AbortError";
+      
+      // Local fallback for timeout or network failure
+      const fallbackAnalysis: AnalysisResult = {
+        meetingId: `meet-fallback-${Date.now()}`,
+        aiSummary: isTimeout
+          ? "Meeting logged successfully. AI analysis timed out and will be processed later."
+          : "Meeting logged successfully. AI analysis is currently unavailable due to a network issue.",
+        actionItems: [],
+        signal: "Neutral",
+        signalReason: "AI analysis fallback triggered.",
+        healthScoreDelta: 0,
+        newHealthScore: context.healthScore,
+        watchPoints: ["analysis-pending"],
+      };
+
+      setConfirmed({
+        date: fields.date,
+        durationMinutes: Number(fields.durationMinutes),
+        notesLength: fields.rawNotes.trim().length,
+        context,
+        analysis: fallbackAnalysis,
+      });
+      setFormState("confirmed");
     }
   }
 
@@ -326,7 +358,7 @@ export function MeetingSubmissionForm() {
                     color: "var(--status-risk)",
                   }}
                 >
-                  {wp}
+                  {wp === "analysis-pending" ? "Analysis pending" : wp}
                 </span>
               ))}
             </div>

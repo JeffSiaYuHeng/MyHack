@@ -2,7 +2,7 @@
 
 **AUTO-GENERATED** by `scripts/generate-structure.js`  
 **DO NOT EDIT MANUALLY** - This file is regenerated before each planning session.  
-**Last Updated:** 05/16/2026, 19:39
+**Last Updated:** 05/16/2026, 20:33
 
 ---
 
@@ -57,12 +57,17 @@ MyHack/
 │   │   │   ├── 2026-05-17_Cohort_Summary_Route.md
 │   │   │   ├── 2026-05-17_Dashboard_Attention_Feed.md
 │   │   │   ├── 2026-05-17_Firebase_Readiness.md
+│   │   │   ├── 2026-05-17_Firestore_Rules.md
 │   │   │   ├── 2026-05-17_Match_Confirmation_Persistence.md
 │   │   │   ├── 2026-05-17_Meeting_Analysis_Route.md
 │   │   │   ├── 2026-05-17_Meeting_Form_Wiring.md
 │   │   │   ├── 2026-05-17_Relationship_Detail_Intelligence.md
 │   │   │   ├── 2026-05-17_Relationship_Diagnosis_Route.md
+│   │   │   ├── 2026-05-17_Resilience_Hardening_Correction.md
+│   │   │   ├── 2026-05-17_Resilience_Hardening_Part2_FAIL.md
+│   │   │   ├── 2026-05-17_Resilience_Hardening.md
 │   │   │   ├── 2026-05-17_Runtime_Data_Normalization.md
+│   │   │   ├── 2026-05-17_Seed_Guards.md
 │   │   │   ├── 2026-05-17_Staleness_Analytics.md
 │   │   │   └── LOG(format).md
 │   │   ├── 00_SRS.md

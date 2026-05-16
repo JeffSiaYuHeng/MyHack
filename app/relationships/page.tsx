@@ -12,6 +12,46 @@ export default function RelationshipsPage() {
   const program = seedPrograms[0];
   const cohort = seedCohorts[0];
 
+  if (!program || !cohort) {
+    return (
+      <ProductShell
+        programName="Verrier Demo"
+        cohortName="Seed data unavailable"
+        cohortWeeks={0}
+        cohortStatus="setup"
+        activeNav="Relationships"
+      >
+        <div className="p-8 text-center border border-dashed border-border rounded-lg m-4">
+          <p className="text-sm text-muted-foreground">
+            Seeded relationship data is missing.
+          </p>
+        </div>
+      </ProductShell>
+    );
+  }
+
+  if (
+    seedRelationships.length === 0 ||
+    seedCompanies.length === 0 ||
+    seedMentors.length === 0
+  ) {
+    return (
+      <ProductShell
+        programName={program.name}
+        cohortName={cohort.name}
+        cohortWeeks={cohort.totalWeeks}
+        cohortStatus={cohort.status}
+        activeNav="Relationships"
+      >
+        <div className="p-8 text-center border border-dashed border-border rounded-lg m-4">
+          <p className="text-sm text-muted-foreground">
+            No active relationships found for this cohort.
+          </p>
+        </div>
+      </ProductShell>
+    );
+  }
+
   return (
     <ProductShell
       activeNav="Relationships"

@@ -30,11 +30,12 @@ interface MatchStore {
   selectedMentorId: string | null;
   confirmState: "idle" | "confirming" | "confirmed" | "error";
   confirmError: string | null;
+  isFallback: boolean;
 }
 
 type MatchAction =
   | { type: "START" }
-  | { type: "SUCCESS"; matches: MatchResult[] }
+  | { type: "SUCCESS"; matches: MatchResult[]; isFallback?: boolean }
   | { type: "ERROR"; message: string }
   | { type: "SELECT_MENTOR"; mentorId: string | null }
   | { type: "CONFIRM_START" }
@@ -52,9 +53,15 @@ function matchReducer(state: MatchStore, action: MatchAction): MatchStore {
         selectedMentorId: null,
         confirmState: "idle",
         confirmError: null,
+        isFallback: false,
       };
     case "SUCCESS":
-      return { ...state, matchState: "done", matches: action.matches };
+      return {
+        ...state,
+        matchState: "done",
+        matches: action.matches,
+        isFallback: !!action.isFallback,
+      };
     case "ERROR":
       return { ...state, matchState: "error", errorMessage: action.message };
     case "SELECT_MENTOR":
@@ -80,6 +87,7 @@ const INITIAL_STORE: MatchStore = {
   selectedMentorId: null,
   confirmState: "idle",
   confirmError: null,
+  isFallback: false,
 };
 
 interface MatchingWorkbenchProps {
@@ -125,9 +133,15 @@ export function MatchingWorkbench({
     let cancelled = false;
     dispatch({ type: "START" });
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, 10000);
+
     fetch("/api/ai/match", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      signal: controller.signal,
       body: JSON.stringify({
         startupId: selectedStartupId,
         programId,
@@ -135,39 +149,103 @@ export function MatchingWorkbench({
       }),
     })
       .then(async (res) => {
+        clearTimeout(timeoutId);
         if (cancelled) return;
+
         if (!res.ok) {
           const data = (await res.json().catch(() => ({}))) as Record<
             string,
             unknown
           >;
-          dispatch({
-            type: "ERROR",
-            message:
-              typeof data.error === "string"
-                ? data.error
-                : "Match request failed.",
-          });
-          return;
+          throw new Error(
+            typeof data.error === "string" ? data.error : "API Error"
+          );
         }
+
         const data = (await res.json()) as { matches: MatchResult[] };
+        if (!data.matches || data.matches.length === 0) {
+          throw new Error("Empty matches");
+        }
+
         if (!cancelled) {
-          dispatch({ type: "SUCCESS", matches: data.matches ?? [] });
+          dispatch({ type: "SUCCESS", matches: data.matches });
         }
       })
-      .catch(() => {
-        if (!cancelled) {
-          dispatch({
-            type: "ERROR",
-            message: "Network error. Manual selection is available below.",
-          });
+      .catch((err: unknown) => {
+        clearTimeout(timeoutId);
+        if (cancelled) return;
+
+        // Deterministic local fallback
+        const startup = initialQueue.find((q) => q.company.id === selectedStartupId);
+        if (!startup) {
+          dispatch({ type: "ERROR", message: "Startup not found." });
+          return;
         }
+
+        const fallbackMatches: MatchResult[] = initialMentorPool
+          .map((poolItem) => {
+            const m = poolItem.mentor;
+            const c = startup.company;
+
+            // Industry Match (0-100)
+            const matchingCount = m.industries.filter((ind) =>
+              c.industry.map((ci) => ci.toLowerCase()).includes(ind.toLowerCase())
+            ).length;
+            const industryMatch =
+              m.industries.length > 0
+                ? Math.max(0, Math.min(100, Math.round((matchingCount / m.industries.length) * 100)))
+                : 0;
+
+            // Stage Fit (100 or 35)
+            const stageFit = m.preferredStages.includes(c.stage) ? 100 : 35;
+
+            // Availability (0-100)
+            const availableSlots = m.availabilitySlots.filter((s) => s.status === "available").length;
+            const availability = m.availabilitySlots.length > 0
+              ? Math.max(0, Math.min(100, Math.round((availableSlots / m.availabilitySlots.length) * 100)))
+              : 0;
+
+            // Style (0-100)
+            const styleCompatibility = Math.max(0, Math.min(100, Math.round((m.availabilityHoursPerMonth * 8 + m.pastSuccessCount * 5) / 2)));
+
+            const overallScore = Math.max(0, Math.min(100, Math.round(
+              industryMatch * 0.35 +
+              stageFit * 0.3 +
+              availability * 0.2 +
+              styleCompatibility * 0.15
+            )));
+
+            let reason = `${m.name} is a programme mentor with relevant expertise in ${m.expertise.slice(0, 2).join(" and ")}.`;
+            if (industryMatch >= 70) reason = `Strong industry alignment in ${c.industry.slice(0, 2).join(" and ")}.`;
+            else if (stageFit === 100) reason = `Specialises in mentoring ${c.stage}-stage startups.`;
+
+            return {
+              mentorId: m.id,
+              mentorName: m.name,
+              overallScore,
+              reason,
+              breakdown: { industryMatch, stageFit, availability, styleCompatibility },
+            };
+          })
+          .sort((a, b) => b.overallScore - a.overallScore || a.mentorId.localeCompare(b.mentorId))
+          .slice(0, 3);
+
+        const isTimeout = err instanceof Error && err.name === "AbortError";
+        const msg = isTimeout 
+          ? "Match request timed out. Using local fallback recommendations."
+          : "AI matching is currently unavailable. Using local fallback recommendations.";
+
+        dispatch({ type: "SUCCESS", matches: fallbackMatches, isFallback: true });
+        // Optional: show a transient error or just let the "fallback active" UI handle it
+        console.warn(msg);
       });
 
     return () => {
       cancelled = true;
+      clearTimeout(timeoutId);
+      controller.abort();
     };
-  }, [selectedStartupId, programId, cohortId]);
+  }, [selectedStartupId, programId, cohortId, initialMentorPool, initialQueue]);
 
   async function handleConfirm() {
     if (
@@ -241,6 +319,7 @@ export function MatchingWorkbench({
     selectedMentorId,
     confirmState,
     confirmError,
+    isFallback,
   } = store;
 
   const selectedStartup =
@@ -347,9 +426,22 @@ export function MatchingWorkbench({
         {(matchState === "done" || matchState === "error") &&
           matches.length > 0 && (
             <div className="space-y-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                Ranked matches ({matches.length})
-              </p>
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  Ranked matches ({matches.length})
+                </p>
+                {isFallback && (
+                  <span className="text-[10px] font-medium border border-border rounded px-1.5 py-0.5 text-muted-foreground">
+                    Fallback active
+                  </span>
+                )}
+              </div>
+              {isFallback && (
+                <p className="text-[10px] text-muted-foreground bg-muted/30 px-3 py-1.5 rounded border border-border/50">
+                  AI matching encountered a network issue. Using local
+                  deterministic recommendations based on industry and stage.
+                </p>
+              )}
               {matches.map((match, idx) => {
                 const poolItem = mentorPoolMap.get(match.mentorId);
                 const isSelected = match.mentorId === selectedMentorId;

@@ -6,7 +6,7 @@ Phase 5, Block B: harden the final demo against slow Gemini, failed Firestore wr
 
 ## Current Target
 
-Add timeout handling and deterministic fallback confirmation states to the two public demo flows: startup application scoring/submission and mentor meeting submission.
+Document the backup demo path and fallback behavior for Phase 5 Block B resilience.
 
 ## Strategic Source
 
@@ -24,9 +24,9 @@ Add timeout handling and deterministic fallback confirmation states to the two p
 
 ## Atomic Sub-Tasks
 
-- [ ] Add timeout handling and deterministic fallback confirmation states to public application and meeting submission flows.
-- [ ] Add timeout, empty, and fallback states to matching and cohort report demo flows.
-- [ ] Add missing-seed and empty-state guards to demo-critical pages and components.
+- [x] Add timeout handling and deterministic fallback confirmation states to public application and meeting submission flows.
+- [x] Add timeout, empty, and fallback states to matching and cohort report demo flows.
+- [x] Add missing-seed and empty-state guards to demo-critical pages and components.
 - [ ] Document the backup demo path and fallback behavior in project docs and handover notes.
 - [ ] Run lint/build verification and append Coder handover details to `DB_Module/_TASK/_Hand_OverLog.md`.
 
@@ -36,6 +36,17 @@ Add timeout handling and deterministic fallback confirmation states to the two p
 - `components/features/meeting-submission-form.tsx` calls `POST /api/ai/analyze-meeting` and currently enters an error state on network failure.
 - Both public flows are pitch-critical and should support a deterministic local fallback when live API/Gemini calls fail or time out.
 - `app/api/ai/program-fit/route.ts` and `app/api/ai/analyze-meeting/route.ts` already provide server-side fallback behavior when the route is reachable.
+- Public application and meeting submission timeout/fallback states passed evaluation.
+- `components/features/matching-workbench.tsx` calls `POST /api/ai/match` and currently shows an error with manual selection when matching fails.
+- `components/features/cohort-overview.tsx` calls `POST /api/ai/cohort-summary` and currently shows an error state when the report call fails.
+- `app/api/ai/match/route.ts` and `app/api/ai/cohort-summary/route.ts` already provide deterministic server fallback behavior when reachable.
+- Matching and cohort report timeout/fallback logic was implemented, but the Evaluator failed the task because visible fallback copy is missing from both components.
+- Matching and cohort report fallback indicators passed re-audit.
+- `app/dashboard/page.tsx`, `app/matching/page.tsx`, and `app/relationships/page.tsx` assume `seedPrograms[0]` and `seedCohorts[0]` exist.
+- `components/features/dashboard-command-center.tsx` maps attention feed and recent meetings without local empty-state messaging.
+- Top-level dashboard, matching, and relationships seed guards passed evaluation.
+- `DB_Module/_DOCS/05_PROJECT_SNAPSHOT.md` still reports Phase 4 shipped and should record the current Phase 5 Block B resilience state.
+- `DB_Module/_DOCS/07_DATA_FLOW.md` describes data movement but does not yet summarize the fallback demo path.
 - `DB_Module/_DOCS/06_DEPENDENCY_GRAPH.md` is stale and does not include the current component graph; direct file inspection confirmed the relevant components.
 
 ## Out of Scope For Current Task
@@ -43,6 +54,9 @@ Add timeout handling and deterministic fallback confirmation states to the two p
 - API route changes.
 - Firestore rules.
 - Firebase helper changes.
-- Matching workbench resilience.
-- Cohort report resilience.
+- Public application resilience.
+- Meeting submission resilience.
+- Fallback scoring/report generation rewrites.
+- Dynamic relationship and cohort detail page guards.
+- Source code changes.
 - Cloud Run deployment.

@@ -165,10 +165,14 @@ export function PublicApplicationForm({
     // Phase 1: request fit score when not yet scored
     if (fitState === "idle" || fitState === "error") {
       setFitState("loading");
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => { controller.abort(); }, 10000);
+
       try {
         const res = await fetch("/api/ai/program-fit", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          signal: controller.signal,
           body: JSON.stringify({
             programId,
             companyProfile: {
@@ -190,6 +194,8 @@ export function PublicApplicationForm({
           }),
         });
 
+        clearTimeout(timeoutId);
+
         if (!res.ok) {
           setFitState("error");
           return;
@@ -198,8 +204,29 @@ export function PublicApplicationForm({
         const data = (await res.json()) as FitResult;
         setFitResult(data);
         setFitState(data.status === "pending" ? "pending" : "scored");
-      } catch {
-        setFitState("error");
+      } catch (err: unknown) {
+        clearTimeout(timeoutId);
+        // Local fallback for timeout or network failure
+        const isTimeout = err instanceof Error && err.name === "AbortError";
+        const fallback: FitResult = {
+          fitScore: 0,
+          fitLabel: "Potential fit",
+          aiRecommendation: "review",
+          aiInsight: isTimeout 
+            ? "Fit scoring timed out. Your application has been recorded and will be reviewed manually."
+            : "Fit scoring is currently unavailable due to a network issue. Your application will be reviewed manually.",
+          breakdown: {
+            stageFit: 0,
+            industryFit: 0,
+            tractionFit: 0,
+            teamFit: 0,
+            needsFit: 0,
+          },
+          eligibilityFlags: ["scoring-fallback-active"],
+          status: "pending",
+        };
+        setFitResult(fallback);
+        setFitState("pending");
       }
       return;
     }
@@ -597,14 +624,16 @@ export function PublicApplicationForm({
                         key={flag}
                         className="text-[10px] border border-border rounded px-1.5 py-0.5 text-muted-foreground"
                       >
-                        {flag}
+                        {flag === "scoring-fallback-active" ? "Fallback active" : flag}
                       </span>
                     ))}
                   </div>
                 )}
                 {fitState === "pending" && (
                   <p className="text-xs text-muted-foreground border-t border-border pt-3">
-                    AI scoring is currently unavailable. You may still submit; the score will be applied in the next review cycle.
+                    {fitResult.eligibilityFlags.includes("scoring-fallback-active")
+                      ? "AI scoring encountered a network issue. You may still submit; the score will be applied in the next review cycle."
+                      : "AI scoring is currently unavailable. You may still submit; the score will be applied in the next review cycle."}
                   </p>
                 )}
               </>

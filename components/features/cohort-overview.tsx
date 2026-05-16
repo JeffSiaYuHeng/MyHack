@@ -77,6 +77,7 @@ export function CohortOverview({
   >("idle");
   const [apiError, setApiError] = useState<string | null>(null);
   const [report, setReport] = useState<CohortReport | null>(null);
+  const [isFallback, setIsFallback] = useState(false);
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "fallback">(
     "idle"
   );
@@ -137,26 +138,87 @@ export function CohortOverview({
     setReportStatus("loading");
     setApiError(null);
     setCopyStatus("idle");
+    setIsFallback(false);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, 10000);
+
     try {
       const res = await fetch("/api/ai/cohort-summary", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
         body: JSON.stringify({ cohortId: cohort.id }),
       });
+      
+      clearTimeout(timeoutId);
+
       if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: "Request failed" }));
-        setApiError(
+        const err = (await res.json().catch(() => ({}))) as Record<
+          string,
+          unknown
+        >;
+        throw new Error(
           typeof err.error === "string" ? err.error : "Request failed"
         );
-        setReportStatus("error");
-        return;
       }
+
       const data = (await res.json()) as CohortReport;
       setReport(data);
       setReportStatus("done");
-    } catch {
-      setApiError("Network error — please try again.");
-      setReportStatus("error");
+    } catch (err: unknown) {
+      clearTimeout(timeoutId);
+      
+      // Deterministic local fallback
+      const staleNote =
+        staleCount > 0
+          ? `${staleCount} relationship${staleCount > 1 ? "s have" : " has"} not logged a meeting in over 14 days.`
+          : "All relationships have maintained recent meeting activity.";
+
+      const narrative =
+        `${cohort.name} has ${totalRelationships} mentorship relationship${totalRelationships !== 1 ? "s" : ""} across ` +
+        `${companies.length} ${companies.length !== 1 ? "companies" : "company"} and ${mentors.length} ${mentors.length !== 1 ? "mentors" : "mentor"}. ` +
+        `Average health score is ${avgHealthScore}/100, with ${healthyCount} healthy, ${atRiskCount} at-risk, ` +
+        `and ${criticalCount} critical. ${staleNote} ` +
+        `${totalMeetings} meeting${totalMeetings !== 1 ? "s" : ""} have been recorded to date.`;
+
+      const keyRisks: string[] = [];
+      if (criticalCount > 0) {
+        keyRisks.push(`${criticalCount} relationship${criticalCount > 1 ? "s are" : " is"} in critical health.`);
+      }
+      if (staleCount > 0) {
+        keyRisks.push(`${staleCount} relationship${staleCount > 1 ? "s have" : " has"} stalled.`);
+      }
+      if (keyRisks.length === 0) {
+        keyRisks.push("No critical risks detected in current health data.");
+      }
+
+      const recommendedActions: string[] = [
+        criticalCount + atRiskCount > 0
+          ? `Schedule check-ins for the ${criticalCount + atRiskCount} at-risk/critical pairings.`
+          : "Maintain regular check-ins across all relationships.",
+        "Ensure all action items from the last meeting cycle are tracked.",
+      ];
+
+      const fallbackReport: CohortReport = {
+        narrative,
+        keyRisks,
+        recommendedActions,
+        generatedAt: new Date().toISOString(),
+      };
+
+      const isTimeout = err instanceof Error && err.name === "AbortError";
+      const msg = isTimeout 
+        ? "Report generation timed out. Using local fallback metrics."
+        : "AI report is currently unavailable. Using local fallback metrics.";
+
+      setReport(fallbackReport);
+      setReportStatus("done");
+      setIsFallback(true);
+      // Optional: show a transient error or just let the "fallback active" UI handle it
+      console.warn(msg);
     }
   }
 
@@ -462,6 +524,22 @@ export function CohortOverview({
         {/* Report content */}
         {report ? (
           <div className="border border-border rounded px-4 py-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-semibold text-foreground">
+                Narrative Summary
+              </p>
+              {isFallback && (
+                <span className="text-[10px] font-medium border border-border rounded px-1.5 py-0.5 text-muted-foreground">
+                  Fallback active
+                </span>
+              )}
+            </div>
+            {isFallback && (
+              <p className="text-[10px] text-muted-foreground bg-muted/30 px-3 py-1.5 rounded border border-border/50">
+                AI generation encountered a network issue. Using local
+                deterministic narrative based on current cohort metrics.
+              </p>
+            )}
             <p className="text-[10px] text-muted-foreground">
               {report.narrative}
             </p>
