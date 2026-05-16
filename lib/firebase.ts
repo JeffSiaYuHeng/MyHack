@@ -6,7 +6,6 @@ import {
   initializeFirestore,
   getFirestore
 } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -17,23 +16,43 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+let app: ReturnType<typeof getApp> | null = null;
+let db: ReturnType<typeof getFirestore> | null = null;
 
-// Use initializeFirestore with experimentalForceLongPolling enabled.
-// This is more robust in Node.js environments (like Next.js API routes) 
-// and avoids GRPC stream errors (Code: undefined) common in serverless or restricted network contexts.
-// Cache the db instance in development to prevent memory leaks from HMR
-let db: ReturnType<typeof getFirestore>;
+function getFirebaseApp() {
+  if (app) {
+    return app;
+  }
 
-if (getApps().length > 0) {
-  db = getFirestore(app);
-} else {
-  db = initializeFirestore(app, {
-    experimentalForceLongPolling: true,
-  });
+  const configStatus = getFirebaseConfigStatus();
+  if (!configStatus.ready) {
+    return null;
+  }
+
+  app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+  return app;
 }
 
-const auth = getAuth(app);
+function getDb() {
+  if (db) {
+    return db;
+  }
+
+  const firebaseApp = getFirebaseApp();
+  if (!firebaseApp) {
+    return null;
+  }
+
+  if (getApps().length > 0) {
+    db = getFirestore(firebaseApp);
+  } else {
+    db = initializeFirestore(firebaseApp, {
+      experimentalForceLongPolling: true,
+    });
+  }
+
+  return db;
+}
 
 // ─── MVP Collection Registry ──────────────────────────────────────────────────
 
@@ -104,8 +123,17 @@ export async function safeWrite(
       error: `Firebase config incomplete. Missing: ${configStatus.missingKeys.join(", ")}`,
     };
   }
+  const dbInstance = getDb();
+  if (!dbInstance) {
+    return {
+      ok: false,
+      collectionName,
+      fallbackUsed: true,
+      error: "Firebase app unavailable",
+    };
+  }
   try {
-    const ref = await addDoc(collection(db, collectionName), data);
+    const ref = await addDoc(collection(dbInstance, collectionName), data);
     return { ok: true, collectionName, fallbackUsed: false, id: ref.id };
   } catch (err) {
     return {
@@ -120,10 +148,15 @@ export async function safeWrite(
 // ─── Legacy Helpers ───────────────────────────────────────────────────────────
 
 export async function saveResult(collectionName: string, data: Record<string, unknown>) {
-  return addDoc(collection(db, collectionName), {
+  const dbInstance = getDb();
+  if (!dbInstance) {
+    throw new Error("Firebase config incomplete");
+  }
+
+  return addDoc(collection(dbInstance, collectionName), {
     ...data,
     createdAt: serverTimestamp()
   });
 }
 
-export { db, auth };
+export { getDb };
