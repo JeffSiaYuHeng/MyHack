@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Source+Serif+4:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-bright": "#faf9f5",
+                        "on-tertiary-fixed": "#1c1b1b",
+                        "on-primary-fixed-variant": "#5516be",
+                        "inverse-primary": "#d0bcff",
+                        "error": "#ba1a1a",
+                        "tertiary-container": "#757474",
+                        "secondary": "#b52330",
+                        "primary": "#6b38d4",
+                        "on-secondary": "#ffffff",
+                        "inverse-on-surface": "#f2f1ed",
+                        "on-tertiary-fixed-variant": "#474746",
+                        "on-tertiary-container": "#f7feff",
+                        "secondary-container": "#ff5a5f",
+                        "on-background": "#1b1c1a",
+                        "outline-variant": "#cbc3d7",
+                        "on-error-container": "#93000a",
+                        "surface-container-low": "#f5f4f0",
+                        "surface-tint": "#6d3bd7",
+                        "surface-container-high": "#e9e8e4",
+                        "on-error": "#ffffff",
+                        "inverse-surface": "#30312e",
+                        "on-primary": "#ffffff",
+                        "surface": "#faf9f5",
+                        "surface-container": "#efeeea",
+                        "secondary-fixed": "#ffdad8",
+                        "background": "#faf9f5",
+                        "on-secondary-container": "#60000e",
+                        "on-primary-fixed": "#23005c",
+                        "surface-dim": "#dbdad6",
+                        "on-secondary-fixed": "#410007",
+                        "secondary-fixed-dim": "#ffb3b0",
+                        "outline": "#7b7486",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-container": "#8455ef",
+                        "primary-fixed": "#e9ddff",
+                        "on-secondary-fixed-variant": "#92001b",
+                        "on-primary-container": "#fffbff",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "tertiary": "#5d5c5b",
+                        "tertiary-fixed": "#e5e2e1",
+                        "error-container": "#ffdad6",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-highest": "#e3e2df",
+                        "on-surface": "#1b1c1a",
+                        "surface-variant": "#e3e2df",
+                        "on-surface-variant": "#494454",
+                        "primary-fixed-dim": "#d0bcff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-md": "1rem",
+                        "section-margin": "2.5rem",
+                        "card-gap": "1rem",
+                        "stack-sm": "0.5rem",
+                        "sidebar-width": "260px",
+                        "container-padding": "2rem"
+                    },
+                    "fontFamily": {
+                        "headline-sm": ["Inter"],
+                        "headline-xl": ["Source Serif 4"],
+                        "headline-lg-mobile": ["Source Serif 4"],
+                        "label-caps": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-lg": ["Source Serif 4"]
+                    },
+                    "fontSize": {
+                        "headline-sm": ["16px", {"lineHeight": "24px", "letterSpacing": "0.02em", "fontWeight": "600"}],
+                        "headline-xl": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                        "headline-lg-mobile": ["22px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.08em", "fontWeight": "500"}],
+                        "body-sm": ["12px", {"lineHeight": "18px", "fontWeight": "400"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "headline-lg": ["24px", {"lineHeight": "32px", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { background-color: #F5F4F0; }
+    </style>
+</head>
+<body class="font-body-md text-on-surface">
+<!-- Fixed SideNavBar -->
+<aside class="fixed left-0 top-0 h-full w-[260px] bg-inverse-surface dark:bg-surface-container-lowest border-r border-outline-variant dark:border-outline flex flex-col py-stack-md z-50">
+<div class="px-6 mb-8">
+<h1 class="font-headline-lg text-headline-lg font-bold text-on-primary dark:text-primary">Verrier</h1>
+<p class="text-on-surface-variant font-body-sm opacity-70">Venture Workbench</p>
+</div>
+<nav class="flex-1 px-3 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="business_center">business_center</span>
+<span class="font-body-md">Portfolio</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg bg-primary-container text-on-primary-container border-l-2 border-primary transition-all opacity-90" href="#">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+<span class="font-body-md">Relationships</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="school">school</span>
+<span class="font-body-md">Mentors</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="psychology">psychology</span>
+<span class="font-body-md">Insights</span>
+</a>
+</nav>
+<div class="mt-auto px-6 mb-6">
+<button class="w-full bg-secondary-container text-on-secondary-container py-3 rounded-lg font-headline-sm flex items-center justify-center gap-2 hover:opacity-90 transition-all">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+                New Relationship
+            </button>
+</div>
+<div class="px-3 border-t border-outline-variant pt-4 space-y-1">
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-body-sm">Settings</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+<span class="font-body-sm">Support</span>
+</a>
+</div>
+</aside>
+<!-- Main Workbench Canvas -->
+<main class="ml-[260px] min-h-screen">
+<!-- TopAppBar -->
+<header class="sticky top-0 z-40 flex justify-between items-center h-16 px-container-padding bg-surface-bright dark:bg-surface-dim border-b border-outline-variant">
+<div class="flex items-center bg-surface-container-low px-4 py-2 rounded-full border border-outline-variant w-96 focus-within:ring-2 focus-within:ring-primary transition-all">
+<span class="material-symbols-outlined text-on-surface-variant mr-2" data-icon="search">search</span>
+<input class="bg-transparent border-none outline-none text-body-sm w-full focus:ring-0" placeholder="Search relationships..." type="text"/>
+</div>
+<div class="flex items-center gap-4">
+<button class="bg-primary text-on-primary px-4 py-2 rounded-lg font-body-sm font-semibold hover:opacity-90 transition-all">
+                    Add Startup
+                </button>
+<div class="flex gap-2">
+<span class="material-symbols-outlined p-2 text-on-surface-variant cursor-pointer hover:bg-surface-container-high rounded-full" data-icon="notifications">notifications</span>
+<span class="material-symbols-outlined p-2 text-on-surface-variant cursor-pointer hover:bg-surface-container-high rounded-full" data-icon="account_circle">account_circle</span>
+</div>
+</div>
+</header>
+<!-- Content Area -->
+<div class="p-container-padding max-w-7xl mx-auto">
+<!-- Header Summary Section -->
+<section class="mb-section-margin">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<h2 class="font-headline-xl text-headline-xl text-on-background mb-1">Relationships</h2>
+<div class="flex items-center gap-4 text-on-surface-variant">
+<span class="flex items-center gap-1.5"><strong class="text-on-surface">42</strong> Total</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="flex items-center gap-1.5 text-primary font-medium"><strong class="text-primary">28</strong> Healthy</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="flex items-center gap-1.5 text-secondary"><strong class="text-secondary">9</strong> At Risk</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="flex items-center gap-1.5 text-error font-bold"><strong class="text-error">5</strong> Critical</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Filter Bar -->
+<section class="mb-stack-md flex flex-wrap items-center gap-8 bg-surface-container-lowest p-4 rounded-xl border border-outline-variant">
+<div class="flex items-center gap-3">
+<span class="font-label-caps text-label-caps text-outline uppercase">Status</span>
+<div class="flex gap-2">
+<button class="px-3 py-1 bg-primary text-on-primary rounded-full text-body-sm font-medium">All</button>
+<button class="px-3 py-1 bg-surface-container-high text-on-surface-variant rounded-full text-body-sm font-medium hover:bg-outline-variant transition-colors">Active</button>
+<button class="px-3 py-1 bg-surface-container-high text-on-surface-variant rounded-full text-body-sm font-medium hover:bg-outline-variant transition-colors">Pending</button>
+</div>
+</div>
+<div class="h-8 w-px bg-outline-variant"></div>
+<div class="flex items-center gap-3">
+<span class="font-label-caps text-label-caps text-outline uppercase">Health</span>
+<div class="flex gap-2">
+<button class="px-3 py-1 bg-primary text-on-primary rounded-full text-body-sm font-medium">All</button>
+<button class="px-3 py-1 bg-surface-container-high text-on-surface-variant rounded-full text-body-sm font-medium hover:bg-outline-variant transition-colors">Healthy</button>
+<button class="px-3 py-1 bg-surface-container-high text-on-surface-variant rounded-full text-body-sm font-medium hover:bg-outline-variant transition-colors">At Risk</button>
+<button class="px-3 py-1 bg-surface-container-high text-on-surface-variant rounded-full text-body-sm font-medium hover:bg-outline-variant transition-colors">Critical</button>
+</div>
+</div>
+</section>
+<!-- Relationship Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-card-gap">
+<!-- Relationship Card 1: Critical State -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 flex flex-col gap-6 relative overflow-hidden transition-all hover:shadow-md border-l-4 border-l-error">
+<div class="flex justify-between items-start">
+<div class="flex gap-4">
+<img alt="" class="w-16 h-16 rounded-lg object-cover border border-outline-variant" data-alt="A macro photograph of a modern, sleek corporate logo for a tech startup, featuring clean minimalist typography against a soft-focus background of a glass-walled office building. The lighting is diffused and natural, highlighting a professional and institutional yet agile atmosphere consistent with high-end venture capital aesthetics." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFkH2N9HMId1Qv5PfR8bKPnG_EN4JAMTY-26JD9uD4luJ7PxHVSigAsOf_mdzRVrKP3kECIkIhh2MvhfUoQuw8mIsb3zijGl17dF-jFKbePXAEgINdeyFV2QA-hWBD3FRa5_nmywnN8zF83Pdx0pGLuR24T05VdvjrkKD8wwYozBSbK1x7lTagT4ol2HUQ6Fz6tC2XrnjTs3Z8MeOAt819XRVi-yfVU2UQ0Kkkbo8bxfEm5wpM97acTJ6Xq5BTCPH0RS2kyrwwr60"/>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-background">NeuraFlow Systems</h3>
+<div class="flex items-center gap-2 mt-1">
+<span class="px-2 py-0.5 bg-error-container text-on-error-container rounded-full text-body-sm font-medium">Critical</span>
+<span class="text-body-sm text-on-surface-variant">Series A</span>
+</div>
+</div>
+</div>
+<div class="text-right">
+<div class="flex items-center justify-end gap-1 text-error">
+<span class="font-headline-lg text-headline-lg font-bold">42</span>
+<span class="material-symbols-outlined" data-icon="trending_down">trending_down</span>
+</div>
+<span class="font-label-caps text-label-caps text-outline uppercase">Health Score</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 border-y border-outline-variant py-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="person">person</span>
+</div>
+<div>
+<p class="font-body-md font-semibold">Sarah Jenkins</p>
+<p class="font-body-sm text-on-surface-variant">Lead Mentor · Fintech</p>
+</div>
+</div>
+<div class="flex flex-col justify-center text-right">
+<div class="flex justify-end gap-4">
+<div>
+<p class="font-body-md font-bold">12</p>
+<p class="font-label-caps text-label-caps text-outline uppercase">Meetings</p>
+</div>
+<div>
+<p class="font-body-md font-bold text-error">18d</p>
+<p class="font-label-caps text-label-caps text-outline uppercase">Last Activity</p>
+</div>
+</div>
+</div>
+</div>
+<!-- AI Insight Block -->
+<div class="bg-[#F5F3FF] border border-primary-fixed p-4 rounded-lg">
+<div class="flex items-center gap-2 mb-2">
+<span class="bg-primary text-on-primary text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">AI Insight</span>
+<span class="font-body-sm font-semibold text-primary">Intelligence Summary</span>
+</div>
+<p class="text-body-md text-on-surface-variant italic">"Communication frequency has dropped by 45% since the last pivot. Founder reports mismatch in technical guidance. Urgent re-alignment meeting recommended."</p>
+</div>
+<div class="grid grid-cols-2 gap-x-8 gap-y-4">
+<div class="space-y-1">
+<div class="flex justify-between items-center text-body-sm mb-1">
+<span class="text-on-surface-variant">Industry Fit</span>
+<span class="font-semibold">88%</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full" style="width: 88%"></div>
+</div>
+</div>
+<div class="space-y-1">
+<div class="flex justify-between items-center text-body-sm mb-1">
+<span class="text-on-surface-variant">Style Comp.</span>
+<span class="font-semibold text-error">34%</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-error rounded-full" style="width: 34%"></div>
+</div>
+</div>
+</div>
+<div class="flex flex-wrap gap-2">
+<span class="px-2 py-1 bg-secondary-fixed text-on-secondary-fixed text-[11px] rounded-full font-medium">Missed Milestones</span>
+<span class="px-2 py-1 bg-secondary-fixed text-on-secondary-fixed text-[11px] rounded-full font-medium">Technical Friction</span>
+</div>
+</div>
+<!-- Relationship Card 2: Healthy State -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 flex flex-col gap-6 relative overflow-hidden transition-all hover:shadow-md border-l-4 border-l-primary">
+<div class="flex justify-between items-start">
+<div class="flex gap-4">
+<div class="w-16 h-16 rounded-lg bg-primary-fixed flex items-center justify-center border border-outline-variant">
+<span class="material-symbols-outlined text-primary scale-150" data-icon="rocket_launch" data-weight="fill" style="font-variation-settings: 'FILL' 1;">rocket_launch</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-background">Lumina Health</h3>
+<div class="flex items-center gap-2 mt-1">
+<span class="px-2 py-0.5 bg-primary-fixed text-on-primary-fixed rounded-full text-body-sm font-medium">Healthy</span>
+<span class="text-body-sm text-on-surface-variant">Seed Phase</span>
+</div>
+</div>
+</div>
+<div class="text-right">
+<div class="flex items-center justify-end gap-1 text-primary">
+<span class="font-headline-lg text-headline-lg font-bold">94</span>
+<span class="material-symbols-outlined" data-icon="trending_up">trending_up</span>
+</div>
+<span class="font-label-caps text-label-caps text-outline uppercase">Health Score</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 border-y border-outline-variant py-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="person">person</span>
+</div>
+<div>
+<p class="font-body-md font-semibold">Dr. Marcus Chen</p>
+<p class="font-body-sm text-on-surface-variant">Domain Expert · Biotech</p>
+</div>
+</div>
+<div class="flex flex-col justify-center text-right">
+<div class="flex justify-end gap-4">
+<div>
+<p class="font-body-md font-bold">24</p>
+<p class="font-label-caps text-label-caps text-outline uppercase">Meetings</p>
+</div>
+<div>
+<p class="font-body-md font-bold text-primary">2d</p>
+<p class="font-label-caps text-label-caps text-outline uppercase">Last Activity</p>
+</div>
+</div>
+</div>
+</div>
+<!-- AI Insight Block -->
+<div class="bg-[#F5F3FF] border border-primary-fixed p-4 rounded-lg">
+<div class="flex items-center gap-2 mb-2">
+<span class="bg-primary text-on-primary text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">AI Insight</span>
+<span class="font-body-sm font-semibold text-primary">Relationship Growth</span>
+</div>
+<p class="text-body-md text-on-surface-variant italic">"Exceptional alignment on market strategy. Mentor has introduced 3 high-value network contacts this month. Momentum is high."</p>
+</div>
+<div class="grid grid-cols-2 gap-x-8 gap-y-4">
+<div class="space-y-1">
+<div class="flex justify-between items-center text-body-sm mb-1">
+<span class="text-on-surface-variant">Stage Alignment</span>
+<span class="font-semibold">96%</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full" style="width: 96%"></div>
+</div>
+</div>
+<div class="space-y-1">
+<div class="flex justify-between items-center text-body-sm mb-1">
+<span class="text-on-surface-variant">Availability</span>
+<span class="font-semibold">92%</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full" style="width: 92%"></div>
+</div>
+</div>
+</div>
+<div class="flex flex-wrap gap-2">
+<span class="px-2 py-1 bg-primary-fixed text-on-primary-fixed-variant text-[11px] rounded-full font-medium">Network Expansion</span>
+<span class="px-2 py-1 bg-primary-fixed text-on-primary-fixed-variant text-[11px] rounded-full font-medium">Active Collaboration</span>
+</div>
+</div>
+<!-- Relationship Card 3: At Risk -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 flex flex-col gap-6 relative overflow-hidden transition-all hover:shadow-md border-l-4 border-l-secondary">
+<div class="flex justify-between items-start">
+<div class="flex gap-4">
+<div class="w-16 h-16 rounded-lg bg-secondary-fixed flex items-center justify-center border border-outline-variant">
+<span class="material-symbols-outlined text-secondary scale-150" data-icon="cloud_sync" data-weight="fill" style="font-variation-settings: 'FILL' 1;">cloud_sync</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-background">Aether Logistics</h3>
+<div class="flex items-center gap-2 mt-1">
+<span class="px-2 py-0.5 bg-secondary-fixed text-on-secondary-fixed rounded-full text-body-sm font-medium">At Risk</span>
+<span class="text-body-sm text-on-surface-variant">Pre-seed</span>
+</div>
+</div>
+</div>
+<div class="text-right">
+<div class="flex items-center justify-end gap-1 text-secondary">
+<span class="font-headline-lg text-headline-lg font-bold">67</span>
+<span class="material-symbols-outlined" data-icon="horizontal_rule">horizontal_rule</span>
+</div>
+<span class="font-label-caps text-label-caps text-outline uppercase">Health Score</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 border-y border-outline-variant py-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="person">person</span>
+</div>
+<div>
+<p class="font-body-md font-semibold">Elena Rodriguez</p>
+<p class="font-body-sm text-on-surface-variant">Operational Advisor</p>
+</div>
+</div>
+<div class="flex flex-col justify-center text-right">
+<div class="flex justify-end gap-4">
+<div>
+<p class="font-body-md font-bold">5</p>
+<p class="font-label-caps text-label-caps text-outline uppercase">Meetings</p>
+</div>
+<div>
+<p class="font-body-md font-bold text-secondary">9d</p>
+<p class="font-label-caps text-label-caps text-outline uppercase">Last Activity</p>
+</div>
+</div>
+</div>
+</div>
+<!-- AI Insight Block -->
+<div class="bg-[#F5F3FF] border border-primary-fixed p-4 rounded-lg">
+<div class="flex items-center gap-2 mb-2">
+<span class="bg-primary text-on-primary text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">AI Insight</span>
+<span class="font-body-sm font-semibold text-primary">Strategic Gap</span>
+</div>
+<p class="text-body-md text-on-surface-variant italic">"Founders are seeking aggressive expansion while mentor advises operational consolidation. Tension noted in meeting notes."</p>
+</div>
+<div class="grid grid-cols-2 gap-x-8 gap-y-4">
+<div class="space-y-1">
+<div class="flex justify-between items-center text-body-sm mb-1">
+<span class="text-on-surface-variant">Industry Fit</span>
+<span class="font-semibold">72%</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-secondary rounded-full" style="width: 72%"></div>
+</div>
+</div>
+<div class="space-y-1">
+<div class="flex justify-between items-center text-body-sm mb-1">
+<span class="text-on-surface-variant">Style Comp.</span>
+<span class="font-semibold text-secondary">55%</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-secondary rounded-full" style="width: 55%"></div>
+</div>
+</div>
+</div>
+<div class="flex flex-wrap gap-2">
+<span class="px-2 py-1 bg-secondary-fixed text-on-secondary-fixed text-[11px] rounded-full font-medium">Strategic Conflict</span>
+</div>
+</div>
+<!-- Empty State / Add New Placeholder -->
+<div class="border-2 border-dashed border-outline-variant rounded-xl p-6 flex flex-col items-center justify-center gap-4 hover:bg-surface-container hover:border-primary transition-all cursor-pointer group">
+<div class="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+</div>
+<div class="text-center">
+<p class="font-headline-sm text-headline-sm">Establish New Relationship</p>
+<p class="text-body-sm text-on-surface-variant">Match a startup with a specialized mentor</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

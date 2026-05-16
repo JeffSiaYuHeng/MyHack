@@ -1,8 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
+import { 
+  TrendingUp, 
+  TrendingDown, 
+  Minus, 
+  User, 
+  Rocket, 
+  CloudSync, 
+  Zap,
+  ArrowLeft,
+  Copy,
+  Calendar,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  Brain
+} from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import type {
   Cohort,
   Company,
@@ -21,38 +38,58 @@ import {
 
 const MILESTONE_LABELS = ["Discovery", "Alignment", "Execution", "Scaling", "Completion"];
 
+// Refined Colors based on reference
+const COLORS = {
+  primary: "#6b38d4", // Healthy
+  secondary: "#b52330", // At Risk
+  error: "#ba1a1a", // Critical
+  surface: "#faf9f5",
+  background: "#F5F4F0",
+  outline: "#7b7486",
+  "on-surface-variant": "#494454",
+  "ai-bg": "#F5F3FF",
+  "ai-border": "#e9ddff"
+};
+
 const HEALTH_COLORS: Record<"healthy" | "at-risk" | "critical", string> = {
-  healthy: "var(--status-healthy)",
-  "at-risk": "var(--status-risk)",
-  critical: "var(--status-critical)",
+  healthy: COLORS.primary,
+  "at-risk": COLORS.secondary,
+  critical: COLORS.error,
 };
 
-const TREND_SYMBOL: Record<Relationship["healthTrend"], string> = {
-  improving: "↑",
-  stable: "→",
-  deteriorating: "↓",
+const STATUS_BG: Record<"healthy" | "at-risk" | "critical", string> = {
+  healthy: "#e9ddff", // primary-fixed
+  "at-risk": "#ffdad8", // secondary-fixed
+  critical: "#ffdad6", // error-container
 };
 
-const TREND_COLOR: Record<Relationship["healthTrend"], string> = {
-  improving: "var(--status-healthy)",
-  stable: "var(--muted-foreground)",
-  deteriorating: "var(--status-critical)",
+const STATUS_TEXT: Record<"healthy" | "at-risk" | "critical", string> = {
+  healthy: "#23005c", // on-primary-fixed
+  "at-risk": "#410007", // on-secondary-fixed
+  critical: "#93000a", // on-error-container
 };
 
-const SIGNAL_COLOR: Record<Meeting["signal"], string> = {
-  Positive: "var(--status-healthy)",
-  Neutral: "var(--muted-foreground)",
-  "Friction detected": "var(--status-critical)",
+const TREND_ICON = {
+  improving: TrendingUp,
+  stable: Minus,
+  deteriorating: TrendingDown,
+};
+
+const SIGNAL_ICON = {
+  Positive: CheckCircle2,
+  Neutral: Minus,
+  "Friction detected": AlertCircle,
 };
 
 function urgencyLevelColor(level: RelationshipUrgencyLevel): string {
-  if (level === "critical") return "var(--status-critical)";
-  if (level === "stale" || level === "watch") return "var(--status-risk)";
-  if (level === "healthy") return "var(--status-healthy)";
-  return "var(--muted-foreground)";
+  if (level === "critical") return COLORS.error;
+  if (level === "stale" || level === "watch") return COLORS.secondary;
+  if (level === "healthy") return COLORS.primary;
+  return COLORS.outline;
 }
 
 function formatDate(ts: TimestampLike): string {
+  if (!ts) return "—";
   if (typeof ts === "string") return ts.slice(0, 10);
   if (ts instanceof Date) return ts.toISOString().slice(0, 10);
   if (typeof ts === "number") return new Date(ts).toISOString().slice(0, 10);
@@ -60,6 +97,40 @@ function formatDate(ts: TimestampLike): string {
     return new Date(ts.seconds * 1000).toISOString().slice(0, 10);
   }
   return String(ts);
+}
+
+function DetailSkeleton() {
+  return (
+    <div className="p-8 max-w-7xl mx-auto space-y-8">
+      <Skeleton className="h-4 w-32" />
+      <div className="bg-white border border-[#cbc3d7] rounded-xl p-8 space-y-6">
+        <div className="flex justify-between items-start">
+          <div className="flex gap-6">
+            <Skeleton className="w-20 h-20 rounded-xl" />
+            <div className="space-y-3">
+              <Skeleton className="h-7 w-64" />
+              <div className="flex gap-2">
+                <Skeleton className="h-5 w-24 rounded-full" />
+                <Skeleton className="h-5 w-32 rounded-full" />
+              </div>
+            </div>
+          </div>
+          <div className="text-right space-y-2">
+            <Skeleton className="h-12 w-20 ml-auto" />
+            <Skeleton className="h-4 w-24 ml-auto" />
+          </div>
+        </div>
+        <div className="border-t border-[#cbc3d7] pt-6 grid grid-cols-4 gap-8">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="space-y-2">
+              <Skeleton className="h-3 w-16" />
+              <Skeleton className="h-5 w-24" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 interface RelationshipDetailProps {
@@ -116,17 +187,18 @@ export function RelationshipDetail({
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [meetingResult, setMeetingResult] = useState<AnalysisResult | null>(null);
   const [liveHealthScore, setLiveHealthScore] = useState(relationship.healthScore);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 400);
+    return () => clearTimeout(t);
+  }, []);
 
   const band = getHealthBand(liveHealthScore);
   const healthColor = HEALTH_COLORS[band];
   const urgency = getRelationshipUrgency(relationship, meetings);
   const sortedMeetings = [...meetings].sort((a, b) => b.meetingNumber - a.meetingNumber);
-  const meetingSignalClass =
-    meetingResult?.signal === "Positive"
-      ? "bg-[var(--status-healthy-bg)] text-[var(--status-healthy)]"
-      : meetingResult?.signal === "Friction detected"
-        ? "bg-[var(--status-critical-bg)] text-[var(--status-critical)]"
-        : "bg-muted text-muted-foreground";
+  const TrendIcon = TREND_ICON[relationship.healthTrend];
 
   async function handleRefreshDiagnosis() {
     setDiagnosisState("loading");
@@ -199,393 +271,451 @@ export function RelationshipDetail({
     setUploadOpen(false);
   }
 
+  if (!mounted) return <DetailSkeleton />;
+
   return (
-    <div className="px-6 md:px-10 py-8 space-y-6">
+    <div className="p-8 max-w-7xl mx-auto space-y-8">
       <Link
         href="/relationships"
-        className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        className="inline-flex items-center gap-2 text-sm font-medium text-[#494454] hover:text-[#6b38d4] transition-colors group"
       >
-        ← Relationships
+        <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+        Back to Relationships
       </Link>
 
-      <section className="bg-card border border-border rounded-xl overflow-hidden">
-        <div className="h-1 w-full" style={{ background: healthColor }} />
-        <div className="px-6 py-5">
+      <section className="bg-white border border-[#cbc3d7] rounded-xl overflow-hidden shadow-sm border-l-4" style={{ borderLeftColor: healthColor }}>
+        <div className="px-8 py-8">
           <div className="flex items-start justify-between gap-6 flex-wrap">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-lg font-semibold text-foreground">{company.name}</h1>
-                <span className="text-muted-foreground text-sm">×</span>
-                <p className="text-base font-medium text-muted-foreground">{mentor.name}</p>
+            <div className="flex gap-6">
+              <div 
+                className="w-20 h-20 rounded-xl flex items-center justify-center border border-[#cbc3d7]"
+                style={{ background: STATUS_BG[band] }}
+              >
+                {band === "healthy" ? (
+                  <Rocket size={40} style={{ color: COLORS.primary }} />
+                ) : band === "at-risk" ? (
+                  <CloudSync size={40} style={{ color: COLORS.secondary }} />
+                ) : (
+                  <Zap size={40} style={{ color: COLORS.error }} />
+                )}
               </div>
-              <div className="flex items-center gap-2 flex-wrap mt-2">
-                <span
-                  className="text-[10px] font-medium px-2 py-0.5 rounded-full"
-                  style={{
-                    color: healthColor,
-                    background: `color-mix(in srgb, ${healthColor} 12%, transparent)`,
-                  }}
-                >
-                  {getHealthBandLabel(band)}
-                </span>
-                {urgency.level !== "healthy" && (
+              <div className="min-w-0">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <h1 className="text-2xl font-bold text-[#1b1c1a]" style={{ fontFamily: "Source Serif 4, serif" }}>
+                    {company.name}
+                  </h1>
+                  <span className="text-[#cbc3d7] text-lg">×</span>
+                  <p className="text-xl font-medium text-[#494454]">{mentor.name}</p>
+                </div>
+                <div className="flex items-center gap-3 flex-wrap mt-3">
                   <span
-                    className="text-[10px] font-medium px-2 py-0.5 rounded-full"
+                    className="text-xs font-semibold px-3 py-1 rounded-full"
                     style={{
-                      color: urgencyLevelColor(urgency.level),
-                      background: `color-mix(in srgb, ${urgencyLevelColor(urgency.level)} 10%, transparent)`,
+                      color: STATUS_TEXT[band],
+                      background: STATUS_BG[band],
                     }}
                   >
-                    {urgency.label}
+                    {getHealthBandLabel(band)}
                   </span>
-                )}
-                <span className="text-[10px] border border-border rounded-full px-2 py-0.5 text-muted-foreground">
-                  {cohort.name}
-                </span>
-                <span className="text-[10px] text-muted-foreground">{program.name}</span>
+                  {urgency.level !== "healthy" && (
+                    <span
+                      className="text-xs font-semibold px-3 py-1 rounded-full"
+                      style={{
+                        color: urgencyLevelColor(urgency.level),
+                        background: `${urgencyLevelColor(urgency.level)}1A`,
+                      }}
+                    >
+                      {urgency.label}
+                    </span>
+                  )}
+                  <span className="text-xs text-[#494454] border border-[#cbc3d7] rounded-full px-3 py-1 bg-[#f5f4f0]">
+                    {cohort.name} · {program.name}
+                  </span>
+                </div>
               </div>
             </div>
 
             <div className="shrink-0 text-right">
-              <div className="flex items-baseline gap-1.5 justify-end">
-                <span className="text-4xl font-bold leading-none" style={{ color: healthColor }}>
+              <div className="flex items-baseline gap-2 justify-end" style={{ color: healthColor }}>
+                <span className="text-5xl font-bold tracking-tighter">
                   {liveHealthScore}
                 </span>
-                <span className="text-lg font-semibold" style={{ color: TREND_COLOR[relationship.healthTrend] }}>
-                  {TREND_SYMBOL[relationship.healthTrend]}
-                </span>
+                <TrendIcon size={24} />
               </div>
-              <p className="text-xs text-muted-foreground mt-1">Health Score</p>
-              <button
-                onClick={() => {
-                  const token = relationship.mentorId;
-                  const url = `${window.location.origin}/submit-meeting?token=${token}`;
-                  navigator.clipboard.writeText(url);
-                  toast.success("Mentor link copied to clipboard");
-                }}
-                className="mt-3 ml-auto text-xs px-3 py-1.5 border border-border rounded-full text-muted-foreground hover:text-foreground hover:bg-accent transition-all duration-150 flex items-center gap-1.5"
-              >
-                ⎘ Copy Mentor Link
-              </button>
-              <p className="text-[10px] text-muted-foreground mt-1 font-mono">
-                /submit-meeting?token={relationship.mentorId}
-              </p>
+              <p className="text-[11px] font-medium text-[#7b7486] uppercase tracking-wider mt-1">Health Score</p>
+              
+              <div className="mt-4 flex flex-col items-end gap-2">
+                <button
+                  onClick={() => {
+                    const token = relationship.mentorId;
+                    const url = `${window.location.origin}/submit-meeting?token=${token}`;
+                    navigator.clipboard.writeText(url);
+                    toast.success("Mentor link copied to clipboard");
+                  }}
+                  className="text-xs px-4 py-2 border border-[#cbc3d7] rounded-full text-[#494454] hover:text-[#6b38d4] hover:border-[#6b38d4] transition-all flex items-center gap-2 bg-[#f5f4f0]"
+                >
+                  <Copy size={14} />
+                  Copy Mentor Link
+                </button>
+                <code className="text-[10px] text-[#7b7486] bg-[#efeeea] px-2 py-0.5 rounded">
+                  /submit-meeting?token={relationship.mentorId.slice(0, 8)}...
+                </code>
+              </div>
             </div>
           </div>
 
-          <div className="mt-4 pt-4 border-t border-border grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+          <div className="mt-8 pt-8 border-t border-[#cbc3d7] grid grid-cols-2 sm:grid-cols-4 gap-8">
             {[
-              { label: "Meetings", value: relationship.meetingCount },
-              { label: "Days since last", value: `${urgency.daysSinceLastMeeting}d` },
-              { label: "Match score", value: relationship.matchScore },
-              { label: "Milestone", value: `${relationship.currentMilestone} / 5` },
-            ].map(({ label, value }) => (
-              <div key={label}>
-                <p className="text-muted-foreground">{label}</p>
-                <p className="font-semibold text-foreground mt-0.5">{value}</p>
+              { label: "Meetings", value: relationship.meetingCount, icon: Calendar },
+              { label: "Last Activity", value: `${urgency.daysSinceLastMeeting}d ago`, icon: Clock },
+              { label: "Match Score", value: `${relationship.matchScore}%`, icon: Zap },
+              { label: "Current Phase", value: MILESTONE_LABELS[relationship.currentMilestone - 1] || "Discovery", icon: CheckCircle2 },
+            ].map(({ label, value, icon: Icon }) => (
+              <div key={label} className="space-y-1">
+                <p className="text-[11px] font-medium text-[#7b7486] uppercase tracking-wider flex items-center gap-1.5">
+                  <Icon size={12} className="text-[#cbc3d7]" />
+                  {label}
+                </p>
+                <p className="text-lg font-bold text-[#1b1c1a]">{value}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="space-y-6">
-          <section className="bg-card border border-border rounded-xl p-5">
-            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-4">
-              Milestones
-            </p>
-            <div className="space-y-2">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        <div className="space-y-8">
+          <section className="bg-white border border-[#cbc3d7] rounded-xl p-6 shadow-sm">
+            <h3 className="text-[11px] font-bold text-[#7b7486] uppercase tracking-widest mb-6">Relationship Milestones</h3>
+            <div className="space-y-4">
               {MILESTONE_LABELS.map((label, index) => {
                 const num = index + 1;
                 const completed = relationship.milestonesCompleted.includes(num);
                 const current = !completed && num === relationship.currentMilestone;
                 return (
-                  <div key={num} className="flex items-center gap-3">
-                    <span
-                      className="w-6 h-6 rounded-full border flex items-center justify-center text-[10px] font-bold"
+                  <div key={num} className="flex items-center gap-4 group">
+                    <div 
+                      className="w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-all"
                       style={{
-                        borderColor: completed ? "var(--status-healthy)" : current ? "var(--primary)" : "var(--border)",
-                        backgroundColor: completed ? "var(--status-healthy)" : current ? "var(--primary)" : "transparent",
-                        color: completed || current ? "#fff" : "var(--muted-foreground)",
+                        borderColor: completed ? COLORS.primary : current ? COLORS.primary : "#efeeea",
+                        backgroundColor: completed ? COLORS.primary : "transparent",
+                        color: completed ? "#fff" : current ? COLORS.primary : "#cbc3d7",
                       }}
                     >
-                      {completed ? "✓" : num}
-                    </span>
-                    <span className="text-xs text-foreground">{label}</span>
-                    {relationship.milestoneCompletedAt[num] && (
-                      <span className="ml-auto text-[10px] text-muted-foreground">
-                        {formatDate(relationship.milestoneCompletedAt[num])}
-                      </span>
-                    )}
+                      {completed ? <CheckCircle2 size={16} /> : num}
+                    </div>
+                    <div className="flex-1">
+                      <p className={`text-sm font-semibold ${completed || current ? "text-[#1b1c1a]" : "text-[#cbc3d7]"}`}>
+                        {label}
+                      </p>
+                      {relationship.milestoneCompletedAt[num] && (
+                        <p className="text-[10px] text-[#7b7486]">
+                          {formatDate(relationship.milestoneCompletedAt[num])}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 );
               })}
             </div>
           </section>
 
-          <section className="bg-card border border-border rounded-xl p-5">
-            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-3">
-              Match Breakdown
+          <section className="bg-white border border-[#cbc3d7] rounded-xl p-6 shadow-sm">
+            <h3 className="text-[11px] font-bold text-[#7b7486] uppercase tracking-widest mb-4">Match Breakdown</h3>
+            <p className="text-xs text-[#494454] italic mb-6 leading-relaxed bg-[#f5f4f0] p-3 rounded-lg border border-[#cbc3d7]">
+              &quot;{relationship.matchReason}&quot;
             </p>
-            <p className="text-xs text-muted-foreground italic mb-3 leading-relaxed">
-              {relationship.matchReason}
-            </p>
-            <div className="space-y-2.5">
+            <div className="space-y-4">
               {(
                 [
-                  ["industryMatch", "Industry"],
-                  ["stageFit", "Stage"],
+                  ["industryMatch", "Industry Fit"],
+                  ["stageFit", "Stage Alignment"],
                   ["availability", "Availability"],
-                  ["styleCompatibility", "Style"],
+                  ["styleCompatibility", "Style Compatibility"],
                 ] as [keyof Relationship["matchBreakdown"], string][]
               ).map(([key, label]) => (
-                <div key={key} className="flex items-center gap-2">
-                  <span className="text-[10px] text-muted-foreground w-20 shrink-0">{label}</span>
-                  <div className="flex-1 bg-muted rounded-full h-1.5 overflow-hidden">
+                <div key={key} className="space-y-1.5">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[11px] font-medium text-[#494454]">{label}</span>
+                    <span className="text-xs font-bold text-[#1b1c1a]">{relationship.matchBreakdown[key]}%</span>
+                  </div>
+                  <div className="h-1.5 bg-[#efeeea] rounded-full overflow-hidden">
                     <div
-                      className="h-full rounded-full"
-                      style={{ width: `${relationship.matchBreakdown[key]}%`, backgroundColor: "var(--primary)" }}
+                      className="h-full rounded-full transition-all duration-1000"
+                      style={{ 
+                        width: `${relationship.matchBreakdown[key]}%`, 
+                        backgroundColor: relationship.matchBreakdown[key] < 50 ? COLORS.secondary : COLORS.primary 
+                      }}
                     />
                   </div>
-                  <span className="text-[10px] text-muted-foreground w-6 text-right shrink-0">
-                    {relationship.matchBreakdown[key]}
-                  </span>
                 </div>
               ))}
             </div>
           </section>
 
-          <section className="bg-card border border-border rounded-xl p-5">
-            <div className="flex items-center justify-between gap-3 mb-3">
-              <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-                AI Diagnosis
-              </p>
+          <section className="bg-white border border-[#cbc3d7] rounded-xl p-6 shadow-sm">
+            <div className="flex items-center justify-between gap-3 mb-6">
+              <h3 className="text-[11px] font-bold text-[#7b7486] uppercase tracking-widest">AI Intelligence</h3>
               <button
                 onClick={() => { void handleRefreshDiagnosis(); }}
                 disabled={diagnosisState === "loading"}
-                className="px-3 py-1.5 text-xs font-medium rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-                style={{
-                  background: diagnosisState === "loading" ? "transparent" : "rgba(243,100,88,0.08)",
-                  color: diagnosisState === "loading" ? "#797979" : "#f36458",
-                  border: "1px solid",
-                  borderColor: diagnosisState === "loading" ? "#e5e5e5" : "rgba(243,100,88,0.3)",
-                }}
+                className="px-4 py-1.5 text-xs font-bold rounded-full transition-all disabled:opacity-50 border border-[#6b38d4] text-[#6b38d4] hover:bg-[#6b38d4] hover:text-white"
               >
-                {diagnosisState === "loading" ? "Diagnosing…" : "Refresh"}
+                {diagnosisState === "loading" ? "Analysing…" : "Refresh"}
               </button>
             </div>
-            <div className="rounded-md p-3" style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.15)" }}>
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[var(--status-ai)]/10 text-[var(--status-ai)]">✦ AI</span>
-                <p className="text-[9px] font-bold uppercase tracking-widest font-mono" style={{ color: "var(--status-ai)" }}>
-                  Diagnosis
-                </p>
+            
+            <div className="bg-[#F5F3FF] border border-[#e9ddff] p-5 rounded-xl space-y-4">
+              <div className="flex items-center gap-2">
+                <span className="bg-[#6b38d4] text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">AI Insight</span>
+                <span className="text-xs font-semibold text-[#6b38d4]">Intelligence Summary</span>
               </div>
-              <p className="text-xs leading-relaxed text-muted-foreground italic">{diagnosis.narrative}</p>
+              
+              <p className="text-sm leading-relaxed text-[#494454] italic">
+                &quot;{diagnosis.narrative}&quot;
+              </p>
+              
               {diagnosis.recommendation && (
-                <p className="text-xs mt-2 leading-relaxed text-muted-foreground">
-                  {diagnosis.recommendation}
-                </p>
+                <div className="pt-3 border-t border-[#e9ddff]">
+                  <p className="text-[10px] font-bold text-[#6b38d4] uppercase tracking-wider mb-1">Recommended Action</p>
+                  <p className="text-xs text-[#494454] leading-relaxed">
+                    {diagnosis.recommendation}
+                  </p>
+                </div>
               )}
             </div>
-            {diagnosisState === "error" && (
-              <p className="text-[10px] mt-2" style={{ color: "var(--status-critical)" }}>
-                Diagnosis request failed. Existing diagnosis shown.
-              </p>
-            )}
+
             {diagnosis.watchPoints.length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                {diagnosis.watchPoints.map((watchPoint) => (
-                  <span
-                    key={watchPoint}
-                    className="text-[10px] border rounded-full px-2 py-0.5"
-                    style={{ color: "var(--status-risk)", borderColor: "var(--status-risk)" }}
-                  >
-                    {watchPoint}
-                  </span>
-                ))}
+              <div className="mt-6 space-y-2">
+                <p className="text-[10px] font-bold text-[#7b7486] uppercase tracking-wider">Watch Points</p>
+                <div className="flex flex-wrap gap-2">
+                  {diagnosis.watchPoints.map((wp) => (
+                    <span
+                      key={wp}
+                      className="text-[10px] font-bold px-2 py-1 rounded-full bg-[#ffdad8] text-[#ba1a1a] border border-[#ffdad6]"
+                    >
+                      {wp}
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
           </section>
         </div>
 
-        <section className="lg:col-span-2 bg-card border border-border rounded-xl overflow-hidden">
-          <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-              Meeting Timeline <span className="ml-2 normal-case font-normal">({sortedMeetings.length})</span>
-            </p>
+        <section className="lg:col-span-2 bg-white border border-[#cbc3d7] rounded-xl overflow-hidden shadow-sm">
+          <div className="px-8 py-6 border-b border-[#cbc3d7] flex items-center justify-between bg-[#f5f4f0]">
+            <div>
+              <h3 className="text-lg font-bold text-[#1b1c1a]" style={{ fontFamily: "Source Serif 4, serif" }}>Meeting Timeline</h3>
+              <p className="text-xs text-[#494454] mt-0.5">{sortedMeetings.length} sessions recorded</p>
+            </div>
             <button
               onClick={() => {
                 if (uploadOpen) resetForm();
                 else setUploadOpen(true);
               }}
-              className="px-3 py-1.5 text-xs font-medium rounded-full border border-border text-muted-foreground hover:text-foreground hover:border-foreground/50 transition-colors"
+              className={`px-5 py-2 text-xs font-bold rounded-full border transition-all ${
+                uploadOpen 
+                  ? "bg-[#efeeea] border-[#cbc3d7] text-[#494454]" 
+                  : "bg-[#6b38d4] border-[#6b38d4] text-white shadow-sm hover:opacity-90"
+              }`}
             >
-              {uploadOpen ? "Cancel" : "Log Meeting"}
+              {uploadOpen ? "Cancel" : "Log New Meeting"}
             </button>
           </div>
 
           {uploadOpen && !meetingResult && (
-            <div className="border-b border-border px-5 py-4 space-y-3 bg-muted/30">
-              <p className="text-xs font-medium text-foreground">Log a meeting</p>
-              <div className="grid grid-cols-2 gap-3">
-                <label className="block">
-                  <span className="text-[10px] text-muted-foreground block mb-1">Date</span>
+            <div className="px-8 py-8 space-y-6 bg-[#f5f4f0]/50 border-b border-[#cbc3d7]">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-[#6b38d4] flex items-center justify-center text-white">
+                  <Calendar size={16} />
+                </div>
+                <h4 className="font-bold text-[#1b1c1a]">New Session Entry</h4>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[11px] font-bold text-[#7b7486] uppercase tracking-wider">Date of Meeting</label>
                   <input
                     type="date"
                     value={meetingDate}
                     onChange={(e) => setMeetingDate(e.target.value)}
-                    className="w-full border border-border rounded-lg px-3 py-2 text-xs bg-background text-foreground"
+                    className="w-full border border-[#cbc3d7] rounded-xl px-4 py-2.5 text-sm bg-white text-[#1b1c1a] focus:ring-2 focus:ring-[#6b38d4] transition-all"
                   />
-                </label>
-                <label className="block">
-                  <span className="text-[10px] text-muted-foreground block mb-1">Duration (min)</span>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[11px] font-bold text-[#7b7486] uppercase tracking-wider">Duration (Minutes)</label>
                   <input
                     type="number"
                     value={duration}
                     onChange={(e) => setDuration(e.target.value)}
-                    placeholder="45"
-                    min={1}
-                    className="w-full border border-border rounded-lg px-3 py-2 text-xs bg-background text-foreground"
+                    placeholder="e.g. 60"
+                    className="w-full border border-[#cbc3d7] rounded-xl px-4 py-2.5 text-sm bg-white text-[#1b1c1a] focus:ring-2 focus:ring-[#6b38d4] transition-all"
                   />
-                </label>
+                </div>
               </div>
-              <label className="block">
-                <span className="text-[10px] text-muted-foreground block mb-1">
-                  Meeting notes ({notes.trim().length}/50 min)
-                </span>
+              
+              <div className="space-y-2">
+                <label className="text-[11px] font-bold text-[#7b7486] uppercase tracking-wider">Session Notes & Observations</label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  rows={4}
-                  placeholder="Describe what was discussed, decisions made, and next steps..."
-                  className="w-full border border-border rounded-lg px-3 py-2 text-xs bg-background text-foreground resize-none"
+                  rows={6}
+                  placeholder="Summarize the core discussion, milestones reached, and any friction points observed..."
+                  className="w-full border border-[#cbc3d7] rounded-xl px-4 py-3 text-sm bg-white text-[#1b1c1a] focus:ring-2 focus:ring-[#6b38d4] transition-all resize-none leading-relaxed"
                 />
-              </label>
-              {formError && (
-                <p className="text-[10px]" style={{ color: "var(--status-critical)" }}>
-                  {formError}
+                <p className="text-[10px] text-[#7b7486] flex justify-end">
+                  {notes.length} / 50 min. characters
                 </p>
-              )}
-              <button
-                onClick={() => { void handleLogMeeting(); }}
-                disabled={isAnalyzing}
-                className="px-5 py-2 text-xs font-bold rounded-full transition-all disabled:cursor-not-allowed disabled:opacity-50"
-                style={{
-                  background: isAnalyzing ? "transparent" : "#f36458",
-                  color: isAnalyzing ? "#797979" : "#ffffff",
-                  border: isAnalyzing ? "1px solid #e5e5e5" : "1px solid #f36458",
-                }}
-              >
-                {isAnalyzing ? "✦ Analyzing…" : "Submit & Analyze"}
-              </button>
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <button
+                  onClick={() => { void handleLogMeeting(); }}
+                  disabled={isAnalyzing}
+                  className="px-8 py-3 bg-[#6b38d4] text-white font-bold rounded-xl shadow-md hover:opacity-90 transition-all flex items-center gap-3 disabled:opacity-50"
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Performing AI Analysis...
+                    </>
+                  ) : (
+                    <>
+                      <Brain size={18} />
+                      Analyze & Save Session
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           )}
 
           {meetingResult && (
-            <div className="border-b border-border px-5 py-4 bg-muted/30 space-y-3">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[var(--status-ai)]/10 text-[var(--status-ai)]">
-                  ✦ AI
-                </span>
-                <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${meetingSignalClass}`}>
-                  {meetingResult.signal}
-                </span>
-                <span
-                  className="text-xs font-bold"
-                  style={{
-                    color: meetingResult.healthScoreDelta >= 0
-                      ? "var(--status-healthy)"
-                      : "var(--status-critical)",
-                  }}
-                >
-                  {meetingResult.healthScoreDelta >= 0 ? "+" : ""}
-                  {meetingResult.healthScoreDelta}
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground leading-relaxed">{meetingResult.aiSummary}</p>
-              {meetingResult.actionItems.length > 0 && (
-                <div className="border-t border-border pt-3">
-                  <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">
-                    Action Items
-                  </p>
-                  <ul className="space-y-1.5">
-                    {meetingResult.actionItems.map((item, index) => (
-                      <li key={`${item.task}-${index}`} className="text-xs text-muted-foreground">
-                        <span className="font-medium text-foreground capitalize">{item.owner}</span>
-                        {" — "}
-                        {item.task}
-                      </li>
-                    ))}
-                  </ul>
+            <div className="p-8 bg-[#F5F3FF] border-b border-[#e9ddff] space-y-6">
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div className="flex items-center gap-3">
+                  <span className="bg-[#6b38d4] text-white text-[10px] px-2 py-1 rounded-full font-bold uppercase tracking-wider">AI Analysis Complete</span>
+                  <div 
+                    className="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold"
+                    style={{ 
+                      background: meetingResult.signal === "Positive" ? "#e9ddff" : "#ffdad6",
+                      color: meetingResult.signal === "Positive" ? "#23005c" : "#93000a"
+                    }}
+                  >
+                    {meetingResult.signal}
+                  </div>
                 </div>
-              )}
-              <button
-                onClick={resetForm}
-                className="mt-3 px-3 py-1.5 text-xs font-medium rounded-full border border-border text-muted-foreground hover:text-foreground hover:border-foreground/50 transition-colors"
-              >
-                Close
-              </button>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-[#494454]">Health Impact</span>
+                  <span className={`text-xl font-bold ${meetingResult.healthScoreDelta >= 0 ? "text-[#6b38d4]" : "text-[#ba1a1a]"}`}>
+                    {meetingResult.healthScoreDelta >= 0 ? "+" : ""}{meetingResult.healthScoreDelta}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <p className="text-sm text-[#494454] leading-relaxed italic border-l-4 border-[#6b38d4] pl-4">
+                  {meetingResult.aiSummary}
+                </p>
+                
+                {meetingResult.actionItems.length > 0 && (
+                  <div className="bg-white/50 border border-[#e9ddff] rounded-xl p-5">
+                    <h5 className="text-[10px] font-bold text-[#6b38d4] uppercase tracking-widest mb-4">Extracted Action Items</h5>
+                    <ul className="space-y-3">
+                      {meetingResult.actionItems.map((item, idx) => (
+                        <li key={idx} className="flex items-start gap-3 text-sm text-[#494454]">
+                          <CheckCircle2 size={16} className="mt-0.5 text-[#cbc3d7]" />
+                          <span>
+                            <strong className="text-[#1b1c1a] capitalize">{item.owner}</strong>: {item.task}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex justify-end">
+                <button
+                  onClick={resetForm}
+                  className="px-6 py-2 text-xs font-bold rounded-full bg-white border border-[#cbc3d7] text-[#494454] hover:bg-[#f5f4f0] transition-all"
+                >
+                  Acknowledge & Close
+                </button>
+              </div>
             </div>
           )}
 
           {sortedMeetings.length === 0 ? (
-            <div className="p-8 text-sm text-muted-foreground text-center">No meetings recorded yet.</div>
+            <div className="p-20 text-center space-y-4">
+              <div className="w-16 h-16 bg-[#f5f4f0] rounded-full flex items-center justify-center mx-auto text-[#cbc3d7]">
+                <Calendar size={32} />
+              </div>
+              <p className="text-sm text-[#494454]">No mentorship sessions have been recorded yet.</p>
+            </div>
           ) : (
-            <div className="divide-y divide-border">
-              {sortedMeetings.map((meeting) => (
-                <article key={meeting.id} className="px-5 py-4 space-y-2.5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-xs font-semibold text-foreground">
-                        #{meeting.meetingNumber} · {formatDate(meeting.date)}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">
-                        {meeting.durationMinutes} min · {meeting.submittedBy}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span
-                        className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted"
-                        style={{ color: SIGNAL_COLOR[meeting.signal] }}
-                      >
-                        {meeting.signal}
-                      </span>
-                      <span
-                        className="text-xs font-bold"
-                        style={{
-                          color: meeting.healthScoreDelta >= 0
-                            ? "var(--status-healthy)"
-                            : "var(--status-critical)",
-                        }}
-                      >
-                        {meeting.healthScoreDelta >= 0 ? "+" : ""}
-                        {meeting.healthScoreDelta}
-                      </span>
-                    </div>
-                  </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{meeting.aiSummary}</p>
-                  {meeting.actionItems.length > 0 && (
-                    <div className="space-y-1.5">
-                      {meeting.actionItems.map((item) => (
-                        <div key={`${meeting.id}-${item.task}`} className="flex items-start gap-2">
-                          <span
-                            className="text-[10px] shrink-0 mt-0.5 font-bold"
-                            style={{ color: item.completed ? "var(--status-healthy)" : "var(--muted-foreground)" }}
-                          >
-                            {item.completed ? "✓" : "○"}
-                          </span>
-                          <p className="text-[10px] text-muted-foreground leading-snug">
-                            {item.task}
-                            {item.dueDate ? ` · due ${item.dueDate}` : ""}
-                          </p>
+            <div className="divide-y divide-[#cbc3d7]">
+              {sortedMeetings.map((meeting) => {
+                const SignalIcon = SIGNAL_ICON[meeting.signal] || Minus;
+                const signalColor = meeting.signal === "Positive" ? COLORS.primary : meeting.signal === "Neutral" ? COLORS.outline : COLORS.error;
+                
+                return (
+                  <article key={meeting.id} className="p-8 hover:bg-[#f5f4f0]/30 transition-colors space-y-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-[#1b1c1a]">Session #{meeting.meetingNumber}</span>
+                          <span className="w-1 h-1 rounded-full bg-[#cbc3d7]"></span>
+                          <span className="text-xs text-[#494454]">{formatDate(meeting.date)}</span>
                         </div>
-                      ))}
+                        <div className="flex items-center gap-3 text-[10px] text-[#7b7486] font-medium uppercase tracking-wider">
+                          <span className="flex items-center gap-1"><Clock size={10} /> {meeting.durationMinutes} min</span>
+                          <span className="flex items-center gap-1"><User size={10} /> {meeting.submittedBy}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-4">
+                        <div 
+                          className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border"
+                          style={{ color: signalColor, borderColor: `${signalColor}4D`, backgroundColor: `${signalColor}0D` }}
+                        >
+                          <SignalIcon size={12} />
+                          {meeting.signal}
+                        </div>
+                        <div 
+                          className={`text-sm font-bold ${meeting.healthScoreDelta >= 0 ? "text-[#6b38d4]" : "text-[#ba1a1a]"}`}
+                        >
+                          {meeting.healthScoreDelta >= 0 ? "+" : ""}{meeting.healthScoreDelta}
+                        </div>
+                      </div>
                     </div>
-                  )}
-                </article>
-              ))}
+                    
+                    <p className="text-sm text-[#494454] leading-relaxed line-clamp-3">
+                      {meeting.aiSummary}
+                    </p>
+                    
+                    {meeting.actionItems.length > 0 && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                        {meeting.actionItems.map((item, idx) => (
+                          <div key={idx} className="flex items-center gap-2 text-[11px] text-[#494454]">
+                            <div 
+                              className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                                item.completed ? "bg-[#6b38d4] border-[#6b38d4] text-white" : "border-[#cbc3d7] text-[#cbc3d7]"
+                              }`}
+                            >
+                              {item.completed ? <CheckCircle2 size={10} /> : <div className="w-1 h-1 rounded-full bg-current" />}
+                            </div>
+                            <span className="truncate">
+                              <span className="font-bold text-[#1b1c1a] capitalize">{item.owner}</span>: {item.task}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </article>
+                );
+              })}
             </div>
           )}
         </section>

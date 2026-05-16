@@ -296,7 +296,13 @@ export function PublicApplicationForm({
         <div className="w-full max-w-sm border border-border rounded bg-card p-8">
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-3">
-              <span className="w-2 h-2 rounded-full shrink-0" style={{ background: "#f36458" }} />
+              <div className="w-6 h-6 relative shrink-0 overflow-hidden rounded-md">
+                <img
+                  src="/Verrier Logo.png"
+                  alt="Verrier Logo"
+                  className="w-full h-full object-cover"
+                />
+              </div>
               <span className="font-bold text-sm tracking-tight">Verrier</span>
             </div>
             <p className="text-xs text-muted-foreground mb-1">{programName}</p>
@@ -339,7 +345,13 @@ export function PublicApplicationForm({
       <div className="max-w-2xl mx-auto px-4 py-10 space-y-10">
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <span className="w-2 h-2 rounded-full shrink-0" style={{ background: "#f36458" }} />
+            <div className="w-6 h-6 relative shrink-0 overflow-hidden rounded-md">
+              <img
+                src="/Verrier Logo.png"
+                alt="Verrier Logo"
+                className="w-full h-full object-cover"
+              />
+            </div>
             <span className="font-bold text-sm tracking-tight">Verrier</span>
             <span className="text-muted-foreground text-xs">/</span>
             <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Apply</span>

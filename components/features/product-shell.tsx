@@ -1,11 +1,26 @@
 import Link from "next/link";
-import { LayoutDashboard, Layers, GitBranch, Users, LogIn } from "lucide-react";
+import { 
+  LayoutDashboard, 
+  Layers, 
+  GitBranch, 
+  Users, 
+  LogIn, 
+  Settings, 
+  HelpCircle, 
+  Plus,
+  Briefcase,
+  Lightbulb,
+  Search,
+  Bell,
+  UserCircle
+} from "lucide-react";
 
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Programmes", href: "/programs", icon: Layers },
-  { label: "Matching", href: "/matching", icon: GitBranch },
+  { label: "Portfolio", href: "/programs", icon: Briefcase },
   { label: "Relationships", href: "/relationships", icon: Users },
+  { label: "Mentors", href: "/matching", icon: GitBranch },
+  { label: "Insights", href: "/dashboard", icon: Lightbulb },
 ];
 
 interface ProductShellProps {
@@ -28,121 +43,124 @@ export function ProductShell({
   const displayStatus = cohortStatus.charAt(0).toUpperCase() + cohortStatus.slice(1);
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground">
-      {/* Sidebar */}
+    <div className="flex min-h-screen bg-[#F5F4F0] text-[#1b1c1a]">
+      {/* Fixed SideNavBar */}
       <aside
-        className="w-56 shrink-0 fixed top-0 left-0 h-screen flex flex-col z-10"
-        style={{ background: "#0b0b0b", borderRight: "1px solid #252525" }}
+        className="w-[260px] shrink-0 fixed top-0 left-0 h-screen flex flex-col py-6 z-50 border-r border-[#cbc3d7]"
+        style={{ background: "#30312e" }}
       >
-        {/* Branding */}
-        <div className="px-5 pt-6 pb-5" style={{ borderBottom: "1px solid #1e1e1e" }}>
-          <div className="flex items-center gap-2.5 mb-1.5">
-            <div className="w-6 h-6 relative shrink-0 overflow-hidden rounded-md">
+        <div className="px-6 mb-8">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-8 h-8 relative shrink-0 overflow-hidden rounded-lg border border-white/20">
               <img
                 src="/Verrier Logo.png"
                 alt="Verrier Logo"
                 className="w-full h-full object-cover"
               />
             </div>
-            <span
-              className="text-[15px] font-bold"
-              style={{ color: "#ffffff", letterSpacing: "-0.03em", fontFamily: "var(--font-sans)" }}
+            <h1 
+              className="text-2xl font-bold text-white tracking-tight" 
+              style={{ fontFamily: "Source Serif 4, serif" }}
             >
               Verrier
-            </span>
+            </h1>
           </div>
-          <p className="text-[10px] leading-snug font-mono truncate pl-0.5" style={{ color: "#4a4a4a" }}>
-            {programName}
+          <p className="text-[#cbc3d7] text-[11px] font-medium uppercase tracking-widest opacity-70">
+            Venture Workbench
           </p>
         </div>
 
-        {/* Nav */}
-        <nav className="flex-1 py-4 px-2.5 overflow-y-auto">
-          <p
-            className="text-[9px] font-bold uppercase tracking-[0.16em] px-3 mb-2 font-mono"
-            style={{ color: "#444" }}
-          >
-            Workspace
-          </p>
-          <div className="space-y-0.5">
-            {NAV_ITEMS.map(({ label, href, icon: Icon }) => {
-              const isActive = label === activeNav;
-              return (
-                <Link
-                  key={label}
-                  href={href}
-                  className="relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] transition-colors hover:bg-white/[0.04]"
-                  style={{
-                    color: isActive ? "#ffffff" : "#888",
-                    background: isActive
-                      ? "color-mix(in srgb, var(--status-ai) 13%, transparent)"
-                      : "transparent",
-                    fontWeight: isActive ? 600 : 400,
-                  }}
-                >
-                  {isActive && (
-                    <span
-                      className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-full"
-                      style={{ background: "var(--status-ai)" }}
-                    />
-                  )}
-                  <Icon
-                    size={14}
-                    className="shrink-0"
-                    style={{ color: isActive ? "var(--status-ai)" : undefined, opacity: isActive ? 1 : 0.6 }}
-                  />
-                  {label}
-                </Link>
-              );
-            })}
-          </div>
+        <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
+          {NAV_ITEMS.map(({ label, href, icon: Icon }) => {
+            const isActive = label === activeNav;
+            return (
+              <Link
+                key={label}
+                href={href}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 border-l-4 ${
+                  isActive 
+                    ? "bg-[#6b38d4] text-white border-[#6b38d4]" 
+                    : "text-[#cbc3d7] hover:bg-white/5 border-transparent"
+                }`}
+              >
+                <Icon
+                  size={20}
+                  className="shrink-0"
+                  style={{ opacity: isActive ? 1 : 0.7 }}
+                />
+                <span className="text-sm font-medium">{label}</span>
+              </Link>
+            );
+          })}
         </nav>
 
-        {/* Cohort card */}
-        <div className="px-3 mb-3">
-          <div
-            className="rounded-xl px-4 py-3.5"
-            style={{ background: "#141414", border: "1px solid #222" }}
+        <div className="px-6 mb-6">
+          <Link
+            href="/matching"
+            className="w-full bg-[#ff5a5f] text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-all shadow-lg text-sm"
           >
-            <div className="flex items-center gap-1.5 mb-2">
-              <div
-                className="w-1.5 h-1.5 rounded-full animate-pulse shrink-0"
-                style={{ background: "#37cd84" }}
-              />
-              <p
-                className="text-[9px] font-bold uppercase tracking-[0.14em] font-mono"
-                style={{ color: "#444" }}
-              >
-                Active Cohort
-              </p>
-            </div>
-            <p
-              className="text-[13px] font-semibold leading-snug mb-1"
-              style={{ color: "#e8e8e8", wordBreak: "break-word" }}
-            >
-              {cohortName}
-            </p>
-            <p className="text-[10px] font-mono" style={{ color: "#555" }}>
-              {cohortWeeks}w · {displayStatus}
-            </p>
-          </div>
+            <Plus size={18} />
+            New Relationship
+          </Link>
         </div>
 
-        {/* Bottom utility */}
-        <div className="px-2.5 pb-4" style={{ borderTop: "1px solid #1e1e1e" }}>
+        <div className="px-3 border-t border-white/10 pt-4 space-y-1">
+          <Link
+            href="#"
+            className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-[#cbc3d7] hover:bg-white/5 transition-colors"
+          >
+            <Settings size={18} className="opacity-70" />
+            <span className="text-sm font-medium">Settings</span>
+          </Link>
+          <Link
+            href="#"
+            className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-[#cbc3d7] hover:bg-white/5 transition-colors"
+          >
+            <HelpCircle size={18} className="opacity-70" />
+            <span className="text-sm font-medium">Support</span>
+          </Link>
           <Link
             href="/login"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] transition-colors hover:bg-white/[0.04] mt-3"
-            style={{ color: "#555" }}
+            className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-[#cbc3d7] hover:bg-white/5 transition-colors"
           >
-            <LogIn size={14} className="shrink-0" style={{ opacity: 0.6 }} />
-            Login
+            <LogIn size={18} className="opacity-70" />
+            <span className="text-sm font-medium">Exit Workbench</span>
           </Link>
         </div>
       </aside>
 
       {/* Main content */}
-      <div className="flex-1 min-w-0 ml-56">{children}</div>
+      <main className="flex-1 min-w-0 ml-[260px] flex flex-col">
+        {/* TopAppBar */}
+        <header className="sticky top-0 z-40 flex justify-between items-center h-16 px-8 bg-white/80 backdrop-blur-md border-b border-[#cbc3d7]">
+          <div className="flex items-center bg-[#f5f4f0] px-4 py-2 rounded-full border border-[#cbc3d7] w-96 focus-within:ring-2 focus-within:ring-[#6b38d4] transition-all">
+            <Search size={18} className="text-[#494454] mr-2" />
+            <input 
+              className="bg-transparent border-none outline-none text-sm w-full focus:ring-0 text-[#1b1c1a]" 
+              placeholder="Search workbench..." 
+              type="text"
+            />
+          </div>
+          <div className="flex items-center gap-4">
+            <button className="bg-[#6b38d4] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-all shadow-sm">
+              Add Startup
+            </button>
+            <div className="flex gap-1">
+              <button className="p-2 text-[#494454] hover:bg-[#efeeea] rounded-full transition-colors">
+                <Bell size={20} />
+              </button>
+              <button className="p-2 text-[#494454] hover:bg-[#efeeea] rounded-full transition-colors">
+                <UserCircle size={20} />
+              </button>
+            </div>
+          </div>
+        </header>
+
+        {/* Content Area */}
+        <div className="flex-1">
+          {children}
+        </div>
+      </main>
     </div>
   );
 }

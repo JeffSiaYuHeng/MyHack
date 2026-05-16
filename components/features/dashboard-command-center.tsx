@@ -1,6 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
+import {
+  Folder,
+  Layers,
+  FileText,
+  CheckCircle,
+  ArrowRight,
+} from "lucide-react";
 import type { HealthBand } from "@/lib/verrier-analytics";
 import {
   getAttentionFeed,
@@ -115,74 +123,162 @@ export function DashboardCommandCenter() {
 
   const atRiskCount = summary.atRiskRelationshipCount;
   const criticalCount = summary.criticalRelationshipCount;
-  const primaryStats = [
-    { label: "Programmes", value: summary.activeProgramCount },
-    { label: "Cohorts", value: summary.activeCohortCount },
-    { label: "Applications", value: summary.submittedApplicationCount },
-    { label: "Approved", value: summary.approvedApplicationCount },
-  ];
-  const relationshipStats = [
-    {
-      label: "Healthy",
-      value: summary.healthyRelationshipCount,
-      topBorderCls: "border-t-2 border-t-green-500",
-      textCls: "text-green-700",
-    },
-    {
-      label: "At Risk",
-      value: atRiskCount,
-      topBorderCls: "border-t-2 border-t-amber-500",
-      textCls: "text-amber-700",
-    },
-    {
-      label: "Critical",
-      value: criticalCount,
-      topBorderCls: criticalCount > 0 ? "border-t-2 border-t-red-500" : "",
-      textCls: criticalCount > 0 ? "text-red-600" : "text-foreground",
-    },
-    {
-      label: "Relationships",
-      value: summary.activeRelationshipCount,
-      topBorderCls: "",
-      textCls: "text-foreground",
-    },
-  ];
 
   return (
     <>
-      {/* Stat Bar */}
-      <div className="border-b border-border bg-card px-4 py-4 md:px-12">
-        <div className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
-          <div className="rounded-xl border border-border bg-card p-2 shadow-md">
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {primaryStats.map(({ label, value }) => (
-                <div
-                  key={label}
-                  className="rounded-lg border border-border bg-background px-4 py-3"
-                >
-                  <p className="text-2xl font-semibold text-foreground tabular-nums leading-none">
-                    {value}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">{label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+      {/* ── Stat Cards ── */}
+      <div className="px-4 md:px-12 py-6 space-y-4">
 
-          <div className="rounded-xl border border-border bg-card p-2 shadow-md">
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {relationshipStats.map(({ label, value, topBorderCls, textCls }) => (
-                <div
-                  key={label}
-                  className={`rounded-lg border border-border bg-background px-4 py-3 ${topBorderCls}`}
-                >
-                  <p className={`text-2xl font-semibold tabular-nums leading-none ${textCls}`}>
+        {/* Group A — Programme Pipeline */}
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground mb-3">
+            Programme Pipeline
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { label: "Total Programmes", value: summary.activeProgramCount, icon: Folder, href: "/programs" },
+              { label: "Active Cohorts", value: summary.activeCohortCount, icon: Layers, href: "/programs" },
+              { label: "New Applications", value: summary.submittedApplicationCount, icon: FileText, href: "/programs/program-cradle-accelerator-2026/applicants" },
+              { label: "Approved Startups", value: summary.approvedApplicationCount, icon: CheckCircle, href: "/programs/program-cradle-accelerator-2026/applicants" },
+            ].map(({ label, value, icon: Icon, href }) => (
+              <Link
+                key={label}
+                href={href}
+                className="group bg-card border border-border rounded-xl p-4 flex flex-col justify-between hover:shadow-md hover:border-primary/30 transition-all cursor-pointer"
+              >
+                <div className="flex items-start justify-between">
+                  <span className="text-3xl font-bold text-foreground tabular-nums leading-none mt-2">
                     {value}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">{label}</p>
+                  </span>
+                  <Icon
+                    size={18}
+                    className="text-muted-foreground group-hover:text-primary transition-colors shrink-0 mt-0.5"
+                  />
                 </div>
-              ))}
-            </div>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mt-3">
+                  {label}
+                </p>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* Group B — Relationship Health */}
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground mb-3">
+            Relationship Health
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {/* Healthy */}
+            <Link
+              href="/relationships?health=healthy"
+              className="group relative bg-[var(--status-healthy-bg)]/30 border border-[var(--status-healthy)]/20 hover:border-[var(--status-healthy)]/50 rounded-xl p-4 flex flex-col justify-between transition-all cursor-pointer hover:shadow-md"
+            >
+              <span
+                className="text-3xl font-bold tabular-nums leading-none mt-2"
+                style={{ color: "var(--status-healthy)" }}
+              >
+                {summary.healthyRelationshipCount}
+              </span>
+              <div className="flex items-end justify-between mt-3">
+                <p
+                  className="text-xs font-semibold uppercase tracking-wider"
+                  style={{ color: "color-mix(in srgb, var(--status-healthy) 80%, transparent)" }}
+                >
+                  Healthy Pairs
+                </p>
+                <ArrowRight
+                  size={14}
+                  className="group-hover:translate-x-1 transition-transform shrink-0"
+                  style={{ color: "var(--status-healthy)" }}
+                />
+              </div>
+            </Link>
+
+            {/* At Risk */}
+            <Link
+              href="/relationships?health=at-risk"
+              className="group relative bg-[var(--status-risk-bg)]/30 border border-[var(--status-risk)]/20 hover:border-[var(--status-risk)]/50 rounded-xl p-4 flex flex-col justify-between transition-all cursor-pointer hover:shadow-md"
+            >
+              <span
+                className="text-3xl font-bold tabular-nums leading-none mt-2"
+                style={{ color: "var(--status-risk)" }}
+              >
+                {atRiskCount}
+              </span>
+              <div className="flex items-end justify-between mt-3">
+                <p
+                  className="text-xs font-semibold uppercase tracking-wider"
+                  style={{ color: "color-mix(in srgb, var(--status-risk) 80%, transparent)" }}
+                >
+                  At Risk Pairs
+                </p>
+                <ArrowRight
+                  size={14}
+                  className="group-hover:translate-x-1 transition-transform shrink-0"
+                  style={{ color: "var(--status-risk)" }}
+                />
+              </div>
+            </Link>
+
+            {/* Critical */}
+            <Link
+              href="/relationships?health=critical"
+              className="group relative bg-[var(--status-critical-bg)]/30 border border-[var(--status-critical)]/20 hover:border-[var(--status-critical)]/50 rounded-xl p-4 flex flex-col justify-between transition-all cursor-pointer hover:shadow-md"
+            >
+              <div className="flex items-start gap-2 mt-2">
+                <span
+                  className="text-3xl font-bold tabular-nums leading-none"
+                  style={{ color: "var(--status-critical)" }}
+                >
+                  {criticalCount}
+                </span>
+                {criticalCount > 0 && (
+                  <span className="relative flex h-2.5 w-2.5 mt-1.5">
+                    <span
+                      className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-60"
+                      style={{ backgroundColor: "var(--status-critical)" }}
+                    />
+                    <span
+                      className="relative inline-flex rounded-full h-2.5 w-2.5"
+                      style={{ backgroundColor: "var(--status-critical)" }}
+                    />
+                  </span>
+                )}
+              </div>
+              <div className="flex items-end justify-between mt-3">
+                <p
+                  className="text-xs font-semibold uppercase tracking-wider"
+                  style={{ color: "color-mix(in srgb, var(--status-critical) 80%, transparent)" }}
+                >
+                  Critical Intervention
+                </p>
+                <ArrowRight
+                  size={14}
+                  className="group-hover:translate-x-1 transition-transform shrink-0"
+                  style={{ color: "var(--status-critical)" }}
+                />
+              </div>
+            </Link>
+
+            {/* Total */}
+            <Link
+              href="/relationships"
+              className="group bg-card border border-border rounded-xl p-4 flex flex-col justify-between hover:shadow-md hover:border-primary/30 transition-all cursor-pointer"
+            >
+              <span className="text-3xl font-bold text-foreground tabular-nums leading-none mt-2">
+                {summary.activeRelationshipCount}
+              </span>
+              <div className="flex items-end justify-between mt-3">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Total Active Pairs
+                </p>
+                <ArrowRight
+                  size={14}
+                  className="text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all shrink-0"
+                />
+              </div>
+            </Link>
           </div>
         </div>
       </div>
