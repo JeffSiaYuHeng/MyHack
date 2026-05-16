@@ -237,7 +237,7 @@ export function CohortOverview({
       <div className="bg-card border border-border rounded-xl px-6 py-5">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="min-w-0">
-            <h1 className="text-xl font-semibold text-foreground">{cohort.name}</h1>
+            <h1 className="text-xl font-bold text-foreground" style={{ letterSpacing: "-0.02em" }}>{cohort.name}</h1>
             <div className="flex items-center gap-2 flex-wrap mt-2">
               <span className="text-[10px] border border-border rounded-full px-2.5 py-0.5 text-muted-foreground capitalize">
                 {cohort.status}
@@ -274,7 +274,7 @@ export function CohortOverview({
         <div className="space-y-6">
           {/* Health stats */}
           <div className="bg-card border border-border rounded-xl px-5 py-5">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground mb-4">
+            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-4">
               Health Overview
             </p>
             <div className="grid grid-cols-2 gap-x-4 gap-y-3">
@@ -302,7 +302,7 @@ export function CohortOverview({
 
           {/* Milestone distribution */}
           <div className="bg-card border border-border rounded-xl px-5 py-5">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground mb-4">
+            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-4">
               Milestone Distribution
             </p>
             <div className="space-y-3">
@@ -345,7 +345,7 @@ export function CohortOverview({
           {heatmap.length > 0 && (
             <div className="bg-card border border-border rounded-xl overflow-hidden">
               <div className="px-5 py-4 border-b border-border">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
                   Relationship Heatmap
                 </p>
               </div>
@@ -403,7 +403,7 @@ export function CohortOverview({
           {/* Cohort report */}
           <div className="bg-card border border-border rounded-xl overflow-hidden">
             <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+              <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
                 Cohort Report
               </p>
               <div className="flex items-center gap-2">
@@ -418,17 +418,18 @@ export function CohortOverview({
                 <button
                   onClick={handleGenerate}
                   disabled={reportStatus === "loading"}
-                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${
-                    reportStatus === "loading"
-                      ? "border-border text-muted-foreground cursor-not-allowed"
-                      : "border-foreground/30 text-foreground hover:border-foreground"
-                  }`}
+                  className="px-4 py-1.5 text-xs font-bold rounded-full transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{
+                    background: reportStatus === "loading" ? "transparent" : "#f36458",
+                    color: reportStatus === "loading" ? "#797979" : "#ffffff",
+                    border: reportStatus === "loading" ? "1px solid #e5e5e5" : "1px solid #f36458",
+                  }}
                 >
                   {reportStatus === "loading"
                     ? "Generating…"
                     : reportStatus === "done"
-                      ? "Regenerate"
-                      : "Generate Report"}
+                      ? "✦ Regenerate"
+                      : "✦ Generate Report"}
                 </button>
               </div>
             </div>
@@ -442,34 +443,29 @@ export function CohortOverview({
 
         {/* Report content */}
         {report ? (
-          <div className="border border-border rounded px-4 py-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <p className="text-[10px] font-semibold text-foreground">
-                Narrative Summary
-              </p>
-              {isFallback && (
-                <span className="text-[10px] font-medium border border-border rounded px-1.5 py-0.5 text-muted-foreground">
-                  Fallback active
-                </span>
-              )}
+          <div className="space-y-3">
+            <div className="rounded-md p-3" style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.15)" }}>
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[var(--status-ai)]/10 text-[var(--status-ai)]">✦ AI</span>
+                <p className="text-[10px] font-bold uppercase tracking-widest font-mono" style={{ color: "var(--status-ai)" }}>
+                  Narrative
+                </p>
+                {isFallback && (
+                  <span className="ml-auto text-[9px] font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                    Fallback
+                  </span>
+                )}
+              </div>
+              <p className="text-xs leading-relaxed text-muted-foreground italic">{report.narrative}</p>
             </div>
-            {isFallback && (
-              <p className="text-[10px] text-muted-foreground bg-muted/30 px-3 py-1.5 rounded border border-border/50">
-                AI generation encountered a network issue. Using local
-                deterministic narrative based on current cohort metrics.
-              </p>
-            )}
-            <p className="text-[10px] text-muted-foreground">
-              {report.narrative}
-            </p>
 
                   {report.keyRisks.length > 0 && (
                     <div>
-                      <p className="text-[11px] font-semibold text-foreground mb-2">Key Risks</p>
+                      <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">Key Risks</p>
                       <ul className="space-y-1.5">
                         {report.keyRisks.map((risk, i) => (
                           <li key={i} className="flex items-start gap-2 text-xs">
-                            <span className="shrink-0 mt-0.5" style={{ color: "var(--status-risk)" }}>·</span>
+                            <span className="shrink-0 mt-0.5 font-bold text-amber-600">·</span>
                             <span className="text-muted-foreground">{risk}</span>
                           </li>
                         ))}
@@ -479,11 +475,11 @@ export function CohortOverview({
 
                   {report.recommendedActions.length > 0 && (
                     <div>
-                      <p className="text-[11px] font-semibold text-foreground mb-2">Recommended Actions</p>
+                      <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">Recommended Actions</p>
                       <ul className="space-y-1.5">
                         {report.recommendedActions.map((action, i) => (
                           <li key={i} className="flex items-start gap-2 text-xs">
-                            <span className="text-muted-foreground shrink-0 mt-0.5">→</span>
+                            <span className="shrink-0 mt-0.5 font-bold" style={{ color: "#f36458" }}>→</span>
                             <span className="text-muted-foreground">{action}</span>
                           </li>
                         ))}
@@ -491,7 +487,7 @@ export function CohortOverview({
                     </div>
                   )}
 
-                  <p className="text-[9px] text-muted-foreground pt-1 border-t border-border">
+                  <p className="text-[9px] font-mono text-muted-foreground pt-2 border-t border-border">
                     Generated {report.generatedAt.slice(0, 19).replace("T", " ")} UTC
                   </p>
 
@@ -509,14 +505,14 @@ export function CohortOverview({
                       />
                     </div>
                   )}
-                </div>
-              ) : (
-                <p className="text-xs text-muted-foreground">
-                  {reportStatus === "loading"
-                    ? "Generating cohort narrative…"
-                    : "Generate a management-ready narrative using live cohort health data."}
-                </p>
-              )}
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            {reportStatus === "loading"
+              ? "Generating cohort narrative…"
+              : "Generate a management-ready narrative using live cohort health data."}
+          </p>
+        )}
             </div>
           </div>
         </div>

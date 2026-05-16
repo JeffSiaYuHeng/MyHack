@@ -295,8 +295,12 @@ export function PublicApplicationForm({
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-4 py-10">
         <div className="w-full max-w-sm border border-border rounded bg-card p-8">
           <div className="mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="w-2 h-2 rounded-full shrink-0" style={{ background: "#f36458" }} />
+              <span className="font-bold text-sm tracking-tight">Verrier</span>
+            </div>
             <p className="text-xs text-muted-foreground mb-1">{programName}</p>
-            <p className="text-base font-semibold">Application submitted</p>
+            <p className="text-xl font-bold" style={{ letterSpacing: "-0.02em" }}>Application submitted</p>
           </div>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
@@ -334,8 +338,13 @@ export function PublicApplicationForm({
     <div className="min-h-screen bg-background text-foreground">
       <div className="max-w-2xl mx-auto px-4 py-10 space-y-10">
         <div>
-          <p className="text-xs text-muted-foreground mb-1">Application</p>
-          <h1 className="text-base font-semibold">{programName}</h1>
+          <div className="flex items-center gap-2 mb-3">
+            <span className="w-2 h-2 rounded-full shrink-0" style={{ background: "#f36458" }} />
+            <span className="font-bold text-sm tracking-tight">Verrier</span>
+            <span className="text-muted-foreground text-xs">/</span>
+            <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Apply</span>
+          </div>
+          <h1 className="text-xl font-bold text-foreground" style={{ letterSpacing: "-0.02em" }}>{programName}</h1>
           <p className="text-xs text-muted-foreground mt-1 capitalize">
             {programType} &middot; Target stages: {targetStages.join(", ")}
           </p>
@@ -687,11 +696,14 @@ export function PublicApplicationForm({
           <button
             onClick={() => { void handleSubmit(); }}
             disabled={submitDisabled}
-            className={`px-5 py-2 rounded text-sm font-medium transition-opacity ${
-              submitDisabled
-                ? "bg-muted text-muted-foreground cursor-not-allowed"
-                : "bg-primary text-primary-foreground hover:opacity-90"
+            className={`px-6 py-2 rounded-full text-sm font-semibold transition-opacity ${
+              submitDisabled ? "cursor-not-allowed opacity-40" : "hover:opacity-90"
             }`}
+            style={
+              submitDisabled
+                ? { background: "#e5e5e5", color: "#797979" }
+                : { background: "#f36458", color: "#ffffff" }
+            }
           >
             {submitLabel}
           </button>

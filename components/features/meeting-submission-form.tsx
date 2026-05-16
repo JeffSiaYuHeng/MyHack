@@ -274,77 +274,59 @@ export function MeetingSubmissionForm() {
         : "var(--status-critical)";
 
     return (
-      <div className="border border-border rounded p-6 space-y-4">
+      <div className="border border-border rounded-xl p-5 space-y-4 bg-card">
+        {/* Header row */}
         <div className="flex items-center gap-2 flex-wrap">
-          <p
-            className="text-sm font-semibold"
-            style={{ color: "var(--status-healthy)" }}
-          >
-            Meeting logged
-          </p>
+          <span className="text-sm font-bold text-green-600">✓ Meeting logged</span>
           <span
-            className="text-[10px] font-medium px-2 py-0.5 rounded"
-            style={{ color: signalColor, background: signalBg }}
+            className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+              analysis.signal === "Positive"
+                ? "bg-green-100 text-green-700"
+                : analysis.signal === "Friction detected"
+                  ? "bg-red-100 text-red-700"
+                  : "bg-muted text-muted-foreground"
+            }`}
           >
             {analysis.signal}
           </span>
-        </div>
-
-        <div className="space-y-1 text-xs text-muted-foreground">
-          <p>
-            <span className="font-medium text-foreground">Pair</span>{" "}
-            {context.mentorName} × {context.companyName}
-          </p>
-          <p>
-            <span className="font-medium text-foreground">Date</span>{" "}
-            {confirmed.date}
-          </p>
-          <p>
-            <span className="font-medium text-foreground">Duration</span>{" "}
-            {confirmed.durationMinutes} min
-          </p>
-        </div>
-
-        <div className="border-t border-border pt-3 space-y-1">
-          <p className="text-xs font-medium text-foreground">AI summary</p>
-          <p className="text-xs text-muted-foreground">{analysis.aiSummary}</p>
-        </div>
-
-        <p className="text-xs text-muted-foreground">
-          <span className="font-medium text-foreground">Signal reason</span>{" "}
-          {analysis.signalReason}
-        </p>
-
-        <div className="flex gap-4 text-xs">
-          <span>
-            <span className="text-muted-foreground">Health delta </span>
-            <span className="font-semibold" style={{ color: deltaColor }}>
-              {analysis.healthScoreDelta > 0
-                ? `+${analysis.healthScoreDelta}`
-                : analysis.healthScoreDelta}
-            </span>
+          <span className="text-xs font-bold tabular-nums" style={{ color: deltaColor ?? "var(--muted-foreground)" }}>
+            {analysis.healthScoreDelta > 0 ? "+" : ""}
+            {analysis.healthScoreDelta} pts
           </span>
-          <span>
-            <span className="text-muted-foreground">New health </span>
-            <span className="font-semibold" style={{ color: scoreColor }}>
-              {analysis.newHealthScore}
+        </div>
+
+        {/* Meta */}
+        <div className="space-y-0.5 text-xs text-muted-foreground">
+          <p><span className="font-medium text-foreground">{context.mentorName}</span> × <span className="font-medium text-foreground">{context.companyName}</span></p>
+          <p>{confirmed.date} · {confirmed.durationMinutes} min</p>
+        </div>
+
+        {/* AI Summary dark chip */}
+        <div className="rounded-md p-3" style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.15)" }}>
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[var(--status-ai)]/10 text-[var(--status-ai)]">✦ AI</span>
+            <p className="text-[10px] font-bold uppercase tracking-widest font-mono" style={{ color: "var(--status-ai)" }}>
+              Summary
+            </p>
+            <span className="ml-auto text-[10px] font-bold tabular-nums" style={{ color: scoreColor }}>
+              Health: {analysis.newHealthScore}
             </span>
-          </span>
+          </div>
+          <p className="text-xs leading-relaxed text-muted-foreground italic">{analysis.aiSummary}</p>
+          {analysis.signalReason && (
+            <p className="text-[10px] mt-1.5 text-muted-foreground">{analysis.signalReason}</p>
+          )}
         </div>
 
         {analysis.actionItems.length > 0 && (
-          <div className="border-t border-border pt-3 space-y-2">
-            <p className="text-xs font-medium text-foreground">Action items</p>
+          <div>
+            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">Action Items</p>
             <ul className="space-y-1.5">
               {analysis.actionItems.map((item, i) => (
                 <li key={i} className="text-xs text-muted-foreground flex gap-2">
-                  <span className="shrink-0 capitalize font-medium text-foreground">
-                    {item.owner}
-                  </span>
+                  <span className="shrink-0 capitalize font-semibold text-foreground">{item.owner}</span>
                   <span className="flex-1">{item.task}</span>
-                  {item.dueDate && (
-                    <span className="shrink-0">by {item.dueDate}</span>
-                  )}
+                  {item.dueDate && <span className="shrink-0 text-muted-foreground">by {item.dueDate}</span>}
                 </li>
               ))}
             </ul>
@@ -352,18 +334,11 @@ export function MeetingSubmissionForm() {
         )}
 
         {analysis.watchPoints.length > 0 && (
-          <div className="border-t border-border pt-3 space-y-2">
-            <p className="text-xs font-medium text-foreground">Watch points</p>
-            <div className="flex flex-wrap gap-1">
+          <div>
+            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">Watch Points</p>
+            <div className="flex flex-wrap gap-1.5">
               {analysis.watchPoints.map((wp, i) => (
-                <span
-                  key={i}
-                  className="text-[10px] px-2 py-0.5 rounded border"
-                  style={{
-                    borderColor: "var(--status-risk)",
-                    color: "var(--status-risk)",
-                  }}
-                >
+                <span key={i} className="text-[10px] px-2 py-0.5 rounded-full border border-amber-300 text-amber-700 bg-amber-50">
                   {wp === "analysis-pending" ? "Analysis pending" : wp}
                 </span>
               ))}
@@ -515,9 +490,14 @@ export function MeetingSubmissionForm() {
       <button
         type="submit"
         disabled={formState === "submitting"}
-        className="w-full px-4 py-2.5 text-sm font-medium rounded border border-border bg-foreground text-background hover:opacity-90 transition-opacity disabled:opacity-50"
+        className="w-full px-4 py-2.5 text-sm font-bold rounded-full transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+        style={{
+          background: formState === "submitting" ? "transparent" : "#f36458",
+          color: formState === "submitting" ? "#797979" : "#ffffff",
+          border: formState === "submitting" ? "1px solid #e5e5e5" : "1px solid #f36458",
+        }}
       >
-        {formState === "submitting" ? "Analysing..." : "Submit meeting notes"}
+        {formState === "submitting" ? "Analysing…" : "Submit meeting notes"}
       </button>
     </form>
   );

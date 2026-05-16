@@ -121,6 +121,12 @@ export function RelationshipDetail({
   const healthColor = HEALTH_COLORS[band];
   const urgency = getRelationshipUrgency(relationship, meetings);
   const sortedMeetings = [...meetings].sort((a, b) => b.meetingNumber - a.meetingNumber);
+  const meetingSignalClass =
+    meetingResult?.signal === "Positive"
+      ? "bg-[var(--status-healthy-bg)] text-[var(--status-healthy)]"
+      : meetingResult?.signal === "Friction detected"
+        ? "bg-[var(--status-critical-bg)] text-[var(--status-critical)]"
+        : "bg-muted text-muted-foreground";
 
   async function handleRefreshDiagnosis() {
     setDiagnosisState("loading");
@@ -153,63 +159,32 @@ export function RelationshipDetail({
   }
 
   async function handleLogMeeting() {
-    setFormError(null);
-
-    if (!meetingDate) {
-      setFormError("Date is required.");
-      return;
-    }
-
-    const durationNum = Number(duration);
-    if (!duration || !Number.isFinite(durationNum) || durationNum <= 0) {
-      setFormError("Duration must be a positive number.");
-      return;
-    }
-
-    if (notes.trim().length < 50) {
-      setFormError("Meeting notes must be at least 50 characters.");
+    if (notes.length < 50) {
+      toast.error("Notes must be at least 50 characters");
       return;
     }
 
     setIsAnalyzing(true);
-    const toastId = toast.loading("Analyzing meeting notes...");
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
-
     try {
       const res = await fetch("/api/ai/analyze-meeting", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        signal: controller.signal,
         body: JSON.stringify({
           relationshipId: relationship.id,
           date: meetingDate,
-          durationMinutes: durationNum,
+          durationMinutes: Number(duration),
           rawNotes: notes,
           submittedBy: "admin",
         }),
       });
-
-      clearTimeout(timeoutId);
-
-      if (!res.ok) {
-        const errBody = (await res.json().catch(() => ({}))) as Record<string, unknown>;
-        const message = typeof errBody.error === "string" ? errBody.error : "Analysis failed.";
-        setFormError(message);
-        toast.error(message, { id: toastId });
-        return;
-      }
-
       const data = (await res.json()) as AnalysisResult;
       setMeetingResult(data);
-      setLiveHealthScore(data.newHealthScore);
-      toast.success("Meeting analysis complete.", { id: toastId });
-    } catch (err: unknown) {
-      clearTimeout(timeoutId);
-      const isTimeout = err instanceof Error && err.name === "AbortError";
-      const message = isTimeout ? "Request timed out. Please try again." : "Network error. Please try again.";
-      setFormError(message);
-      toast.error(message, { id: toastId });
+      setLiveHealthScore((prev) =>
+        Math.min(100, Math.max(0, prev + (data.healthScoreDelta ?? 0)))
+      );
+      toast.success("Meeting analyzed");
+    } catch {
+      toast.error("Analysis failed, please retry");
     } finally {
       setIsAnalyzing(false);
     }
@@ -281,6 +256,20 @@ export function RelationshipDetail({
                 </span>
               </div>
               <p className="text-xs text-muted-foreground mt-1">Health Score</p>
+              <button
+                onClick={() => {
+                  const token = relationship.mentorId;
+                  const url = `${window.location.origin}/submit-meeting?token=${token}`;
+                  navigator.clipboard.writeText(url);
+                  toast.success("Mentor link copied to clipboard");
+                }}
+                className="mt-3 ml-auto text-xs px-3 py-1.5 border border-border rounded-full text-muted-foreground hover:text-foreground hover:bg-accent transition-all duration-150 flex items-center gap-1.5"
+              >
+                ⎘ Copy Mentor Link
+              </button>
+              <p className="text-[10px] text-muted-foreground mt-1 font-mono">
+                /submit-meeting?token={relationship.mentorId}
+              </p>
             </div>
           </div>
 
@@ -303,7 +292,7 @@ export function RelationshipDetail({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="space-y-6">
           <section className="bg-card border border-border rounded-xl p-5">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground mb-4">
+            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-4">
               Milestones
             </p>
             <div className="space-y-2">
@@ -336,7 +325,7 @@ export function RelationshipDetail({
           </section>
 
           <section className="bg-card border border-border rounded-xl p-5">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground mb-3">
+            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-3">
               Match Breakdown
             </p>
             <p className="text-xs text-muted-foreground italic mb-3 leading-relaxed">
@@ -369,24 +358,40 @@ export function RelationshipDetail({
 
           <section className="bg-card border border-border rounded-xl p-5">
             <div className="flex items-center justify-between gap-3 mb-3">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+              <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
                 AI Diagnosis
               </p>
               <button
                 onClick={() => { void handleRefreshDiagnosis(); }}
                 disabled={diagnosisState === "loading"}
-                className="px-3 py-1.5 text-xs font-medium rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-foreground/50 transition-colors disabled:cursor-not-allowed"
+                className="px-3 py-1.5 text-xs font-medium rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                style={{
+                  background: diagnosisState === "loading" ? "transparent" : "rgba(243,100,88,0.08)",
+                  color: diagnosisState === "loading" ? "#797979" : "#f36458",
+                  border: "1px solid",
+                  borderColor: diagnosisState === "loading" ? "#e5e5e5" : "rgba(243,100,88,0.3)",
+                }}
               >
-                {diagnosisState === "loading" ? "Diagnosing..." : "Refresh"}
+                {diagnosisState === "loading" ? "Diagnosing…" : "Refresh"}
               </button>
             </div>
-            <p className="text-xs text-muted-foreground leading-relaxed">{diagnosis.narrative}</p>
-            {diagnosis.recommendation && (
-              <p className="text-xs text-foreground mt-3 leading-relaxed">{diagnosis.recommendation}</p>
-            )}
+            <div className="rounded-md p-3" style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.15)" }}>
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[var(--status-ai)]/10 text-[var(--status-ai)]">✦ AI</span>
+                <p className="text-[9px] font-bold uppercase tracking-widest font-mono" style={{ color: "var(--status-ai)" }}>
+                  Diagnosis
+                </p>
+              </div>
+              <p className="text-xs leading-relaxed text-muted-foreground italic">{diagnosis.narrative}</p>
+              {diagnosis.recommendation && (
+                <p className="text-xs mt-2 leading-relaxed text-muted-foreground">
+                  {diagnosis.recommendation}
+                </p>
+              )}
+            </div>
             {diagnosisState === "error" && (
-              <p className="text-[10px] mt-3" style={{ color: "var(--status-critical)" }}>
-                Diagnosis request failed. Existing seeded diagnosis remains visible.
+              <p className="text-[10px] mt-2" style={{ color: "var(--status-critical)" }}>
+                Diagnosis request failed. Existing diagnosis shown.
               </p>
             )}
             {diagnosis.watchPoints.length > 0 && (
@@ -407,7 +412,7 @@ export function RelationshipDetail({
 
         <section className="lg:col-span-2 bg-card border border-border rounded-xl overflow-hidden">
           <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
               Meeting Timeline <span className="ml-2 normal-case font-normal">({sortedMeetings.length})</span>
             </p>
             <button
@@ -415,7 +420,7 @@ export function RelationshipDetail({
                 if (uploadOpen) resetForm();
                 else setUploadOpen(true);
               }}
-              className="px-3 py-1.5 text-xs font-medium rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-foreground/50 transition-colors"
+              className="px-3 py-1.5 text-xs font-medium rounded-full border border-border text-muted-foreground hover:text-foreground hover:border-foreground/50 transition-colors"
             >
               {uploadOpen ? "Cancel" : "Log Meeting"}
             </button>
@@ -431,8 +436,7 @@ export function RelationshipDetail({
                     type="date"
                     value={meetingDate}
                     onChange={(e) => setMeetingDate(e.target.value)}
-                    disabled={isAnalyzing}
-                    className="w-full border border-border rounded-lg px-3 py-2 text-xs bg-background text-foreground disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed"
+                    className="w-full border border-border rounded-lg px-3 py-2 text-xs bg-background text-foreground"
                   />
                 </label>
                 <label className="block">
@@ -441,10 +445,9 @@ export function RelationshipDetail({
                     type="number"
                     value={duration}
                     onChange={(e) => setDuration(e.target.value)}
-                    disabled={isAnalyzing}
                     placeholder="45"
                     min={1}
-                    className="w-full border border-border rounded-lg px-3 py-2 text-xs bg-background text-foreground disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed"
+                    className="w-full border border-border rounded-lg px-3 py-2 text-xs bg-background text-foreground"
                   />
                 </label>
               </div>
@@ -455,10 +458,9 @@ export function RelationshipDetail({
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  disabled={isAnalyzing}
                   rows={4}
                   placeholder="Describe what was discussed, decisions made, and next steps..."
-                  className="w-full border border-border rounded-lg px-3 py-2 text-xs bg-background text-foreground disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed resize-none"
+                  className="w-full border border-border rounded-lg px-3 py-2 text-xs bg-background text-foreground resize-none"
                 />
               </label>
               {formError && (
@@ -469,20 +471,59 @@ export function RelationshipDetail({
               <button
                 onClick={() => { void handleLogMeeting(); }}
                 disabled={isAnalyzing}
-                className="px-4 py-2 text-xs font-medium rounded-lg border border-foreground/30 text-foreground hover:border-foreground transition-colors disabled:cursor-not-allowed disabled:text-muted-foreground disabled:border-border"
+                className="px-5 py-2 text-xs font-bold rounded-full transition-all disabled:cursor-not-allowed disabled:opacity-50"
+                style={{
+                  background: isAnalyzing ? "transparent" : "#f36458",
+                  color: isAnalyzing ? "#797979" : "#ffffff",
+                  border: isAnalyzing ? "1px solid #e5e5e5" : "1px solid #f36458",
+                }}
               >
-                {isAnalyzing ? "Analyzing..." : "Submit & Analyze"}
+                {isAnalyzing ? "✦ Analyzing…" : "Submit & Analyze"}
               </button>
             </div>
           )}
 
           {meetingResult && (
-            <div className="border-b border-border px-5 py-4 bg-muted/30">
-              <p className="text-xs font-semibold text-foreground">Analysis saved locally</p>
-              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{meetingResult.aiSummary}</p>
+            <div className="border-b border-border px-5 py-4 bg-muted/30 space-y-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[var(--status-ai)]/10 text-[var(--status-ai)]">
+                  ✦ AI
+                </span>
+                <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${meetingSignalClass}`}>
+                  {meetingResult.signal}
+                </span>
+                <span
+                  className="text-xs font-bold"
+                  style={{
+                    color: meetingResult.healthScoreDelta >= 0
+                      ? "var(--status-healthy)"
+                      : "var(--status-critical)",
+                  }}
+                >
+                  {meetingResult.healthScoreDelta >= 0 ? "+" : ""}
+                  {meetingResult.healthScoreDelta}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed">{meetingResult.aiSummary}</p>
+              {meetingResult.actionItems.length > 0 && (
+                <div className="border-t border-border pt-3">
+                  <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">
+                    Action Items
+                  </p>
+                  <ul className="space-y-1.5">
+                    {meetingResult.actionItems.map((item, index) => (
+                      <li key={`${item.task}-${index}`} className="text-xs text-muted-foreground">
+                        <span className="font-medium text-foreground capitalize">{item.owner}</span>
+                        {" — "}
+                        {item.task}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               <button
                 onClick={resetForm}
-                className="mt-3 px-3 py-1.5 text-xs font-medium rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-foreground/50 transition-colors"
+                className="mt-3 px-3 py-1.5 text-xs font-medium rounded-full border border-border text-muted-foreground hover:text-foreground hover:border-foreground/50 transition-colors"
               >
                 Close
               </button>

@@ -16,83 +16,45 @@ function bandToStatus(band: HealthBand): "critical" | "at-risk" | "healthy" {
 }
 
 function StatusBadge({ status }: { status: "critical" | "at-risk" | "healthy" }) {
-  const styles = {
-    critical: {
-      background: "var(--status-critical-bg)",
-      color: "var(--status-critical)",
-    },
-    "at-risk": {
-      background: "var(--status-risk-bg)",
-      color: "var(--status-risk)",
-    },
-    healthy: {
-      background: "var(--status-healthy-bg)",
-      color: "var(--status-healthy)",
-    },
+  const cls = {
+    critical: "bg-red-100 text-red-700 border border-red-400",
+    "at-risk": "bg-amber-100 text-amber-700 border border-amber-400",
+    healthy: "bg-green-100 text-green-700 border border-green-400",
   };
-  const labels = { critical: "Critical", "at-risk": "At Risk", healthy: "Healthy" };
+  const labels = { critical: "🚨 CRITICAL", "at-risk": "⚠ At Risk", healthy: "✓ Healthy" };
   return (
-    <span
-      className="text-xs font-medium px-2.5 py-1 rounded-full"
-      style={styles[status]}
-    >
+    <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${cls[status]}`}>
       {labels[status]}
     </span>
   );
 }
 
 function SignalBadge({ signal }: { signal: string }) {
-  const isPositive = signal === "Positive";
-  const isFriction = signal === "Friction detected";
-  const style = isPositive
-    ? { background: "var(--status-healthy-bg)", color: "var(--status-healthy)" }
-    : isFriction
-      ? { background: "var(--status-critical-bg)", color: "var(--status-critical)" }
-      : undefined;
-  const className = `text-[10px] font-medium px-2 py-0.5 rounded-full ${
-    !isPositive && !isFriction ? "bg-muted text-muted-foreground" : ""
-  }`;
-  return (
-    <span className={className} style={style}>
-      {signal}
-    </span>
-  );
-}
-
-function HealthBar({ score }: { score: number }) {
-  const color =
-    score < 40
-      ? "var(--status-critical)"
-      : score < 70
-        ? "var(--status-risk)"
-        : "var(--status-healthy)";
-  return (
-    <div className="flex items-center gap-3 mt-3">
-      <span className="text-xs text-muted-foreground w-20 shrink-0">Health Score</span>
-      <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-        <div
-          className="h-full rounded-full transition-all duration-500"
-          style={{ width: `${score}%`, background: color }}
-        />
-      </div>
-      <span className="text-xs font-semibold w-6 text-right" style={{ color }}>
-        {score}
-      </span>
-    </div>
-  );
+  const cls =
+    signal === "Positive"
+      ? "bg-green-100 text-green-700"
+      : signal === "Friction detected"
+        ? "bg-red-100 text-red-700"
+        : "bg-muted text-muted-foreground";
+  return <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${cls}`}>{signal}</span>;
 }
 
 function AiBadge() {
   return (
-    <span
-      className="shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded mt-0.5"
-      style={{
-        background: "color-mix(in srgb, var(--status-ai) 10%, transparent)",
-        color: "var(--status-ai)",
-      }}
-    >
+    <span className="shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[var(--status-ai)]/10 text-[var(--status-ai)]">
       ✦ AI
     </span>
+  );
+}
+
+function AiInsightBox({ text }: { text: string }) {
+  return (
+    <div className="mt-3 pt-3 border-t border-border/40 flex items-start gap-2">
+      <span className="shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[var(--status-ai)]/10 text-[var(--status-ai)] mt-0.5">
+        ✦ AI
+      </span>
+      <p className="text-xs text-muted-foreground leading-relaxed italic">{text}</p>
+    </div>
   );
 }
 
@@ -153,80 +115,74 @@ export function DashboardCommandCenter() {
 
   const atRiskCount = summary.atRiskRelationshipCount;
   const criticalCount = summary.criticalRelationshipCount;
+  const primaryStats = [
+    { label: "Programmes", value: summary.activeProgramCount },
+    { label: "Cohorts", value: summary.activeCohortCount },
+    { label: "Applications", value: summary.submittedApplicationCount },
+    { label: "Approved", value: summary.approvedApplicationCount },
+  ];
+  const relationshipStats = [
+    {
+      label: "Healthy",
+      value: summary.healthyRelationshipCount,
+      topBorderCls: "border-t-2 border-t-green-500",
+      textCls: "text-green-700",
+    },
+    {
+      label: "At Risk",
+      value: atRiskCount,
+      topBorderCls: "border-t-2 border-t-amber-500",
+      textCls: "text-amber-700",
+    },
+    {
+      label: "Critical",
+      value: criticalCount,
+      topBorderCls: criticalCount > 0 ? "border-t-2 border-t-red-500" : "",
+      textCls: criticalCount > 0 ? "text-red-600" : "text-foreground",
+    },
+    {
+      label: "Relationships",
+      value: summary.activeRelationshipCount,
+      topBorderCls: "",
+      textCls: "text-foreground",
+    },
+  ];
 
   return (
     <>
       {/* Stat Bar */}
-      <div className="bg-card border-b border-border py-4 px-4 md:px-8 flex items-center justify-between">
-        {/* Group A */}
-        <div className="flex items-center gap-8">
-          {[
-            { label: "Programmes", value: summary.activeProgramCount },
-            { label: "Cohorts", value: summary.activeCohortCount },
-            { label: "Applications", value: summary.submittedApplicationCount },
-            { label: "Approved", value: summary.approvedApplicationCount },
-          ].map(({ label, value }) => (
-            <div key={label}>
-              <p className="text-2xl font-semibold text-foreground tabular-nums leading-none">
-                {value}
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Divider */}
-        <div className="w-px h-10 bg-border mx-4 shrink-0" />
-
-        {/* Group B */}
-        <div className="flex items-center gap-8">
-          <div>
-            <p
-              className="text-3xl font-bold tabular-nums leading-none"
-              style={{ color: "var(--status-healthy)" }}
-            >
-              {summary.healthyRelationshipCount}
-            </p>
-            <p className="text-xs text-muted-foreground mt-0.5">Healthy</p>
-          </div>
-          <div>
-            <p
-              className="text-3xl font-bold tabular-nums leading-none"
-              style={{ color: "var(--status-risk)" }}
-            >
-              {atRiskCount}
-            </p>
-            <p className="text-xs text-muted-foreground mt-0.5">At Risk</p>
-          </div>
-          <div>
-            {criticalCount > 0 ? (
-              <span className="relative inline-block">
-                <span
-                  className="absolute -inset-1 rounded-full animate-ping"
-                  style={{ background: "color-mix(in srgb, var(--status-critical) 10%, transparent)" }}
-                />
-                <p
-                  className="text-3xl font-bold tabular-nums leading-none relative"
-                  style={{ color: "var(--status-critical)" }}
+      <div className="border-b border-border bg-card px-4 py-4 md:px-12">
+        <div className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+          <div className="rounded-xl border border-border bg-card p-2 shadow-md">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {primaryStats.map(({ label, value }) => (
+                <div
+                  key={label}
+                  className="rounded-lg border border-border bg-background px-4 py-3"
                 >
-                  {criticalCount}
-                </p>
-              </span>
-            ) : (
-              <p
-                className="text-3xl font-bold tabular-nums leading-none"
-                style={{ color: "var(--status-critical)" }}
-              >
-                {criticalCount}
-              </p>
-            )}
-            <p className="text-xs text-muted-foreground mt-0.5">Critical</p>
+                  <p className="text-2xl font-semibold text-foreground tabular-nums leading-none">
+                    {value}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">{label}</p>
+                </div>
+              ))}
+            </div>
           </div>
-          <div>
-            <p className="text-2xl font-semibold text-foreground tabular-nums leading-none">
-              {summary.activeRelationshipCount}
-            </p>
-            <p className="text-xs text-muted-foreground mt-0.5">Relationships</p>
+
+          <div className="rounded-xl border border-border bg-card p-2 shadow-md">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {relationshipStats.map(({ label, value, topBorderCls, textCls }) => (
+                <div
+                  key={label}
+                  className={`rounded-lg border border-border bg-background px-4 py-3 ${topBorderCls}`}
+                >
+                  <p className={`text-2xl font-semibold tabular-nums leading-none ${textCls}`}>
+                    {value}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">{label}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -253,57 +209,63 @@ export function DashboardCommandCenter() {
           ) : (
             feed.map(({ relationship, company, mentor, band, urgency }) => {
               const status = bandToStatus(band);
-              const accentColor =
+              const accentBg =
+                status === "critical" ? "#dc2626" : status === "at-risk" ? "#d97706" : "#16a34a";
+              const scoreCls =
                 status === "critical"
-                  ? "var(--status-critical)"
+                  ? "text-[var(--status-critical)]"
                   : status === "at-risk"
-                    ? "var(--status-risk)"
-                    : "var(--status-healthy)";
+                    ? "text-[var(--status-risk)]"
+                    : "text-[var(--status-healthy)]";
+              const cardBorder =
+                status === "critical"
+                  ? "border-red-200"
+                  : status === "at-risk"
+                    ? "border-amber-200"
+                    : "border-border";
 
               return (
                 <div
                   key={relationship.id}
-                  className="group relative bg-card border border-border rounded-xl overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer"
-                  style={
-                    {
-                      "--hover-border": "var(--status-ai)",
-                    } as React.CSSProperties
-                  }
+                  className={`group relative bg-card border ${cardBorder} rounded-xl overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer`}
                 >
                   {/* Left accent bar */}
                   <div
-                    className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl"
-                    style={{ background: accentColor }}
+                    className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-xl"
+                    style={{ background: accentBg }}
                   />
 
                   <div className="pl-5 pr-4 py-4">
-                    {/* Row 1 */}
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-semibold text-foreground text-[15px]">
-                          {company.name}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{mentor.name}</p>
+                    {/* Row 1 — relationship connection + score */}
+                    <div className="flex justify-between items-start gap-3">
+                      <div className="flex items-center gap-2 flex-wrap min-w-0">
+                        <span className="font-bold text-foreground text-[15px]">
+                          🏢 {company.name}
+                        </span>
+                        <span className="text-gray-400 font-light text-lg">↔</span>
+                        <span className="font-semibold text-muted-foreground text-[14px]">
+                          👤 {mentor.name}
+                        </span>
                       </div>
-                      <StatusBadge status={status} />
+                      <div className="shrink-0 text-right">
+                        <p className={`text-3xl font-black leading-none tabular-nums ${scoreCls}`}>
+                          {relationship.healthScore}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">score</p>
+                      </div>
                     </div>
 
-                    {/* Row 2 — health bar */}
-                    <HealthBar score={relationship.healthScore} />
-                    <div className="flex justify-end mt-1">
+                    {/* Row 2 — status badge + days */}
+                    <div className="flex items-center gap-2 mt-2.5 flex-wrap">
+                      <StatusBadge status={status} />
                       <span className="text-xs text-muted-foreground">
-                        · {urgency.daysSinceLastMeeting}d ago
+                        {urgency.daysSinceLastMeeting}d since last meeting
                       </span>
                     </div>
 
-                    {/* Row 3 — AI reason */}
+                    {/* Row 3 — AI insight box */}
                     {relationship.aiDiagnosis && (
-                      <div className="mt-3 pt-3 border-t border-border/60 flex items-start gap-2">
-                        <AiBadge />
-                        <p className="text-xs text-muted-foreground leading-relaxed">
-                          {relationship.aiDiagnosis}
-                        </p>
-                      </div>
+                      <AiInsightBox text={relationship.aiDiagnosis} />
                     )}
                   </div>
                 </div>

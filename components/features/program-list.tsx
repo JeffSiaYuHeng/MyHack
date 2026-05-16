@@ -52,14 +52,15 @@ export function ProgramList({ programs: initialPrograms }: ProgramListProps) {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold text-foreground">Programmes</h1>
-          <p className="text-xs text-muted-foreground mt-1">
+          <h1 className="text-xl font-bold text-foreground" style={{ letterSpacing: "-0.02em" }}>Programmes</h1>
+          <p className="text-[10px] font-mono text-muted-foreground mt-1 uppercase tracking-widest">
             {programs.length} programme{programs.length !== 1 ? "s" : ""}
           </p>
         </div>
         <Link
           href="/programs/new"
-          className="shrink-0 px-3 py-1.5 text-xs font-medium rounded border border-foreground text-foreground hover:bg-muted transition-colors"
+          className="shrink-0 px-4 py-1.5 text-xs font-bold rounded-full transition-opacity hover:opacity-90"
+          style={{ background: "#f36458", color: "#ffffff" }}
         >
           + New Programme
         </Link>
@@ -125,23 +126,19 @@ export function ProgramList({ programs: initialPrograms }: ProgramListProps) {
                   <div className="flex items-center gap-2 shrink-0">
                     <Link
                       href={`/programs/${program.id}`}
-                      className="px-3 py-1.5 text-xs font-medium rounded border border-border text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
+                      className="px-3 py-1.5 text-xs font-medium rounded-full border border-border text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
                     >
                       View
                     </Link>
                     <Link
                       href={`/programs/${program.id}/applicants`}
-                      className="px-3 py-1.5 text-xs font-medium rounded border border-border text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
+                      className="px-3 py-1.5 text-xs font-medium rounded-full border border-border text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
                     >
                       Applicants
                     </Link>
                     <button
                       onClick={() => setDeleteId(program.id)}
-                      className="px-3 py-1.5 text-xs font-medium rounded border transition-colors"
-                      style={{
-                        color: "var(--status-critical)",
-                        borderColor: "var(--status-critical)",
-                      }}
+                      className="px-3 py-1.5 text-xs font-medium rounded-full border border-red-300 text-red-600 hover:bg-red-50 transition-colors"
                     >
                       Delete
                     </button>

@@ -100,12 +100,12 @@ export function RelationshipList({
     <div className="px-6 md:px-10 py-8 space-y-6">
       {/* Page header */}
       <div>
-        <h1 className="text-xl font-semibold text-foreground">Relationships</h1>
-        <div className="flex items-center gap-5 mt-2 text-xs text-muted-foreground">
-          <span>{relationships.length} total</span>
-          <span style={{ color: "var(--status-healthy)" }}>{totalHealthy} healthy</span>
-          <span style={{ color: "var(--status-risk)" }}>{totalAtRisk} at risk</span>
-          <span style={{ color: "var(--status-critical)" }}>{totalCritical} critical</span>
+        <h1 className="text-xl font-bold text-foreground" style={{ letterSpacing: "-0.02em" }}>Relationships</h1>
+        <div className="flex items-center gap-5 mt-2 text-xs font-mono">
+          <span className="text-muted-foreground">{relationships.length} total</span>
+          <span className="text-green-600 font-bold">{totalHealthy} healthy</span>
+          <span className="text-amber-600 font-bold">{totalAtRisk} at risk</span>
+          <span className="text-red-600 font-bold">{totalCritical} critical</span>
         </div>
       </div>
 
@@ -122,15 +122,16 @@ export function RelationshipList({
               <button
                 key={f}
                 onClick={() => setStatusFilter(f)}
-                className={`px-3 py-1 text-xs font-medium rounded-full border transition-colors capitalize ${
-                  isActive
-                    ? "border-foreground bg-foreground text-background"
-                    : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/50"
-                }`}
+                className="px-3 py-1 text-xs font-medium rounded-full border transition-all capitalize"
+                style={{
+                  background: isActive ? "#f36458" : "transparent",
+                  color: isActive ? "#ffffff" : undefined,
+                  borderColor: isActive ? "#f36458" : undefined,
+                }}
               >
                 {f}
                 {count > 0 && (
-                  <span className={`ml-1.5 ${isActive ? "opacity-70" : "opacity-50"}`}>
+                  <span className={`ml-1.5 ${isActive ? "opacity-80" : "opacity-50"}`}>
                     {count}
                   </span>
                 )}
@@ -162,16 +163,16 @@ export function RelationshipList({
               <button
                 key={f}
                 onClick={() => setHealthFilter(f)}
-                className={`px-3 py-1 text-xs font-medium rounded-full border transition-colors capitalize ${
-                  isActive
-                    ? "border-foreground bg-foreground text-background"
-                    : "border-border hover:border-foreground/50"
-                }`}
-                style={!isActive && color ? { color } : undefined}
+                className="px-3 py-1 text-xs font-medium rounded-full border transition-all capitalize"
+                style={{
+                  background: isActive ? "#f36458" : "transparent",
+                  color: isActive ? "#ffffff" : color ?? undefined,
+                  borderColor: isActive ? "#f36458" : color ?? undefined,
+                }}
               >
                 {f === "at-risk" ? "At Risk" : f.charAt(0).toUpperCase() + f.slice(1)}
                 {count > 0 && (
-                  <span className="ml-1.5 opacity-50">{count}</span>
+                  <span className="ml-1.5 opacity-70">{count}</span>
                 )}
               </button>
             );
@@ -268,19 +269,16 @@ export function RelationshipList({
 
                   {/* Row 3: AI diagnosis */}
                   {r.aiDiagnosis && (
-                    <div className="mt-3 pt-3 border-t border-border/60 flex items-start gap-2">
-                      <span
-                        className="shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded mt-0.5"
-                        style={{
-                          background: "color-mix(in srgb, var(--status-ai) 10%, transparent)",
-                          color: "var(--status-ai)",
-                        }}
-                      >
-                        ✦ AI
-                      </span>
-                      <p className="text-xs text-muted-foreground leading-relaxed">
-                        {r.aiDiagnosis}
-                      </p>
+                    <div className="mt-3 pt-3 border-t border-border/60">
+                      <div className="rounded-md p-2.5" style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.15)" }}>
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[var(--status-ai)]/10 text-[var(--status-ai)]">✦ AI</span>
+                          <p className="text-[9px] font-bold uppercase tracking-widest font-mono" style={{ color: "var(--status-ai)" }}>
+                            Insight
+                          </p>
+                        </div>
+                        <p className="text-xs leading-relaxed text-muted-foreground italic">{r.aiDiagnosis}</p>
+                      </div>
                     </div>
                   )}
 

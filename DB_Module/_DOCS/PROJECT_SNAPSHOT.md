@@ -22,6 +22,7 @@ The application is now a feature-complete MVP with robust client-side resilience
 - [Dependency Graph](./06_DEPENDENCY_GRAPH.md)
 - [Data Flow & Backup Path](./07_DATA_FLOW.md)
 - [User Flow UI Interaction Report](./08_USER_FLOW_UI_INTERACTION_REPORT.md)
+- [Application Master Brief for Slides](./09_APPLICATION_MASTER_BRIEF_FOR_SLIDES.md)
 - [Roadmap](../_PHASES/00_ROADMAP.md)
 
 ## Active Work

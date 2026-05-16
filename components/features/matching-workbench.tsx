@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useReducer } from "react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type {
@@ -91,7 +92,7 @@ interface MatchingWorkbenchProps {
 const BREAKDOWN_LABELS: [keyof MatchBreakdown, string][] = [
   ["industryMatch", "Industry"],
   ["stageFit", "Stage"],
-  ["availability", "Availability"],
+  ["availability", "Avail."],
   ["styleCompatibility", "Style"],
 ];
 
@@ -108,6 +109,7 @@ export function MatchingWorkbench({
   programId,
   cohortId,
 }: MatchingWorkbenchProps) {
+  const router = useRouter();
   const [confirmedStartupIds, setConfirmedStartupIds] = useState<Set<string>>(new Set());
 
   const displayQueue = initialQueue.filter((item) => !confirmedStartupIds.has(item.company.id));
@@ -191,11 +193,14 @@ export function MatchingWorkbench({
         return;
       }
       dispatch({ type: "CONFIRM_SUCCESS" });
-      toast.success("Mentor match confirmed.", { id: toastId });
+      toast.success("Match confirmed — relationship created", { id: toastId });
       const nextQueue = displayQueue.filter((item) => item.company.id !== selectedStartupId);
       setConfirmedStartupIds((prev) => new Set([...prev, selectedStartupId]));
       setSelectedStartupId(nextQueue[0]?.company.id ?? null);
       dispatch({ type: "RESET" });
+      setTimeout(() => {
+        router.push("/relationships");
+      }, 1500);
     } catch {
       const message = "Network error during confirmation.";
       dispatch({ type: "CONFIRM_ERROR", message });
@@ -226,7 +231,7 @@ export function MatchingWorkbench({
   return (
     <div className="px-6 md:px-10 py-8">
       <div className="mb-6">
-        <h1 className="text-xl font-semibold text-foreground">Matching Workbench</h1>
+        <h1 className="text-xl font-bold text-foreground" style={{ letterSpacing: "-0.02em" }}>Matching Workbench</h1>
         <p className="text-xs text-muted-foreground mt-1">
           {displayQueue.length} startup{displayQueue.length !== 1 ? "s" : ""} awaiting mentor match
         </p>
@@ -235,7 +240,7 @@ export function MatchingWorkbench({
       <div className="flex flex-col lg:flex-row gap-5">
         {/* Left panel: startup queue */}
         <div className="lg:w-64 shrink-0">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground mb-3">
+          <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-3">
             Queue
           </p>
           <div className="bg-card border border-border rounded-xl overflow-hidden">
@@ -317,9 +322,14 @@ export function MatchingWorkbench({
                 <button
                   onClick={() => { void handleGenerateMatches(); }}
                   disabled={matchState === "loading"}
-                  className="px-4 py-2 text-xs font-semibold rounded-lg border border-foreground/30 text-foreground hover:border-foreground transition-colors disabled:cursor-not-allowed disabled:text-muted-foreground disabled:border-border"
+                  className="px-5 py-2 text-xs font-bold rounded-full transition-all disabled:cursor-not-allowed disabled:opacity-50"
+                  style={{
+                    background: matchState === "loading" ? "transparent" : "#f36458",
+                    color: matchState === "loading" ? "#797979" : "#ffffff",
+                    border: matchState === "loading" ? "1px solid #e5e5e5" : "1px solid #f36458",
+                  }}
                 >
-                  {matchState === "loading" ? "Generating AI matches..." : "Generate AI matches"}
+                  {matchState === "loading" ? "Generating matches…" : "✦ Generate AI Matches"}
                 </button>
               </div>
             </div>
@@ -336,19 +346,20 @@ export function MatchingWorkbench({
             <div className="bg-card border border-border rounded-xl p-6 overflow-hidden">
               <div className="flex items-center gap-3">
                 <div
-                  className="relative size-10 rounded-full border border-border"
-                  style={{ background: "color-mix(in srgb, var(--status-ai) 8%, transparent)" }}
+                  className="relative size-10 rounded-full"
+                  style={{ background: "rgba(243,100,88,0.08)", border: "1px solid #353535" }}
                 >
                   <span
-                    className="absolute inset-1 rounded-full border-2 border-transparent border-t-[var(--status-ai)] animate-spin"
+                    className="absolute inset-1 rounded-full border-2 border-transparent animate-spin"
+                    style={{ borderTopColor: "#f36458" }}
                   />
                   <span
                     className="absolute inset-3 rounded-full"
-                    style={{ background: "var(--status-ai)" }}
+                    style={{ background: "#f36458" }}
                   />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold" style={{ color: "var(--status-ai)" }}>
+                  <p className="text-sm font-semibold" style={{ color: "#f36458" }}>
                     Finding best mentor matches
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5">
@@ -390,86 +401,58 @@ export function MatchingWorkbench({
           {/* Match results */}
           {(matchState === "done" || matchState === "error") && matches.length > 0 && (
             <div className="space-y-3">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+              <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
                 Ranked Matches ({matches.length})
               </p>
               {matches.map((match, idx) => {
                 const poolItem = mentorPoolMap.get(match.mentorId);
                 const isSelected = match.mentorId === selectedMentorId;
+                const mentorRole = poolItem?.mentor.currentRole ?? "Mentor";
+                const mentorCompany = poolItem?.mentor.company ?? "Mentor network";
+                const rank = idx + 1;
                 return (
                   <div
                     key={match.mentorId}
-                    className={`bg-card border rounded-xl p-5 transition-all duration-200 ${
-                      isSelected ? "border-primary shadow-sm" : "border-border hover:border-foreground/20"
-                    }`}
+                    data-selected={isSelected}
+                    onClick={() =>
+                      dispatch({ type: "SELECT_MENTOR", mentorId: isSelected ? null : match.mentorId })
+                    }
+                    className="relative bg-card border border-border rounded-xl overflow-hidden transition-all duration-200 hover:shadow-md cursor-pointer data-[selected=true]:border-[var(--status-ai)] data-[selected=true]:shadow-md"
                   >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2.5">
-                          <span className="text-[10px] font-bold text-muted-foreground shrink-0">
-                            #{idx + 1}
-                          </span>
-                          <p className="text-[15px] font-semibold text-foreground truncate">
+                    <div className="absolute top-3 left-3 w-6 h-6 rounded-full bg-[var(--status-ai)]/10 text-[var(--status-ai)] text-xs font-bold flex items-center justify-center">
+                      {rank}
+                    </div>
+
+                    <div className="p-4 pl-11">
+                      <div className="flex justify-between items-start gap-4">
+                        <div className="min-w-0">
+                          <p className="font-semibold text-foreground text-[15px] truncate">
                             {match.mentorName}
                           </p>
-                          {poolItem && (
-                            <span className="text-[10px] text-muted-foreground shrink-0 capitalize">
-                              {poolItem.mentor.mentorshipStyle}
-                            </span>
-                          )}
-                        </div>
-                        {poolItem && (
-                          <p className="text-xs text-muted-foreground mt-0.5 ml-6">
-                            {poolItem.mentor.currentRole} · {poolItem.mentor.company}
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {mentorRole} · {mentorCompany}
                           </p>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-3 shrink-0">
-                        <div className="text-right">
-                          <p
-                            className="text-2xl font-bold leading-none"
-                            style={{ color: "var(--primary)" }}
-                          >
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="text-2xl font-bold text-foreground leading-none">
                             {match.overallScore}
                           </p>
-                          <p className="text-[10px] text-muted-foreground mt-0.5">score</p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">
+                            match score
+                          </p>
                         </div>
-                        <button
-                          onClick={() =>
-                            dispatch({ type: "SELECT_MENTOR", mentorId: isSelected ? null : match.mentorId })
-                          }
-                          className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
-                            isSelected
-                              ? "border-primary bg-primary text-primary-foreground"
-                              : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/50"
-                          }`}
-                        >
-                          {isSelected ? "Selected" : "Select"}
-                        </button>
                       </div>
-                    </div>
 
-                    <div className="mt-3 ml-6 flex items-start gap-2">
-                      <span
-                        className="shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded mt-0.5"
-                        style={{
-                          background: "color-mix(in srgb, var(--status-ai) 10%, transparent)",
-                          color: "var(--status-ai)",
-                        }}
-                      >
-                        ✦ AI
-                      </span>
-                      <p className="text-xs text-muted-foreground leading-relaxed">{match.reason}</p>
-                    </div>
-
-                    <div className="mt-4 ml-6 space-y-2">
+                      <div className="mt-3 space-y-1.5">
                       {BREAKDOWN_LABELS.map(([key, label]) => (
                         <div key={key} className="flex items-center gap-2">
-                          <span className="text-[10px] text-muted-foreground w-20 shrink-0">{label}</span>
-                          <div className="flex-1 bg-muted rounded-full h-1.5 overflow-hidden">
+                            <span className="text-[10px] text-muted-foreground w-12 shrink-0">
+                              {label}
+                            </span>
+                            <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden">
                             <div
-                              className="h-full rounded-full"
-                              style={{ width: `${match.breakdown[key]}%`, backgroundColor: "var(--primary)" }}
+                                className="h-full rounded-full bg-[var(--status-ai)]/60 transition-all duration-700"
+                                style={{ width: `${match.breakdown[key]}%` }}
                             />
                           </div>
                           <span className="text-[10px] text-muted-foreground w-6 text-right">
@@ -477,10 +460,24 @@ export function MatchingWorkbench({
                           </span>
                         </div>
                       ))}
-                    </div>
+                      </div>
+
+                      <div className="mt-3 pt-3 border-t border-border/60">
+                        <div className="rounded-md p-2.5" style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.15)" }}>
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[var(--status-ai)]/10 text-[var(--status-ai)]">✦ AI</span>
+                            <p className="text-[9px] font-bold uppercase tracking-widest font-mono" style={{ color: "var(--status-ai)" }}>
+                              Reasoning
+                            </p>
+                          </div>
+                          <p className="text-xs leading-relaxed text-muted-foreground italic">
+                            {match.reason}
+                          </p>
+                        </div>
+                      </div>
 
                     {poolItem && poolItem.warnings.length > 0 && (
-                      <div className="mt-3 ml-6 flex flex-wrap gap-1.5">
+                        <div className="mt-3 flex flex-wrap gap-1.5">
                         {poolItem.warnings.map((w) => (
                           <span
                             key={w.code}
@@ -492,6 +489,18 @@ export function MatchingWorkbench({
                         ))}
                       </div>
                     )}
+
+                      <button
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          dispatch({ type: "SELECT_MENTOR", mentorId: isSelected ? null : match.mentorId });
+                        }}
+                        data-selected={isSelected}
+                        className="mt-3 w-full py-2 rounded-lg text-sm font-medium transition-all duration-150 bg-[var(--status-ai)]/10 text-[var(--status-ai)] hover:bg-[var(--status-ai)]/20 data-[selected=true]:bg-[var(--status-ai)] data-[selected=true]:text-white"
+                      >
+                        {isSelected ? "✓ Selected" : "Select"}
+                      </button>
+                    </div>
                   </div>
                 );
               })}
@@ -512,7 +521,8 @@ export function MatchingWorkbench({
                       </p>
                       <button
                         onClick={() => setConfirmDialogOpen(true)}
-                        className="px-5 py-2.5 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:opacity-90 transition-opacity"
+                        className="px-5 py-2.5 text-sm font-bold rounded-full transition-opacity hover:opacity-90"
+                        style={{ background: "#f36458", color: "#ffffff" }}
                       >
                         Retry
                       </button>
@@ -521,7 +531,8 @@ export function MatchingWorkbench({
                     <button
                       onClick={() => setConfirmDialogOpen(true)}
                       disabled={confirmState === "confirming"}
-                      className="w-full md:w-auto px-8 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full md:w-auto px-8 py-2.5 text-sm font-bold rounded-full transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{ background: "#f36458", color: "#ffffff" }}
                     >
                       {confirmState === "confirming" ? "Confirming…" : "Confirm Match"}
                     </button>

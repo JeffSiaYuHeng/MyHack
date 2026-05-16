@@ -5,29 +5,30 @@ export default function SubmitMeetingPage() {
     <div className="min-h-screen bg-background text-foreground">
       <div className="max-w-lg mx-auto px-4 py-10">
         {/* Branding */}
-        <div className="mb-8">
-          <p className="text-base font-semibold tracking-tight">Verrier</p>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Mentor meeting submission
-          </p>
+        <div className="flex items-center gap-2 mb-10">
+          <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: "#f36458" }} />
+          <span className="font-bold text-sm tracking-tight">Verrier</span>
+          <span className="text-muted-foreground mx-1 text-xs">/</span>
+          <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+            Mentor Meeting
+          </span>
         </div>
 
-        {/* Context copy */}
-        <div className="mb-6">
-          <h1 className="text-sm font-semibold">Log your meeting</h1>
-          <p className="text-xs text-muted-foreground mt-1">
-            Submit your session notes after each mentor meeting. AI analysis will
-            generate a summary, signal, and action items within minutes.
+        <div className="mb-7">
+          <h1 className="text-xl font-bold text-foreground" style={{ letterSpacing: "-0.02em" }}>
+            Log your meeting
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
+            Submit session notes after each mentor meeting. AI analysis will generate a summary,
+            signal, and action items within seconds.
           </p>
         </div>
 
         <MeetingSubmissionForm />
 
-        <p className="text-[10px] text-muted-foreground mt-6 text-center">
+        <p className="text-[10px] text-muted-foreground text-center mt-8 font-mono">
           Having trouble with your token?{" "}
-          <span className="font-medium text-foreground">
-            Contact your programme coordinator.
-          </span>
+          <span className="font-semibold text-foreground">Contact your programme coordinator.</span>
         </p>
       </div>
     </div>

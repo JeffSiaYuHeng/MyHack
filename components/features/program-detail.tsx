@@ -122,7 +122,7 @@ export function ProgramDetail({ program: initialProgram }: ProgramDetailProps) {
               ← Programmes
             </Link>
           </div>
-          <h1 className="text-xl font-semibold text-foreground mt-1 truncate">{program.name}</h1>
+          <h1 className="text-xl font-bold text-foreground mt-1 truncate" style={{ letterSpacing: "-0.02em" }}>{program.name}</h1>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             <span className="text-[10px] font-medium px-2 py-0.5 rounded-full capitalize" style={{ color, background: bg }}>
               {program.status}
@@ -138,20 +138,19 @@ export function ProgramDetail({ program: initialProgram }: ProgramDetailProps) {
             <>
               <Link
                 href={`/programs/${program.id}/applicants`}
-                className="px-3 py-1.5 text-xs font-medium rounded border border-border text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
+                className="px-3 py-1.5 text-xs font-medium rounded-full border border-border text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
               >
                 Applicants ({applications.length})
               </Link>
               <button
                 onClick={() => { setDraft(program); setEditing(true); }}
-                className="px-3 py-1.5 text-xs font-medium rounded border border-border text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
+                className="px-3 py-1.5 text-xs font-medium rounded-full border border-border text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
               >
                 Edit
               </button>
               <button
                 onClick={() => setShowDelete(true)}
-                className="px-3 py-1.5 text-xs font-medium rounded border transition-colors"
-                style={{ color: "var(--status-critical)", borderColor: "var(--status-critical)" }}
+                className="px-3 py-1.5 text-xs font-medium rounded-full border border-red-300 text-red-600 hover:bg-red-50 transition-colors"
               >
                 Delete
               </button>
@@ -161,15 +160,15 @@ export function ProgramDetail({ program: initialProgram }: ProgramDetailProps) {
             <>
               <button
                 onClick={cancelEdit}
-                className="px-3 py-1.5 text-xs font-medium rounded border border-border text-muted-foreground hover:text-foreground transition-colors"
+                className="px-3 py-1.5 text-xs font-medium rounded-full border border-border text-muted-foreground hover:text-foreground transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={saveEdit}
                 disabled={weightTotal !== 100}
-                className="px-3 py-1.5 text-xs font-semibold rounded border transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{ color: "var(--status-healthy)", borderColor: "var(--status-healthy)", background: "var(--status-healthy-bg)" }}
+                className="px-4 py-1.5 text-xs font-bold rounded-full transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{ background: "#f36458", color: "#ffffff" }}
               >
                 Save changes
               </button>
@@ -182,7 +181,7 @@ export function ProgramDetail({ program: initialProgram }: ProgramDetailProps) {
       {!editing && (
         <div className="bg-card border border-border rounded-xl px-6 py-4 flex flex-wrap gap-8 text-[10px] text-muted-foreground">
           <div><span className="text-2xl font-semibold text-foreground">{applications.length}</span><p className="mt-0.5">Applications</p></div>
-          <div><span className="text-2xl font-semibold" style={{ color: "var(--status-healthy)" }}>{approvedCount}</span><p className="mt-0.5">Approved</p></div>
+          <div><span className="text-2xl font-semibold text-green-600">{approvedCount}</span><p className="mt-0.5">Approved</p></div>
           <div><span className="text-2xl font-semibold text-foreground">{mentors.length}</span><p className="mt-0.5">Mentors</p></div>
           <div><span className="text-sm font-medium text-foreground">{formatDate(program.applicationOpenAt)}</span><p className="mt-0.5">Opens</p></div>
           <div><span className="text-sm font-medium text-foreground">{formatDate(program.applicationCloseAt)}</span><p className="mt-0.5">Closes</p></div>
@@ -196,7 +195,7 @@ export function ProgramDetail({ program: initialProgram }: ProgramDetailProps) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Basics */}
           <div className="bg-card border border-border rounded-xl p-5 space-y-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Basics</p>
+            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Basics</p>
             <dl className="space-y-2 text-xs">
               {[
                 ["Name", program.name],
@@ -213,7 +212,7 @@ export function ProgramDetail({ program: initialProgram }: ProgramDetailProps) {
 
           {/* Target profile */}
           <div className="bg-card border border-border rounded-xl p-5 space-y-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Target Profile</p>
+            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Target Profile</p>
             <dl className="space-y-2 text-xs">
               <div className="flex gap-3"><dt className="text-muted-foreground w-24 shrink-0">Stages</dt><dd className="text-foreground">{program.targetStages.join(", ") || "—"}</dd></div>
               <div className="flex gap-3"><dt className="text-muted-foreground w-24 shrink-0">Industries</dt><dd className="text-foreground">{program.targetIndustries.join(", ") || "—"}</dd></div>
@@ -223,7 +222,7 @@ export function ProgramDetail({ program: initialProgram }: ProgramDetailProps) {
 
           {/* Criteria weights */}
           <div className="bg-card border border-border rounded-xl p-5 space-y-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Criteria Weights</p>
+            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Criteria Weights</p>
             <div className="space-y-2">
               {CRITERIA_FIELDS.map(({ key, label }) => (
                 <div key={key} className="flex items-center gap-3">
@@ -239,7 +238,7 @@ export function ProgramDetail({ program: initialProgram }: ProgramDetailProps) {
 
           {/* Application setup */}
           <div className="bg-card border border-border rounded-xl p-5 space-y-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Application Setup</p>
+            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Application Setup</p>
             <dl className="space-y-2 text-xs">
               <div className="flex gap-3"><dt className="text-muted-foreground w-24 shrink-0">Documents</dt><dd className="text-foreground">{program.requiredDocuments.join(", ") || "None"}</dd></div>
               <div className="flex gap-3"><dt className="text-muted-foreground w-24 shrink-0">App URL</dt><dd className="font-mono text-foreground">/apply/{program.id}</dd></div>
@@ -248,7 +247,7 @@ export function ProgramDetail({ program: initialProgram }: ProgramDetailProps) {
 
           {/* Mentors */}
           <div className="bg-card border border-border rounded-xl p-5 space-y-3 lg:col-span-2">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Mentors ({mentors.length})</p>
+            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Mentors ({mentors.length})</p>
             <div className="flex flex-wrap gap-2">
               {mentors.map((m) => (
                 <span key={m.id} className="text-xs bg-muted border border-border rounded-lg px-3 py-1.5">
@@ -268,7 +267,7 @@ export function ProgramDetail({ program: initialProgram }: ProgramDetailProps) {
           <div className="flex-1 min-w-0 space-y-8">
             {/* Basics */}
             <section className="bg-card border border-border rounded-xl p-5 space-y-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Basics</p>
+              <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Basics</p>
               <div className="space-y-3">
                 <div>
                   <label className="block text-xs text-muted-foreground mb-1">Programme name</label>
@@ -297,7 +296,7 @@ export function ProgramDetail({ program: initialProgram }: ProgramDetailProps) {
 
             {/* Target profile */}
             <section className="bg-card border border-border rounded-xl p-5 space-y-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Target Profile</p>
+              <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Target Profile</p>
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs text-muted-foreground mb-2">Target stages</label>
@@ -337,7 +336,7 @@ export function ProgramDetail({ program: initialProgram }: ProgramDetailProps) {
 
             {/* Criteria weights */}
             <section className="bg-card border border-border rounded-xl p-5 space-y-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Criteria Weights</p>
+              <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Criteria Weights</p>
               <p className="text-xs text-muted-foreground">Must total 100.</p>
               <div className="space-y-2">
                 {CRITERIA_FIELDS.map(({ key, label }) => (
@@ -357,7 +356,7 @@ export function ProgramDetail({ program: initialProgram }: ProgramDetailProps) {
 
             {/* Application setup */}
             <section className="bg-card border border-border rounded-xl p-5 space-y-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Application Setup</p>
+              <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Application Setup</p>
               <div>
                 <label className="block text-xs text-muted-foreground mb-2">Required documents</label>
                 <div className="flex flex-wrap gap-x-4 gap-y-2">
@@ -391,7 +390,7 @@ export function ProgramDetail({ program: initialProgram }: ProgramDetailProps) {
 
             {/* Mentor assignment */}
             <section className="bg-card border border-border rounded-xl p-5 space-y-3">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Mentors</p>
+              <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Mentors</p>
               <div className="border border-border rounded divide-y divide-border">
                 {seedMentors.map((mentor) => {
                   const selected = draft.mentorIds.includes(mentor.id);
@@ -422,10 +421,10 @@ export function ProgramDetail({ program: initialProgram }: ProgramDetailProps) {
                 </div>
               </div>
               <div className="border-t border-border pt-3 space-y-2">
-                <button onClick={saveEdit} disabled={weightTotal !== 100} className="w-full px-3 py-2 text-xs font-semibold rounded border transition-colors disabled:opacity-40 disabled:cursor-not-allowed" style={{ color: "var(--status-healthy)", borderColor: "var(--status-healthy)", background: "var(--status-healthy-bg)" }}>
+                <button onClick={saveEdit} disabled={weightTotal !== 100} className="w-full px-3 py-2 text-xs font-bold rounded-full transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed" style={{ background: "#f36458", color: "#ffffff" }}>
                   Save changes
                 </button>
-                <button onClick={cancelEdit} className="w-full px-3 py-1.5 text-xs font-medium rounded border border-border text-muted-foreground hover:text-foreground transition-colors">
+                <button onClick={cancelEdit} className="w-full px-3 py-1.5 text-xs font-medium rounded-full border border-border text-muted-foreground hover:text-foreground transition-colors">
                   Cancel
                 </button>
               </div>

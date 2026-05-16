@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { StateBlock } from "@/components/ui/state-block";
@@ -60,11 +61,13 @@ function applyLocalDecision(
 }
 
 export function ApplicantReviewPool() {
+  const router = useRouter();
   const [applications, setApplications] = useState<Application[]>(seedApplications);
   const [activeFilter, setActiveFilter] = useState<Filter>("all");
   const [selectedId, setSelectedId] = useState<string | null>(seedApplications[0]?.id ?? null);
   const [isLoading] = useState(false);
   const [error] = useState<string | null>(null);
+  const [lastApprovedId, setLastApprovedId] = useState<string | null>(null);
   const [pendingDecision, setPendingDecision] = useState<{
     applicationId: string;
     status: ApplicationStatus;
@@ -91,6 +94,9 @@ export function ApplicantReviewPool() {
 
   function applyDecision(applicationId: string, status: ApplicationStatus) {
     setApplications((prev) => applyLocalDecision(prev, applicationId, status));
+    if (status === "approved") {
+      setLastApprovedId(applicationId);
+    }
     toast.success(`Applicant marked as ${status}.`);
   }
 
@@ -120,7 +126,7 @@ export function ApplicantReviewPool() {
       {/* Page header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold text-foreground">Applicant Review Pool</h1>
+          <h1 className="text-xl font-bold text-foreground" style={{ letterSpacing: "-0.02em" }}>Applicant Review Pool</h1>
           <p className="text-xs text-muted-foreground mt-1">{applications.length} total applications</p>
         </div>
         <Link
@@ -134,7 +140,7 @@ export function ApplicantReviewPool() {
       {/* Approved companies strip */}
       {approvedCompanies.length > 0 && (
         <div className="bg-card border border-border rounded-xl px-5 py-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground mb-2.5">
+          <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2.5">
             Approved for Matching ({approvedCompanies.length})
           </p>
           <div className="flex flex-wrap gap-2">
@@ -165,7 +171,7 @@ export function ApplicantReviewPool() {
               onClick={() => setActiveFilter(value)}
               className={`px-4 py-2.5 text-xs font-medium border-b-2 transition-colors -mb-px ${
                 isActive
-                  ? "border-foreground text-foreground"
+                  ? "border-[#f36458] text-foreground"
                   : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -271,6 +277,17 @@ export function ApplicantReviewPool() {
                 {selected.status}
               </span>
             </div>
+            {lastApprovedId === selected.id && (
+              <div className="mx-6 mt-3 flex items-center justify-between bg-[var(--status-healthy-bg)] text-[var(--status-healthy)] text-xs px-3 py-2 rounded-lg">
+                <span>✓ Approved — ready for mentor matching</span>
+                <button
+                  onClick={() => router.push("/matching")}
+                  className="font-medium underline underline-offset-2"
+                >
+                  Go to Matching →
+                </button>
+              </div>
+            )}
 
             {/* Decision actions */}
             <div className="border-b border-border px-6 py-3 flex gap-2 flex-wrap">
@@ -282,7 +299,7 @@ export function ApplicantReviewPool() {
                     key={action}
                     onClick={() => handleDecision(selected.id, action)}
                     disabled={isCurrentStatus}
-                    className="px-4 py-1.5 text-xs font-semibold rounded-lg border transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-4 py-1.5 text-xs font-semibold rounded-full border transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{
                       color: style.color,
                       borderColor: style.color,
@@ -299,7 +316,7 @@ export function ApplicantReviewPool() {
             <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
               {/* Company profile */}
               <section>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground mb-3">
+                <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-3">
                   Company Profile
                 </p>
                 {selectedCompany ? (
@@ -325,7 +342,7 @@ export function ApplicantReviewPool() {
 
               {/* Fit score */}
               <section>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground mb-3">
+                <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-3">
                   Fit Score — <span className="text-foreground normal-case font-bold">{selected.fitScore}</span>
                   <span className="font-normal normal-case ml-1">({selected.fitLabel})</span>
                 </p>
@@ -355,7 +372,7 @@ export function ApplicantReviewPool() {
 
               {/* Founder summary */}
               <section>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground mb-3">
+                <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-3">
                   Founder Summary
                 </p>
                 <p className="text-xs text-foreground leading-relaxed">{selected.founderSummary}</p>
@@ -368,32 +385,29 @@ export function ApplicantReviewPool() {
 
               {/* AI insight */}
               <section>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground mb-3">
+                <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-3">
                   AI Insight
                 </p>
-                <div className="flex items-start gap-2">
-                  <span
-                    className="shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded mt-0.5"
-                    style={{
-                      background: "color-mix(in srgb, var(--status-ai) 10%, transparent)",
-                      color: "var(--status-ai)",
-                    }}
+                <div className="rounded-md p-3" style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.15)" }}>
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[var(--status-ai)]/10 text-[var(--status-ai)]">✦ AI</span>
+                    <p className="text-[10px] font-bold uppercase tracking-widest font-mono" style={{ color: "var(--status-ai)" }}>
+                      Insight
+                    </p>
+                  </div>
+                  <p className="text-xs leading-relaxed text-muted-foreground italic">{selected.aiInsight}</p>
+                  <p
+                    className="text-xs font-bold mt-2 capitalize font-mono"
+                    style={{ color: getRecommendationColor(selected.aiRecommendation) }}
                   >
-                    ✦ AI
-                  </span>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{selected.aiInsight}</p>
+                    → {selected.aiRecommendation}
+                  </p>
                 </div>
-                <p
-                  className="text-xs font-semibold mt-2 capitalize"
-                  style={{ color: getRecommendationColor(selected.aiRecommendation) }}
-                >
-                  Recommendation: {selected.aiRecommendation}
-                </p>
               </section>
 
               {/* Support needs */}
               <section>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground mb-3">
+                <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-3">
                   Support Needs
                 </p>
                 <div className="flex flex-wrap gap-1.5">
@@ -410,7 +424,7 @@ export function ApplicantReviewPool() {
 
               {/* Eligibility flags */}
               <section>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground mb-3">
+                <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-3">
                   Eligibility Flags
                 </p>
                 {selected.eligibilityFlags.length === 0 ? (
@@ -437,7 +451,7 @@ export function ApplicantReviewPool() {
             {/* Documents */}
             {Object.keys(selected.documentUrls).length > 0 && (
               <div className="px-6 pb-6">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground mb-3">
+                <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-3">
                   Documents
                 </p>
                 <div className="flex flex-wrap gap-2">
