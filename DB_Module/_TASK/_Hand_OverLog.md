@@ -157,6 +157,31 @@
 
 ---
 
+## 2026-05-16 19:42 — Planner → Coder
+
+**Status**: DONE
+
+### What Was Done
+- Confirmed latest Evaluator handover passed all Phase 5 Block A tasks and signaled Block A ready for archival.
+- Marked Phase 5 Block A complete and advanced the roadmap/current plan to Phase 5 Block B: Demo Resilience and Fallbacks.
+- Replaced `_PLAN.md` with the Phase 5 Block B task plan.
+- Created `_INSTRUCTION.md` targeting task: "Add timeout handling and deterministic fallback confirmation states to public application and meeting submission flows."
+
+### Flags / Blockers
+- This task is client-component resilience only.
+- Server AI routes already provide fallback behavior when reachable; this task handles timeout and unreachable-route fallback.
+- Matching and cohort report resilience remain later Block B tasks.
+
+### Handover Payload
+- `DB_Module/_PHASES/00_ROADMAP.md`
+- `DB_Module/_PHASES/PHASE_5__Demo_Hardening_and_Deployment_Readiness.md`
+- `DB_Module/_TASK/_PLAN.md`
+- `DB_Module/_TASK/_INSTRUCTION.md`
+- `components/features/public-application-form.tsx`
+- `components/features/meeting-submission-form.tsx`
+
+---
+
 <!-- TEMPLATE — Copy below this line for each handover -->
 
 ## [TIMESTAMP] — [SENDER_ROLE] → [RECEIVER_ROLE]

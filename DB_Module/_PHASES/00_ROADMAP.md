@@ -1,7 +1,7 @@
 # Project Roadmap
 
 **Current Phase**: Phase 5 — Demo Hardening and Deployment Readiness
-**Current Block**: Block A
+**Current Block**: Block B
 **Last Updated**: 2026-05-16
 
 ---
@@ -18,9 +18,9 @@
 
 ---
 
-## Active: Phase 5 → Block A
+## Active: Phase 5 → Block B
 
 > See `PHASE_5__Demo_Hardening_and_Deployment_Readiness.md` for full block details.
 
-**What we're building**: Firestore-ready persistence baseline, collection-aware rules, environment documentation, and seed fallback readiness for the final demo.
-**Acceptance gate**: Firestore collections match the schema, rules are narrower than broad authenticated access, public submission paths validate required fields, and seed fallback still works when Firebase is unavailable.
+**What we're building**: Demo resilience, visible fallback states, timeout handling, and backup paths for pitch-critical flows.
+**Acceptance gate**: The demo can complete without successful live Gemini or Firestore responses, failed writes are visible, routes avoid crashes on missing data, and the backup path is documented.

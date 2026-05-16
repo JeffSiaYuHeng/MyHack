@@ -10,8 +10,8 @@
 
 | Block | Name | Depends On | Status |
 |-------|------|------------|--------|
-| A | Firebase Persistence and Rules | — | IN_PROGRESS |
-| B | Demo Resilience and Fallbacks | Block A | NOT_STARTED |
+| A | Firebase Persistence and Rules | — | COMPLETED |
+| B | Demo Resilience and Fallbacks | Block A | IN_PROGRESS |
 | C | Cloud Run Deployment Verification | Block B | NOT_STARTED |
 | D | Final Pitch Walkthrough Polish | Block C | NOT_STARTED |
 
@@ -20,16 +20,16 @@
 ## Block A: Firebase Persistence and Rules
 
 ### Scope
-- [ ] Replace critical seeded mutations with Firestore reads/writes where demo value requires persistence.
-- [ ] Add or update Firestore rules for admin, viewer, public application, and tokenized meeting flows.
-- [ ] Confirm environment variables are documented and available.
-- [ ] Keep seed data available as a fallback path.
+- [x] Replace critical seeded mutations with Firestore reads/writes where demo value requires persistence.
+- [x] Add or update Firestore rules for admin, viewer, public application, and tokenized meeting flows.
+- [x] Confirm environment variables are documented and available.
+- [x] Keep seed data available as a fallback path.
 
 ### Acceptance Criteria
-- [ ] Firestore collections match `_DOCS/01_DB_SCHEMA.md`.
-- [ ] Rules are narrower than broad authenticated read/write for final demo.
-- [ ] Public submission paths validate required fields.
-- [ ] Seed fallback can still run when Firebase is unavailable.
+- [x] Firestore collections match `_DOCS/01_DB_SCHEMA.md`.
+- [x] Rules are narrower than broad authenticated read/write for final demo.
+- [x] Public submission paths validate required fields.
+- [x] Seed fallback can still run when Firebase is unavailable.
 
 ---
 
