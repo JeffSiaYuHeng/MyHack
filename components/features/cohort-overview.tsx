@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useState } from "react";
 import toast from "react-hot-toast";
 import type {
   Cohort,
@@ -75,95 +75,47 @@ export function CohortOverview({
   // Demo features
   const [isGenerating, setIsGenerating] = useState(false);
   const [reportReady, setReportReady] = useState(false);
-  const reportControllerRef = useRef<AbortController | null>(null);
-  const reportTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const revealTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    return () => {
-      reportControllerRef.current?.abort();
-      if (reportTimeoutRef.current) clearTimeout(reportTimeoutRef.current);
-      if (revealTimerRef.current) clearTimeout(revealTimerRef.current);
-    };
-  }, []);
+  const companyMap = new Map(companies.map((c) => [c.id, c]));
 
-  const companyMap = useMemo(() => new Map(companies.map((c) => [c.id, c])), [companies]);
-
-  const relWithMeta = useMemo(
-    () =>
-      relationships.map((r) => ({
-        relationship: r,
-        company: companyMap.get(r.companyId),
-        urgency: getRelationshipUrgency(r, meetings),
-        band: getHealthBand(r.healthScore),
-      })),
-    [companyMap, meetings, relationships]
-  );
+  const relWithMeta = relationships.map((r) => ({
+    relationship: r,
+    company: companyMap.get(r.companyId),
+    urgency: getRelationshipUrgency(r, meetings),
+    band: getHealthBand(r.healthScore),
+  }));
 
   const totalRelationships = relationships.length;
-  const {
-    activeCount,
-    avgHealthScore,
-    healthyCount,
-    atRiskCount,
-    criticalCount,
-    staleCount,
-  } = useMemo(() => {
-    let active = 0;
-    let healthTotal = 0;
-    let healthy = 0;
-    let atRisk = 0;
-    let critical = 0;
-    let stale = 0;
-
-    for (const item of relWithMeta) {
-      if (item.relationship.status === "active") active++;
-      healthTotal += item.relationship.healthScore;
-      if (item.band === "healthy") healthy++;
-      else if (item.band === "at-risk") atRisk++;
-      else critical++;
-      if (item.urgency.level === "stale") stale++;
-    }
-
-    return {
-      activeCount: active,
-      avgHealthScore:
-        totalRelationships > 0 ? Math.round(healthTotal / totalRelationships) : 0,
-      healthyCount: healthy,
-      atRiskCount: atRisk,
-      criticalCount: critical,
-      staleCount: stale,
-    };
-  }, [relWithMeta, totalRelationships]);
+  const activeCount = relationships.filter((r) => r.status === "active").length;
+  const avgHealthScore =
+    totalRelationships > 0
+      ? Math.round(relationships.reduce((sum, r) => sum + r.healthScore, 0) / totalRelationships)
+      : 0;
+  const healthyCount = relWithMeta.filter((x) => x.band === "healthy").length;
+  const atRiskCount = relWithMeta.filter((x) => x.band === "at-risk").length;
+  const criticalCount = relWithMeta.filter((x) => x.band === "critical").length;
+  const staleCount = relWithMeta.filter((x) => x.urgency.level === "stale").length;
   const totalMeetings = meetings.length;
 
-  const heatmap = useMemo(
-    () =>
-      [...relWithMeta].sort((a, b) => {
-        if (a.urgency.priority !== b.urgency.priority) return a.urgency.priority - b.urgency.priority;
-        if (b.urgency.daysSinceLastMeeting !== a.urgency.daysSinceLastMeeting)
-          return b.urgency.daysSinceLastMeeting - a.urgency.daysSinceLastMeeting;
-        if (a.relationship.healthScore !== b.relationship.healthScore)
-          return a.relationship.healthScore - b.relationship.healthScore;
-        const nameA = a.company?.name ?? "";
-        const nameB = b.company?.name ?? "";
-        return nameA < nameB ? -1 : nameA > nameB ? 1 : 0;
-      }),
-    [relWithMeta]
-  );
+  const heatmap = [...relWithMeta].sort((a, b) => {
+    if (a.urgency.priority !== b.urgency.priority) return a.urgency.priority - b.urgency.priority;
+    if (b.urgency.daysSinceLastMeeting !== a.urgency.daysSinceLastMeeting)
+      return b.urgency.daysSinceLastMeeting - a.urgency.daysSinceLastMeeting;
+    if (a.relationship.healthScore !== b.relationship.healthScore)
+      return a.relationship.healthScore - b.relationship.healthScore;
+    const nameA = a.company?.name ?? "";
+    const nameB = b.company?.name ?? "";
+    return nameA < nameB ? -1 : nameA > nameB ? 1 : 0;
+  });
 
-  const milestoneDistribution = useMemo(
-    () =>
-      [1, 2, 3, 4, 5].map((num) => ({
-        num,
-        label: MILESTONE_LABELS[num - 1],
-        completed: relationships.filter((r) => r.milestonesCompleted.includes(num)).length,
-        current: relationships.filter(
-          (r) => r.currentMilestone === num && !r.milestonesCompleted.includes(num)
-        ).length,
-      })),
-    [relationships]
-  );
+  const milestoneDistribution = [1, 2, 3, 4, 5].map((num) => ({
+    num,
+    label: MILESTONE_LABELS[num - 1],
+    completed: relationships.filter((r) => r.milestonesCompleted.includes(num)).length,
+    current: relationships.filter(
+      (r) => r.currentMilestone === num && !r.milestonesCompleted.includes(num)
+    ).length,
+  }));
 
   async function handleGenerate() {
     setReportStatus("loading");
@@ -172,12 +124,8 @@ export function CohortOverview({
     setIsFallback(false);
     const toastId = toast.loading("Generating cohort report...");
 
-    reportControllerRef.current?.abort();
-    if (reportTimeoutRef.current) clearTimeout(reportTimeoutRef.current);
-
     const controller = new AbortController();
-    reportControllerRef.current = controller;
-    reportTimeoutRef.current = setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       controller.abort();
     }, 10000);
 
@@ -189,9 +137,7 @@ export function CohortOverview({
         body: JSON.stringify({ cohortId: cohort.id }),
       });
       
-      if (reportTimeoutRef.current) clearTimeout(reportTimeoutRef.current);
-      reportTimeoutRef.current = null;
-      reportControllerRef.current = null;
+      clearTimeout(timeoutId);
 
       if (!res.ok) {
         const err = (await res.json().catch(() => ({}))) as Record<
@@ -208,9 +154,7 @@ export function CohortOverview({
       setReportStatus("done");
       toast.success("Cohort report generated.", { id: toastId });
     } catch (err: unknown) {
-      if (reportTimeoutRef.current) clearTimeout(reportTimeoutRef.current);
-      reportTimeoutRef.current = null;
-      reportControllerRef.current = null;
+      clearTimeout(timeoutId);
       
       // Deterministic local fallback
       const staleNote =
@@ -346,8 +290,7 @@ export function CohortOverview({
               onClick={() => {
                 setIsGenerating(true);
                 handleGenerate();
-                if (revealTimerRef.current) clearTimeout(revealTimerRef.current);
-                revealTimerRef.current = setTimeout(() => {
+                setTimeout(() => {
                   setIsGenerating(false);
                   setReportReady(true);
                 }, 2500);
@@ -696,3 +639,4 @@ export function CohortOverview({
     </div>
   );
 }
+

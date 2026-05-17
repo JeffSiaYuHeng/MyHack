@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import {
   MessageCircle,
   BookOpen,
@@ -55,19 +55,11 @@ export function SupportCenter() {
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [ticketStatus, setTicketStatus] = useState<TicketStatus>("idle");
-  const submitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (submitTimerRef.current) clearTimeout(submitTimerRef.current);
-    };
-  }, []);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setTicketStatus("sending");
-    if (submitTimerRef.current) clearTimeout(submitTimerRef.current);
-    submitTimerRef.current = setTimeout(() => {
+    setTimeout(() => {
       setTicketStatus("sent");
       setSubject("");
       setMessage("");

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
   Folder,
@@ -184,29 +184,15 @@ export function DashboardCommandCenter() {
   };
   const removeFromWatchlist = (id: string) => saveWatchlist(watchlist.filter((w) => w !== id));
 
-  const seedCompanyById = useMemo(
-    () => new Map(seedCompanies.map((company) => [company.id, company])),
-    []
-  );
-
-  const watchlistCompanies = useMemo(
-    () => watchlist.map((id) => seedCompanyById.get(id)).filter(Boolean) as typeof seedCompanies,
-    [seedCompanyById, watchlist]
-  );
+  const watchlistCompanies = watchlist
+    .map((id) => seedCompanies.find((c) => c.id === id))
+    .filter(Boolean) as typeof seedCompanies;
 
   // Get health score for a company via its relationship
-  const activeRelationshipScoreByCompany = useMemo(() => {
-    const scores = new Map<string, number>();
-    for (const rel of seedRelationships) {
-      if (rel.status === "active") scores.set(rel.companyId, rel.healthScore);
-    }
-    return scores;
-  }, []);
-
-  const getCompanyScore = useCallback(
-    (companyId: string) => activeRelationshipScoreByCompany.get(companyId) ?? null,
-    [activeRelationshipScoreByCompany]
-  );
+  const getCompanyScore = (companyId: string) => {
+    const rel = seedRelationships.find((r) => r.companyId === companyId && r.status === "active");
+    return rel?.healthScore ?? null;
+  };
 
   const initials = (name: string) =>
     name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
@@ -251,15 +237,10 @@ export function DashboardCommandCenter() {
     );
   };
 
-  const dialogCandidates = useMemo(() => {
+  const dialogCandidates = seedCompanies.filter((c) => {
     const q = watchlistSearch.toLowerCase();
-    return seedCompanies.filter(
-      (c) =>
-        !q ||
-        c.name.toLowerCase().includes(q) ||
-        (c.industry ?? []).join(",").toLowerCase().includes(q)
-    );
-  }, [watchlistSearch]);
+    return !q || c.name.toLowerCase().includes(q) || (c.industry ?? []).join(",").toLowerCase().includes(q);
+  });
   // ──────────────────────────────────────────────────────────────────────
 
   useEffect(() => {
@@ -268,77 +249,59 @@ export function DashboardCommandCenter() {
     return () => clearTimeout(t);
   }, []);
 
-  const summary = useMemo(() => getDashboardSummary(), []);
-  const feed = useMemo(() => getAttentionFeed(), []);
-  const meetings = useMemo(() => getRecentMeetings(5), []);
+  const summary = getDashboardSummary();
+  const feed = getAttentionFeed();
+  const meetings = getRecentMeetings(5);
 
   const atRiskCount = summary.atRiskRelationshipCount;
   const criticalCount = summary.criticalRelationshipCount;
 
   // Chart Data preparation
-  const chartData = useMemo(() => {
-    const rows = [
-      { name: "0-20", count: 0, fill: "var(--status-critical)" },
-      { name: "21-40", count: 0, fill: "var(--status-critical)" },
-      { name: "41-60", count: 0, fill: "var(--status-risk)" },
-      { name: "61-80", count: 0, fill: "var(--status-healthy)" },
-      { name: "81-100", count: 0, fill: "var(--status-healthy)" },
-    ];
+  const chartData = [
+    { name: "0-20", count: 0, fill: "var(--status-critical)" },
+    { name: "21-40", count: 0, fill: "var(--status-critical)" },
+    { name: "41-60", count: 0, fill: "var(--status-risk)" },
+    { name: "61-80", count: 0, fill: "var(--status-healthy)" },
+    { name: "81-100", count: 0, fill: "var(--status-healthy)" },
+  ];
 
-    seedRelationships.forEach((rel) => {
-      if (rel.status !== "active") return;
-      const score = rel.healthScore;
-      if (score <= 20) rows[0].count++;
-      else if (score <= 40) rows[1].count++;
-      else if (score <= 60) rows[2].count++;
-      else if (score <= 80) rows[3].count++;
-      else rows[4].count++;
-    });
+  seedRelationships.forEach(rel => {
+    if (rel.status !== "active") return;
+    const score = rel.healthScore;
+    if (score <= 20) chartData[0].count++;
+    else if (score <= 40) chartData[1].count++;
+    else if (score <= 60) chartData[2].count++;
+    else if (score <= 80) chartData[3].count++;
+    else chartData[4].count++;
+  });
 
-    return rows;
-  }, []);
-
-  const ecosystemEntityCounts = useMemo(
-    () => ({
-      partners: seedEcosystemEntities.filter((entity) => entity.type === "partner").length,
-      serviceProviders: seedEcosystemEntities.filter((entity) => entity.type === "service-provider").length,
-      grants: seedEcosystemEntities.filter((entity) => entity.type === "grant").length,
-      initiatives: seedEcosystemEntities.filter((entity) => entity.type === "initiative").length,
-    }),
-    []
-  );
+  const ecosystemEntityCounts = {
+    partners: seedEcosystemEntities.filter((entity) => entity.type === "partner").length,
+    serviceProviders: seedEcosystemEntities.filter((entity) => entity.type === "service-provider").length,
+    grants: seedEcosystemEntities.filter((entity) => entity.type === "grant").length,
+    initiatives: seedEcosystemEntities.filter((entity) => entity.type === "initiative").length,
+  };
   const ecosystemLinkageCounts = {
     total: seedEcosystemLinkages.length,
   };
-  const entityNameById = useMemo(
-    () =>
-      new Map<string, string>([
-        ...seedEcosystemEntities.map((entity) => [entity.id, entity.name] as const),
-        ...seedCompanies.map((company) => [company.id, company.name] as const),
-      ]),
-    []
-  );
-  const filteredEcosystemLinkages = useMemo(
-    () =>
-      seedEcosystemLinkages.filter(
-        (linkage) => linkageFilter === "all" || linkage.type === linkageFilter
-      ),
-    [linkageFilter]
+  const entityNameById = new Map<string, string>([
+    ...seedEcosystemEntities.map((entity) => [entity.id, entity.name] as const),
+    ...seedCompanies.map((company) => [company.id, company.name] as const),
+  ]);
+  const filteredEcosystemLinkages = seedEcosystemLinkages.filter(
+    (linkage) => linkageFilter === "all" || linkage.type === linkageFilter
   );
   const selectedLinkage =
     seedEcosystemLinkages.find((linkage) => linkage.id === selectedLinkageId) ??
     filteredEcosystemLinkages[0] ??
     seedEcosystemLinkages[0];
-  const averageLinkageScore = useMemo(
-    () =>
-      seedEcosystemLinkages.length > 0
-        ? Math.round(
-            seedEcosystemLinkages.reduce((sum, linkage) => sum + linkage.fitScore, 0) /
-              seedEcosystemLinkages.length
-          )
-        : 0,
-    []
-  );
+  const averageLinkageScore =
+    seedEcosystemLinkages.length > 0
+      ? Math.round(
+          seedEcosystemLinkages.reduce((sum, linkage) => sum + linkage.fitScore, 0) /
+            seedEcosystemLinkages.length
+        )
+      : 0;
 
   return (
     <>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useReducer, useRef, useEffect, useMemo } from "react";
+import { useState, useReducer, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { Brain } from "lucide-react";
@@ -152,14 +152,8 @@ export function MatchingWorkbench({
   const [confirmedStartupIds, setConfirmedStartupIds] = useState<Set<string>>(new Set());
   const [loadingStep, setLoadingStep] = useState(0);
   const stepTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const abortTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const displayQueue = useMemo(
-    () => initialQueue.filter((item) => !confirmedStartupIds.has(item.company.id)),
-    [confirmedStartupIds, initialQueue]
-  );
+  const displayQueue = initialQueue.filter((item) => !confirmedStartupIds.has(item.company.id));
 
   const [selectedStartupId, setSelectedStartupId] = useState<string | null>(
     displayQueue[0]?.company.id ?? null
@@ -170,18 +164,11 @@ export function MatchingWorkbench({
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 400);
-    return () => {
-      clearTimeout(t);
-      clearStepTimers();
-      if (abortTimerRef.current) clearTimeout(abortTimerRef.current);
-      abortControllerRef.current?.abort();
-      if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
-    };
+    return () => clearTimeout(t);
   }, []);
 
-  const mentorPoolMap = useMemo(
-    () => new Map<string, MentorPoolItem>(initialMentorPool.map((p) => [p.mentor.id, p])),
-    [initialMentorPool]
+  const mentorPoolMap = new Map<string, MentorPoolItem>(
+    initialMentorPool.map((p) => [p.mentor.id, p])
   );
 
   function clearStepTimers() {
@@ -193,8 +180,6 @@ export function MatchingWorkbench({
     if (!selectedStartupId) return;
 
     clearStepTimers();
-    abortControllerRef.current?.abort();
-    if (abortTimerRef.current) clearTimeout(abortTimerRef.current);
     dispatch({ type: "START" });
     setLoadingStep(0);
 
@@ -215,8 +200,7 @@ export function MatchingWorkbench({
 
     const toastId = toast.loading("Generating mentor matches…");
     const controller = new AbortController();
-    abortControllerRef.current = controller;
-    abortTimerRef.current = setTimeout(() => controller.abort(), 25000);
+    const abortTimer = setTimeout(() => controller.abort(), 25000);
 
     try {
       const [res] = await Promise.all([
@@ -229,9 +213,7 @@ export function MatchingWorkbench({
         minDelay,
       ]);
 
-      if (abortTimerRef.current) clearTimeout(abortTimerRef.current);
-      abortTimerRef.current = null;
-      abortControllerRef.current = null;
+      clearTimeout(abortTimer);
       clearStepTimers();
       setLoadingStep(totalSteps);
 
@@ -247,9 +229,7 @@ export function MatchingWorkbench({
       dispatch({ type: "SUCCESS", matches: data.matches ?? [] });
       toast.success(`Generated ${data.matches?.length ?? 0} mentor matches.`, { id: toastId });
     } catch {
-      if (abortTimerRef.current) clearTimeout(abortTimerRef.current);
-      abortTimerRef.current = null;
-      abortControllerRef.current = null;
+      clearTimeout(abortTimer);
       clearStepTimers();
       const message = "Network error. Manual selection is available below.";
       dispatch({ type: "ERROR", message });
@@ -292,7 +272,7 @@ export function MatchingWorkbench({
       setConfirmedStartupIds((prev) => new Set([...prev, selectedStartupId]));
       setSelectedStartupId(nextQueue[0]?.company.id ?? null);
       dispatch({ type: "RESET" });
-      redirectTimerRef.current = setTimeout(() => {
+      setTimeout(() => {
         router.push("/relationships");
       }, 1500);
     } catch {
@@ -305,8 +285,6 @@ export function MatchingWorkbench({
   function selectStartup(id: string) {
     if (id === selectedStartupId) return;
     clearStepTimers();
-    abortControllerRef.current?.abort();
-    if (abortTimerRef.current) clearTimeout(abortTimerRef.current);
     setLoadingStep(0);
     setSelectedStartupId(id);
     dispatch({ type: "RESET" });
