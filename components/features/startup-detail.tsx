@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
@@ -43,10 +43,20 @@ export function StartupDetail({ company: init }: StartupDetailProps) {
   const [editing, setEditing] = useState(false);
   const [showDel, setShowDel] = useState(false);
   const [deleted, setDeleted] = useState(false);
+  const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const programMap  = new Map(seedPrograms.map((p) => [p.id, p]));
-  const mentorMap   = new Map(seedMentors.map((m) => [m.id, m]));
-  const rels = seedRelationships.filter((r) => r.companyId === company.id);
+  useEffect(() => {
+    return () => {
+      if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
+    };
+  }, []);
+
+  const programMap = useMemo(() => new Map(seedPrograms.map((p) => [p.id, p])), []);
+  const mentorMap = useMemo(() => new Map(seedMentors.map((m) => [m.id, m])), []);
+  const rels = useMemo(
+    () => seedRelationships.filter((r) => r.companyId === company.id),
+    [company.id]
+  );
   const ss = stageStyle(company.stage);
 
   function save() {
@@ -63,7 +73,7 @@ export function StartupDetail({ company: init }: StartupDetailProps) {
   function handleDelete() {
     setDeleted(true);
     toast.success("Startup removed locally.");
-    setTimeout(() => router.push("/startups"), 1100);
+    redirectTimerRef.current = setTimeout(() => router.push("/startups"), 1100);
   }
 
   if (deleted) return (

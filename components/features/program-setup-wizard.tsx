@@ -286,7 +286,12 @@ export function ProgramSetupWizard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ briefText: aiBriefText }),
       });
-      if (!res.ok) throw new Error("Failed to extract parameters");
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+        throw new Error(
+          typeof data.error === "string" ? data.error : "Failed to extract parameters"
+        );
+      }
       const data = await res.json();
       
       setState((s) => ({
@@ -305,7 +310,12 @@ export function ProgramSetupWizard() {
         mentorIds: data.mentorIds || s.mentorIds,
       }));
       
-      toast.success("✦ Programme parameters successfully extracted by AI.", { id: toastId });
+      toast.success(
+        data.fallbackUsed
+          ? "Parameters extracted locally. You can refine them before publishing."
+          : "✦ Programme parameters successfully extracted by AI.",
+        { id: toastId }
+      );
       setIsAiDialogOpen(false);
       setAiBriefText("");
     } catch (err) {

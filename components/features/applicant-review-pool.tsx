@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -120,19 +120,30 @@ export function ApplicantReviewPool() {
     status: ApplicationStatus;
   } | null>(null);
   const [mounted, setMounted] = useState(false);
+  const scoringTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 400);
-    return () => clearTimeout(t);
+    return () => {
+      clearTimeout(t);
+      if (scoringTimerRef.current) clearTimeout(scoringTimerRef.current);
+    };
   }, []);
 
-  const companyMap = new Map<string, Company>(seedCompanies.map((c) => [c.id, c]));
-
-  const filtered = applications.filter(
-    (app) => activeFilter === "all" || app.status === activeFilter
+  const companyMap = useMemo(
+    () => new Map<string, Company>(seedCompanies.map((c) => [c.id, c])),
+    []
   );
 
-  const selected = applications.find((app) => app.id === selectedId) ?? null;
+  const filtered = useMemo(
+    () => applications.filter((app) => activeFilter === "all" || app.status === activeFilter),
+    [activeFilter, applications]
+  );
+
+  const selected = useMemo(
+    () => applications.find((app) => app.id === selectedId) ?? null,
+    [applications, selectedId]
+  );
   const selectedCompany = selected ? companyMap.get(selected.companyId) : null;
 
   function applyDecision(applicationId: string, status: ApplicationStatus) {
@@ -216,7 +227,8 @@ export function ApplicantReviewPool() {
                       if (selectedId !== app.id) {
                         setIsScoring(true);
                         setSelectedId(app.id);
-                        setTimeout(() => setIsScoring(false), 1500);
+                        if (scoringTimerRef.current) clearTimeout(scoringTimerRef.current);
+                        scoringTimerRef.current = setTimeout(() => setIsScoring(false), 1500);
                       }
                     }}
                     className={`w-full text-left rounded-xl transition-all duration-150 ${

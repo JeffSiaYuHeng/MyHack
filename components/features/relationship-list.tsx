@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { 
@@ -158,20 +158,45 @@ function RelationshipListContent({
     return () => clearTimeout(t);
   }, []);
 
-  const companyMap = new Map<string, Company>(companies.map((c) => [c.id, c]));
-  const mentorMap = new Map<string, Mentor>(mentors.map((m) => [m.id, m]));
+  const companyMap = useMemo(
+    () => new Map<string, Company>(companies.map((c) => [c.id, c])),
+    [companies]
+  );
+  const mentorMap = useMemo(
+    () => new Map<string, Mentor>(mentors.map((m) => [m.id, m])),
+    [mentors]
+  );
 
-  const filtered = relationships.filter((r) => {
-    if (statusFilter !== "all" && r.status !== statusFilter) return false;
-    if (healthFilter !== "all" && getHealthBand(r.healthScore) !== healthFilter)
-      return false;
-    
-    return true;
-  });
+  const filtered = useMemo(
+    () =>
+      relationships.filter((r) => {
+        if (statusFilter !== "all" && r.status !== statusFilter) return false;
+        if (healthFilter !== "all" && getHealthBand(r.healthScore) !== healthFilter)
+          return false;
 
-  const totalHealthy = relationships.filter((r) => getHealthBand(r.healthScore) === "healthy").length;
-  const totalAtRisk = relationships.filter((r) => getHealthBand(r.healthScore) === "at-risk").length;
-  const totalCritical = relationships.filter((r) => getHealthBand(r.healthScore) === "critical").length;
+        return true;
+      }),
+    [healthFilter, relationships, statusFilter]
+  );
+
+  const { totalHealthy, totalAtRisk, totalCritical } = useMemo(() => {
+    let healthy = 0;
+    let atRisk = 0;
+    let critical = 0;
+
+    for (const relationship of relationships) {
+      const band = getHealthBand(relationship.healthScore);
+      if (band === "healthy") healthy++;
+      else if (band === "at-risk") atRisk++;
+      else critical++;
+    }
+
+    return {
+      totalHealthy: healthy,
+      totalAtRisk: atRisk,
+      totalCritical: critical,
+    };
+  }, [relationships]);
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-10">
